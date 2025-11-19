@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+
 import {
   Table,
   TableBody,
@@ -12,6 +13,8 @@ import {
 } from "@/app/dashboard/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
+import { exportExcel, exportPDF } from "@/app/dashboard/utils/exportData";
+import { exportWithPreview } from "@/app/dashboard/utils/exportWithPreview";
 import { Trash, Download } from "lucide-react";
 
 export interface Column<T> {
@@ -19,6 +22,7 @@ export interface Column<T> {
   label: string;
   className?: string;
   cellClassName?: string;
+  exportable?: boolean;
 }
 
 interface CustomTableProps<T> {
@@ -30,7 +34,6 @@ interface CustomTableProps<T> {
   renderCell?: (row: T, key: keyof T) => React.ReactNode;
   onSelectionChange?: (selectedRows: T[]) => void;
   onDelete?: (selectedRows: T[]) => void;
-  onExport?: (selectedRows: T[]) => void;
 }
 
 const CustomTable = <T extends { [key: string]: any }>({
@@ -42,7 +45,6 @@ const CustomTable = <T extends { [key: string]: any }>({
   renderCell,
   onSelectionChange,
   onDelete,
-  onExport,
 }: CustomTableProps<T>) => {
   const startIndex = (page - 1) * limit + 1;
 
@@ -51,14 +53,14 @@ const CustomTable = <T extends { [key: string]: any }>({
 
   const toggleRow = (index: number) => {
     const newSet = new Set(selectedRows);
-    if (newSet.has(index)) newSet.delete(index);
-    else newSet.add(index);
+    newSet.has(index) ? newSet.delete(index) : newSet.add(index);
     setSelectedRows(newSet);
   };
 
   const toggleAll = () => {
-    if (allSelected) setSelectedRows(new Set());
-    else setSelectedRows(new Set(data.map((_, idx) => idx)));
+    allSelected
+      ? setSelectedRows(new Set())
+      : setSelectedRows(new Set(data.map((_, idx) => idx)));
   };
 
   useEffect(() => {
@@ -66,29 +68,40 @@ const CustomTable = <T extends { [key: string]: any }>({
       const selectedData = Array.from(selectedRows).map(idx => data[idx]);
       onSelectionChange(selectedData);
     }
-  }, [selectedRows, data, onSelectionChange]);
+  }, [selectedRows, data]);
+
+  const selectedData = Array.from(selectedRows).map(idx => data[idx]);
+
+  const exportColumns = columns
+    .filter(c => c.exportable !== false)
+    .map(c => ({ key: c.key as keyof T, label: c.label }));
+
+  /* ---------- Export Handler with Preview ---------- */
+  const handleExport = () => {
+  exportWithPreview(selectedData, exportColumns, caption || "Export");
+};
 
 
-  const selectedData = Array.from(selectedRows).map((idx) => data[idx]);
 
   return (
     <div>
-      {/* Bulk Action Buttons */}
+      {/* Bulk Buttons */}
       {selectedRows.size > 0 && (
         <div className="flex justify-end gap-2 mb-4">
           <Button
             variant="destructive"
             size="lg"
-            className="flex items-center gap-2"
             onClick={() => onDelete?.(selectedData)}
+            className="flex items-center gap-2"
           >
-            <Trash className="w-5 h-5 text-white" /> Delete ({selectedRows.size})
+            <Trash className="w-5 h-5" /> Delete ({selectedRows.size})
           </Button>
+
           <Button
             variant="default"
             size="lg"
-            className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white"
-            onClick={() => onExport?.(selectedData)}
+            className="flex items-center gap-2 bg-green-600 text-white"
+            onClick={handleExport}
           >
             <Download className="w-5 h-5 text-white" /> Export ({selectedRows.size})
           </Button>
@@ -100,13 +113,12 @@ const CustomTable = <T extends { [key: string]: any }>({
 
         <TableHeader>
           <TableRow>
-            {/* Bulk checkbox */}
             <TableHead className="w-12">
               <Checkbox checked={allSelected} onCheckedChange={toggleAll} />
             </TableHead>
 
-            {columns.map((col) => (
-              <TableHead key={String(col.key)} className={col.className || ""}>
+            {columns.map(col => (
+              <TableHead key={String(col.key)} className={col.className}>
                 {col.label}
               </TableHead>
             ))}
@@ -116,7 +128,6 @@ const CustomTable = <T extends { [key: string]: any }>({
         <TableBody>
           {data.map((row, idx) => (
             <TableRow key={idx}>
-              {/* Row checkbox */}
               <TableCell>
                 <Checkbox
                   checked={selectedRows.has(idx)}
@@ -124,24 +135,21 @@ const CustomTable = <T extends { [key: string]: any }>({
                 />
               </TableCell>
 
-              {columns.map((col) => (
-                <TableCell
-                  key={String(col.key)}
-                  className={col.cellClassName || ""}
-                >
+              {columns.map(col => (
+                <TableCell key={String(col.key)} className={col.cellClassName}>
                   {col.key === "sn"
                     ? startIndex + idx
                     : col.key === "photo"
-                      ? (
-                        <img
-                          src={row[col.key as keyof T] as unknown as string}
-                          alt={row.name ?? ""}
-                          className="w-12 h-12 rounded-full object-cover"
-                        />
-                      )
-                      : renderCell
-                        ? renderCell(row, col.key as keyof T)
-                        : (row[col.key as keyof T] as unknown as React.ReactNode)}
+                    ? (
+                      <img
+                        src={row[col.key]}
+                        alt={row.name || ""}
+                        className="w-12 h-12 rounded-full object-cover"
+                      />
+                    )
+                    : renderCell
+                    ? renderCell(row, col.key as keyof T)
+                    : row[col.key]}
                 </TableCell>
               ))}
             </TableRow>

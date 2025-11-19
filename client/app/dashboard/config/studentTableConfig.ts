@@ -11,12 +11,13 @@ export interface Student {
   actions?: any;
 }
 
+
 export const studentColumns: Column<Student>[] = [
-  { key: "sn", label: "S.N." },
-  { key: "photo", label: "Photo", className: "w-[80px]" },
-  { key: "name", label: "Name" },
-  { key: "grade", label: "Grade" },
-  { key: "rollNo", label: "Roll No" },
-  { key: "parent", label: "Parent" },
-  { key: "actions", label: "Actions", className: "text-right" },
+  { key: "photo", label: "Photo", className: "w-[80px]", exportable: false }, 
+  { key: "name", label: "Name", exportable: true },
+  { key: "grade", label: "Grade", exportable: true },
+  { key: "rollNo", label: "Roll No", exportable: true },
+  { key: "parent", label: "Parent", exportable: true },
+  { key: "actions", label: "Actions", className: "text-right", exportable: false }, //Don't export
 ];
+
