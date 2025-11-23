@@ -13,10 +13,8 @@ const StudentList = () => {
       <h1 className="text-2xl font-bold mb-4">Student Details</h1>
 
       <CustomTable
-        caption="Student Report"
         columns={studentColumns}
         data={students}
-        page={1}
         limit={5}
         renderCell={(row, key) => {
           if (key === "photo") {
@@ -35,11 +33,9 @@ const StudentList = () => {
                 <Button variant="outline" size="sm">
                   <Eye className="w-4 h-4" />
                 </Button>
-
                 <Button variant="outline" size="sm">
                   <Edit className="w-4 h-4" />
                 </Button>
-
                 <Button variant="destructive" size="sm">
                   <Trash className="w-4 h-4" />
                 </Button>

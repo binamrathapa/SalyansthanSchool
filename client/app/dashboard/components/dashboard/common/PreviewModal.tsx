@@ -103,14 +103,14 @@ const PreviewModal = <T extends { [key: string]: any }>({
         {/* Footer Buttons */}
         <div className="flex justify-end gap-2 p-4 border-t">
           <Button
-            onClick={() => exportExcel(data, columns, title)}
+            onClick={() => (console.log("data",data),exportExcel(data, columns, title))}
             className="bg-green-600 text-white"
           >
             Export Excel
           </Button>
 
           <Button
-            onClick={() => exportPDF(data, columns, title)}
+            onClick={() => console.log("data",data)}
             className="bg-blue-600 text-white"
           >
             Export PDF

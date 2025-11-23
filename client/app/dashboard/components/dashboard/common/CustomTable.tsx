@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-
 import {
   Table,
   TableBody,
@@ -13,9 +12,18 @@ import {
 } from "@/app/dashboard/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { exportExcel, exportPDF } from "@/app/dashboard/utils/exportData";
-import { exportWithPreview } from "@/app/dashboard/utils/exportWithPreview";
 import { Trash, Download } from "lucide-react";
+import { exportWithPreview } from "@/app/dashboard/utils/exportWithPreview";
+
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationPrevious,
+  PaginationNext,
+  PaginationEllipsis,
+} from "@/components/ui/pagination";
 
 export interface Column<T> {
   key: keyof T | string;
@@ -29,7 +37,6 @@ interface CustomTableProps<T> {
   caption?: string;
   columns: Column<T>[];
   data: T[];
-  page?: number;
   limit?: number;
   renderCell?: (row: T, key: keyof T) => React.ReactNode;
   onSelectionChange?: (selectedRows: T[]) => void;
@@ -40,16 +47,18 @@ const CustomTable = <T extends { [key: string]: any }>({
   caption,
   columns,
   data,
-  page = 1,
   limit = 10,
   renderCell,
   onSelectionChange,
   onDelete,
 }: CustomTableProps<T>) => {
-  const startIndex = (page - 1) * limit + 1;
-
+  const [page, setPage] = useState(1);
   const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
   const allSelected = selectedRows.size === data.length && data.length > 0;
+
+  const totalPages = Math.ceil(data.length / limit);
+  const startIndex = (page - 1) * limit;
+  const pageData = data.slice(startIndex, startIndex + limit);
 
   const toggleRow = (index: number) => {
     const newSet = new Set(selectedRows);
@@ -65,23 +74,20 @@ const CustomTable = <T extends { [key: string]: any }>({
 
   useEffect(() => {
     if (onSelectionChange) {
-      const selectedData = Array.from(selectedRows).map(idx => data[idx]);
+      const selectedData = Array.from(selectedRows).map((idx) => data[idx]);
       onSelectionChange(selectedData);
     }
   }, [selectedRows, data]);
 
-  const selectedData = Array.from(selectedRows).map(idx => data[idx]);
+  const selectedData = Array.from(selectedRows).map((idx) => data[idx]);
 
   const exportColumns = columns
-    .filter(c => c.exportable !== false)
-    .map(c => ({ key: c.key as keyof T, label: c.label }));
+    .filter((c) => c.exportable !== false)
+    .map((c) => ({ key: c.key as keyof T, label: c.label }));
 
-  /* ---------- Export Handler with Preview ---------- */
   const handleExport = () => {
-  exportWithPreview(selectedData, exportColumns, caption || "Export");
-};
-
-
+    exportWithPreview(selectedData, exportColumns, caption || "Export");
+  };
 
   return (
     <div>
@@ -103,11 +109,13 @@ const CustomTable = <T extends { [key: string]: any }>({
             className="flex items-center gap-2 bg-green-600 text-white"
             onClick={handleExport}
           >
-            <Download className="w-5 h-5 text-white" /> Export ({selectedRows.size})
+            <Download className="w-5 h-5 text-white" /> Export (
+            {selectedRows.size})
           </Button>
         </div>
       )}
 
+      {/* Table */}
       <Table>
         {caption && <TableCaption>{caption}</TableCaption>}
 
@@ -117,7 +125,7 @@ const CustomTable = <T extends { [key: string]: any }>({
               <Checkbox checked={allSelected} onCheckedChange={toggleAll} />
             </TableHead>
 
-            {columns.map(col => (
+            {columns.map((col) => (
               <TableHead key={String(col.key)} className={col.className}>
                 {col.label}
               </TableHead>
@@ -126,36 +134,95 @@ const CustomTable = <T extends { [key: string]: any }>({
         </TableHeader>
 
         <TableBody>
-          {data.map((row, idx) => (
-            <TableRow key={idx}>
+          {pageData.map((row, idx) => (
+            <TableRow key={startIndex + idx}>
               <TableCell>
                 <Checkbox
-                  checked={selectedRows.has(idx)}
-                  onCheckedChange={() => toggleRow(idx)}
+                  checked={selectedRows.has(startIndex + idx)}
+                  onCheckedChange={() => toggleRow(startIndex + idx)}
                 />
               </TableCell>
 
-              {columns.map(col => (
+              {columns.map((col) => (
                 <TableCell key={String(col.key)} className={col.cellClassName}>
-                  {col.key === "sn"
-                    ? startIndex + idx
-                    : col.key === "photo"
-                    ? (
-                      <img
-                        src={row[col.key]}
-                        alt={row.name || ""}
-                        className="w-12 h-12 rounded-full object-cover"
-                      />
-                    )
-                    : renderCell
-                    ? renderCell(row, col.key as keyof T)
-                    : row[col.key]}
+                  {col.key === "sn" ? (
+                    startIndex + idx + 1
+                  ) : col.key === "photo" ? (
+                    <img
+                      src={row[col.key]}
+                      alt={row.name || ""}
+                      className="w-12 h-12 rounded-full object-cover"
+                    />
+                  ) : renderCell ? (
+                    renderCell(row, col.key as keyof T)
+                  ) : (
+                    row[col.key]
+                  )}
                 </TableCell>
               ))}
             </TableRow>
           ))}
         </TableBody>
       </Table>
+
+
+      {/* Pagination + Info */}
+      {totalPages > 1 && (
+        <div className="mt-4 w-full flex items-center justify-between">
+          {/* Left: Pages info */}
+          <div className="text-sm text-gray-600">
+            Showing {startIndex + 1} –{" "}
+            {Math.min(startIndex + limit, data.length)} of {data.length}
+          </div>
+
+          {/* Right: Pagination */}
+          <Pagination>
+            <PaginationContent className="flex items-center gap-2">
+              {/* Prev */}
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setPage((p) => Math.max(p - 1, 1));
+                  }}
+                />
+              </PaginationItem>
+
+              {/* Page Numbers */}
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                <PaginationItem key={p}>
+                  <PaginationLink
+                    isActive={p === page}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setPage(p);
+                    }}
+                  >
+                    {p}
+                  </PaginationLink>
+                </PaginationItem>
+              ))}
+
+              {/* Optional Ellipsis */}
+              {totalPages > 5 && (
+                <PaginationItem>
+                  <PaginationEllipsis />
+                </PaginationItem>
+              )}
+
+              {/* Next */}
+              <PaginationItem>
+                <PaginationNext
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setPage((p) => Math.min(p + 1, totalPages));
+                  }}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
     </div>
   );
 };
