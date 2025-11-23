@@ -1,6 +1,8 @@
 ﻿using FluentValidation;
 using FluentValidation.AspNetCore;
+using Microsoft.AspNetCore.Http.Json;
 using Microsoft.EntityFrameworkCore;
+using SalyanthanSchool.Core.Converters;
 using SalyanthanSchool.Core.DTOs;
 using SalyanthanSchool.Core.Interfaces;
 using SalyanthanSchool.Core.Services;
@@ -20,6 +22,7 @@ builder.Services.AddDbContext<SalyanthanSchoolWebAPIContext>(options =>
 builder.Services.AddScoped<ITeacherService, TeacherService>();
 builder.Services.AddScoped<IStudentService, StudentService>();
 builder.Services.AddScoped<IRoutineService, RoutineService>();
+builder.Services.AddScoped<IGradeService, GradeService>();
 // Add more services if needed
 // builder.Services.AddScoped<IGradeService, GradeService>();
 
@@ -28,6 +31,7 @@ builder.Services.AddScoped<IRoutineService, RoutineService>();
 builder.Services.AddValidatorsFromAssemblyContaining<TeacherValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<StudentValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<RoutineValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<GradeValidator>();
 
 // ---------------------------
 // Add Controllers with JSON options
@@ -40,8 +44,14 @@ builder.Services.AddControllers()
 
         // Optional: format DateTime as yyyy-MM-dd
         options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
-        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonDateTimeConverter("yyyy-MM-dd"));
+        //options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonDateTimeConverter("yyyy-MM-dd"));
     });
+
+builder.Services.Configure<JsonOptions>(options =>
+{
+    options.SerializerOptions.Converters.Add(new JsonDateTimeConverter("yyyy-MM-dd"));
+});
+
 
 // ---------------------------
 // Add FluentValidation Auto Validation
