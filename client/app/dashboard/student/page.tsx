@@ -13,6 +13,7 @@ const StudentList = () => {
       <h1 className="text-2xl font-bold mb-4">Student Details</h1>
 
       <CustomTable
+        caption="Student Details"
         columns={studentColumns}
         data={students}
         limit={5}
