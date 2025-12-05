@@ -45,7 +45,9 @@ export const exportWithPreview = <T>(
       </div>
   </div>
 
-  <h2 style="text-align:center; margin-bottom:10px;">${title}</h2>
+   <h2 style="text-align:center; margin:10px 0; font-size:18px; font-weight:600;">
+    ${title}
+  </h2>
 
   <table style="width:100%; border-collapse: collapse; font-size:12px;">
     <thead>
@@ -88,17 +90,18 @@ export const exportWithPreview = <T>(
   `;
 
   Swal.fire({
-    title: "",
-    html: previewHTML,
-    width: "80%",
-    showCancelButton: true,
-    confirmButtonText: "Export Excel",
-    cancelButtonText: "Export PDF",
-  }).then(async (result) => {
-    if (result.isConfirmed) {
-      exportExcel(data, columns, title);
-    } else if (result.dismiss === Swal.DismissReason.cancel) {
-      await exportAsPDF(previewHTML, `${title}.pdf`);
-    }
-  });
+  title: "",
+  html: previewHTML,
+  width: "80%",
+  showCancelButton: true,
+  confirmButtonText: "Export Excel",
+  cancelButtonText: "Export PDF",
+}).then(async (result) => {
+  if (result.isConfirmed) {
+    exportExcel(previewHTML, title); 
+  } else if (result.dismiss === Swal.DismissReason.cancel) {
+    await exportPDF(previewHTML, title);
+  }
+});
+
 };

@@ -1,39 +1,31 @@
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
+export const exportPDF = async (htmlContent: string, title: string) => {
+  const printWindow = window.open("", "_blank");
+  if (!printWindow) return;
 
-/**
- * Export data to PDF file
- * @param data - Array of objects
- * @param columns - Column config [{ key, label }]
- * @param title - PDF title & file name
- */
-export const exportPDF = (
-  data: any[],
-  columns: { key: string; label: string }[],
-  title: string
-) => {
-  const doc = new jsPDF({ orientation: "landscape" });
+  printWindow.document.write(`
+    <html>
+      <head>
+        <title>${title}</title>
+        <style>
+          body { font-family: Arial, sans-serif; margin: 20px; }
+          table { border-collapse: collapse; width: 100%; font-size: 12px; }
+          th, td { border: 1px solid #ccc; padding: 4px; text-align: left; }
+          th { background-color: #f0f0f0; }
+          img { max-width: 50px; max-height: 50px; border-radius: 4px; }
+        </style>
+      </head>
+      <body>
+        ${htmlContent}
+      </body>
+    </html>
+  `);
 
-  // Title
-  doc.setFontSize(16);
-  doc.text(title, 14, 15);
+  printWindow.document.close();
+  printWindow.focus();
 
-  // Prepare table columns
-  const tableColumnHeaders = columns.map((col) => ({
-    header: col.label,
-    dataKey: col.key,
-  }));
-
-  // Generate PDF table
-  autoTable(doc, {
-    head: [tableColumnHeaders.map((c) => c.header)],
-    body: data.map((row) =>
-      tableColumnHeaders.map((c) => row[c.dataKey] || "")
-    ),
-    startY: 25,
-    styles: { fontSize: 8, cellWidth: "wrap" },
-  });
-
-  // Save PDF
-  doc.save(`${title}.pdf`);
+  // Delay to ensure images render
+  setTimeout(() => {
+    printWindow.print();
+    printWindow.close();
+  }, 500);
 };

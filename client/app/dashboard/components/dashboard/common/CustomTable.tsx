@@ -10,6 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/app/dashboard/components/ui/table";
+import SearchFilterBar from "@/components/ui/SearchFilterBar ";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Trash, Download } from "lucide-react";
@@ -54,6 +55,8 @@ const CustomTable = <T extends { [key: string]: any }>({
 }: CustomTableProps<T>) => {
   const [page, setPage] = useState(1);
   const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
+  const [search, setSearch] = useState<string>("");
+  const [filter, setFilter] = useState<string>("");
   const allSelected = selectedRows.size === data.length && data.length > 0;
 
   const totalPages = Math.ceil(data.length / limit);
@@ -114,7 +117,18 @@ const CustomTable = <T extends { [key: string]: any }>({
           </Button>
         </div>
       )}
-
+      <div className="flex justify-end mb-4 gap-2">
+        <SearchFilterBar
+          search={search}
+          filter={filter}
+          onSearchChange={setSearch}
+          onFilterChange={setFilter}
+          filterOptions={[
+            { label: "Active", value: "active" },
+            { label: "Inactive", value: "inactive" },
+          ]}
+        />
+      </div>
       {/* Table */}
       <Table>
         {caption && <TableCaption>{caption}</TableCaption>}
@@ -155,6 +169,8 @@ const CustomTable = <T extends { [key: string]: any }>({
                     />
                   ) : renderCell ? (
                     renderCell(row, col.key as keyof T)
+                  ) : col.key === "roll" ? (
+                    Number(row[col.key])
                   ) : (
                     row[col.key]
                   )}
@@ -164,7 +180,6 @@ const CustomTable = <T extends { [key: string]: any }>({
           ))}
         </TableBody>
       </Table>
-
 
       {/* Pagination + Info */}
       {totalPages > 1 && (
