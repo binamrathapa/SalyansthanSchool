@@ -10,9 +10,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/app/dashboard/components/ui/table";
-import SearchFilterBar from "@/components/ui/SearchFilterBar ";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Button } from "@/components/ui/button";
+import SearchFilterBar from "@/app/dashboard/components/ui/SearchFilterBar ";
+import { Checkbox } from "@/app/dashboard/components/ui/checkbox";
+import { Button } from "@/app/dashboard/components/ui/button";
 import { Trash, Download } from "lucide-react";
 import { exportWithPreview } from "@/app/dashboard/utils/exportWithPreview";
 
@@ -24,7 +24,7 @@ import {
   PaginationPrevious,
   PaginationNext,
   PaginationEllipsis,
-} from "@/components/ui/pagination";
+} from "@/app/dashboard/components/ui/pagination";
 
 export interface Column<T> {
   key: keyof T | string;
@@ -32,6 +32,7 @@ export interface Column<T> {
   className?: string;
   cellClassName?: string;
   exportable?: boolean;
+  render?: (row: T) => React.ReactNode; // column-level custom render
 }
 
 interface CustomTableProps<T> {
@@ -39,7 +40,7 @@ interface CustomTableProps<T> {
   columns: Column<T>[];
   data: T[];
   limit?: number;
-  renderCell?: (row: T, key: keyof T) => React.ReactNode;
+  renderCell?: (row: T, key: keyof T) => React.ReactNode; // fallback render
   onSelectionChange?: (selectedRows: T[]) => void;
   onDelete?: (selectedRows: T[]) => void;
 }
@@ -94,7 +95,7 @@ const CustomTable = <T extends { [key: string]: any }>({
 
   return (
     <div>
-      {/* Bulk Buttons */}
+      {/* Bulk Actions */}
       {selectedRows.size > 0 && (
         <div className="flex justify-end gap-2 mb-4">
           <Button
@@ -117,6 +118,8 @@ const CustomTable = <T extends { [key: string]: any }>({
           </Button>
         </div>
       )}
+
+      {/* Search & Filter */}
       <div className="flex justify-end mb-4 gap-2">
         <SearchFilterBar
           search={search}
@@ -129,6 +132,7 @@ const CustomTable = <T extends { [key: string]: any }>({
           ]}
         />
       </div>
+
       {/* Table */}
       <Table>
         {caption && <TableCaption>{caption}</TableCaption>}
@@ -159,21 +163,11 @@ const CustomTable = <T extends { [key: string]: any }>({
 
               {columns.map((col) => (
                 <TableCell key={String(col.key)} className={col.cellClassName}>
-                  {col.key === "sn" ? (
-                    startIndex + idx + 1
-                  ) : col.key === "photo" ? (
-                    <img
-                      src={row[col.key]}
-                      alt={row.name || ""}
-                      className="w-12 h-12 rounded-full object-cover"
-                    />
-                  ) : renderCell ? (
-                    renderCell(row, col.key as keyof T)
-                  ) : col.key === "roll" ? (
-                    Number(row[col.key])
-                  ) : (
-                    row[col.key]
-                  )}
+                  {col.render
+                    ? col.render(row) 
+                    : renderCell
+                    ? renderCell(row, col.key as keyof T) 
+                    : row[col.key]}{" "}
                 </TableCell>
               ))}
             </TableRow>
@@ -181,19 +175,16 @@ const CustomTable = <T extends { [key: string]: any }>({
         </TableBody>
       </Table>
 
-      {/* Pagination + Info */}
+      {/* Pagination */}
       {totalPages > 1 && (
         <div className="mt-4 w-full flex items-center justify-between">
-          {/* Left: Pages info */}
           <div className="text-sm text-gray-600">
             Showing {startIndex + 1} –{" "}
             {Math.min(startIndex + limit, data.length)} of {data.length}
           </div>
 
-          {/* Right: Pagination */}
           <Pagination>
             <PaginationContent className="flex items-center gap-2">
-              {/* Prev */}
               <PaginationItem>
                 <PaginationPrevious
                   onClick={(e) => {
@@ -203,7 +194,6 @@ const CustomTable = <T extends { [key: string]: any }>({
                 />
               </PaginationItem>
 
-              {/* Page Numbers */}
               {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
                 <PaginationItem key={p}>
                   <PaginationLink
@@ -218,14 +208,12 @@ const CustomTable = <T extends { [key: string]: any }>({
                 </PaginationItem>
               ))}
 
-              {/* Optional Ellipsis */}
               {totalPages > 5 && (
                 <PaginationItem>
                   <PaginationEllipsis />
                 </PaginationItem>
               )}
 
-              {/* Next */}
               <PaginationItem>
                 <PaginationNext
                   onClick={(e) => {

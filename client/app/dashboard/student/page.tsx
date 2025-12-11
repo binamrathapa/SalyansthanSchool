@@ -1,20 +1,38 @@
 "use client";
-
-import { Trash, Edit, Eye } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useState } from "react";
 import CustomTable from "@/app/dashboard/components/dashboard/common/CustomTable";
-
-import { studentColumns } from "@/app/dashboard/config/studentTableConfig";
+import {
+  studentColumns,
+  Student,
+  studentModalFields,
+} from "@/app/dashboard/config/studentTableConfig";
 import { students } from "@/app/dashboard/data/studentsData";
+import ReusableDetailsModal from "@/app/dashboard/components/dashboard/common/modals/ReusableDetailsModal";
 
 const StudentList = () => {
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [open, setOpen] = useState(false);
+
+  const handleView = (student: Student) => {
+    setSelectedStudent(student);
+    setOpen(true);
+  };
+
+  const handleEdit = (student: Student) => {
+    alert("Edit:");
+  };
+
+  const handleDelete = (student: Student) => {
+    console.log("Delete:", student);
+  };
+
   return (
     <div className="p-8">
       <h1 className="text-2xl font-bold mb-4">Student Details</h1>
 
       <CustomTable
         caption="Student Details"
-        columns={studentColumns}
+        columns={studentColumns(handleView, handleEdit, handleDelete)}
         data={students}
         limit={5}
         renderCell={(row, key) => {
@@ -27,25 +45,18 @@ const StudentList = () => {
               />
             );
           }
-
-          if (key === "actions") {
-            return (
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" size="sm">
-                  <Eye className="w-4 h-4" />
-                </Button>
-                <Button variant="outline" size="sm">
-                  <Edit className="w-4 h-4" />
-                </Button>
-                <Button variant="destructive" size="sm">
-                  <Trash className="w-4 h-4" />
-                </Button>
-              </div>
-            );
-          }
-
           return row[key];
         }}
+      />
+
+      <ReusableDetailsModal
+        open={open}
+        onClose={() => setOpen(false)}
+        title="Student Details"
+        subtitle={`Viewing details for ${selectedStudent?.name}`}
+        data={selectedStudent}
+        fields={studentModalFields}
+        size="lg"
       />
     </div>
   );
