@@ -8,10 +8,13 @@ import {
 } from "@/app/dashboard/config/studentTableConfig";
 import { students } from "@/app/dashboard/data/studentsData";
 import ReusableDetailsModal from "@/app/dashboard/components/dashboard/common/modals/ReusableDetailsModal";
+import ReusableEditModal from "../components/dashboard/common/modals/ReusableEditModal";
+import { showAlert, showConfirm } from "@/lib/sweet-alert";
 
 const StudentList = () => {
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [open, setOpen] = useState(false);
+  const [openEdit, setOpenEdit] = useState(false);
 
   const handleView = (student: Student) => {
     setSelectedStudent(student);
@@ -19,12 +22,44 @@ const StudentList = () => {
   };
 
   const handleEdit = (student: Student) => {
-    alert("Edit:");
+    setSelectedStudent(student);
+    setOpenEdit(true);
   };
 
   const handleDelete = (student: Student) => {
     console.log("Delete:", student);
   };
+
+  
+
+const handleUpdate = async (updated: Student) => {
+  const confirmed = await showConfirm({
+    title: "Update Student?",
+    text: "Do you want to save these changes?",
+    confirmButtonText: "Yes, Update",
+  });
+
+  if (!confirmed) {
+    showAlert({
+      type: "info",
+      title: "Cancelled",
+      message: "No changes were saved.",
+    });
+    return;
+  }
+
+  // try {
+  //   // If you later connect API:
+  //   // await updateStudentAPI(updated);
+
+  //   showSuccess("Student information updated successfully!");
+  //   setOpenEdit(false);
+
+  // } catch (err) {
+  //   showError("Failed to update student.");
+  // }
+};
+
 
   return (
     <div className="p-8">
@@ -56,6 +91,16 @@ const StudentList = () => {
         subtitle={`Viewing details for ${selectedStudent?.name}`}
         data={selectedStudent}
         fields={studentModalFields}
+        size="lg"
+      />
+
+      <ReusableEditModal<Student>
+        open={openEdit}
+        onClose={() => setOpenEdit(false)}
+        title="Edit Student"
+        data={selectedStudent}
+        fields={studentModalFields}
+        onSubmit={handleUpdate}
         size="lg"
       />
     </div>
