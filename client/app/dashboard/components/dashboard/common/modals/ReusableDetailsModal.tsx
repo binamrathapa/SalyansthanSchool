@@ -5,7 +5,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/app/dashboard/components/ui/dialog";
+} from "@/components/ui/dialog";
 import {
   X,
   Calendar,
