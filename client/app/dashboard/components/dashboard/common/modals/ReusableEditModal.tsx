@@ -5,7 +5,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/app/dashboard/components/ui/dialog";
+} from "@/components/ui/dialog";
 import {
   X,
   Calendar,
@@ -17,8 +17,9 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
-import { Input } from "@/app/dashboard/components/ui/input";
-import { Button } from "@/app/dashboard/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import BaseModal from "@/app/dashboard/components/dashboard/common/modals/BaseModal";
 
 type FieldType =
   | "text"

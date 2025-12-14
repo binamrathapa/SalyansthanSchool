@@ -1,75 +1,104 @@
 "use client";
-import { useState } from "react";
+
+import { useMemo, useState } from "react";
 import CustomTable from "@/app/dashboard/components/dashboard/common/CustomTable";
 import {
   studentColumns,
   Student,
-  studentModalFields,
 } from "@/app/dashboard/config/studentTableConfig";
 import { students } from "@/app/dashboard/data/studentsData";
-import ReusableDetailsModal from "@/app/dashboard/components/dashboard/common/modals/ReusableDetailsModal";
-import ReusableEditModal from "../components/dashboard/common/modals/ReusableEditModal";
+import StudentAddEditModal from "@/app/dashboard/student/StudentAddEditModal";
+import StudentViewModal from "@/app/dashboard/student/StudentViewModal";
 import { showAlert, showConfirm } from "@/lib/sweet-alert";
+import { StudentFormType } from "@/lib/validation/student.schema";
+import { generateFilterOptions } from "@/app/dashboard/utils/generateFilterOptions";
 
 const StudentList = () => {
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
-  const [open, setOpen] = useState(false);
-  const [openEdit, setOpenEdit] = useState(false);
+  const [editingStudent, setEditingStudent] = useState<Student | null>(null);
 
+  const [openView, setOpenView] = useState(false);
+  const [openAddEdit, setOpenAddEdit] = useState(false);
+
+  /* ✅ CORRECT: memoized filter options */
+  const statusFilterOptions = useMemo(
+    () => generateFilterOptions(students, "grade"),
+    []
+  );
+
+  // ---------------- VIEW ----------------
   const handleView = (student: Student) => {
     setSelectedStudent(student);
-    setOpen(true);
+    setOpenView(true);
   };
 
+  // ---------------- ADD ----------------
+  const handleAdd = () => {
+    setEditingStudent(null);
+    setOpenAddEdit(true);
+  };
+
+  // ---------------- EDIT ----------------
   const handleEdit = (student: Student) => {
-    setSelectedStudent(student);
-    setOpenEdit(true);
+    setEditingStudent(student);
+    setOpenAddEdit(true);
   };
 
-  const handleDelete = (student: Student) => {
-    console.log("Delete:", student);
-  };
-
-  
-
-const handleUpdate = async (updated: Student) => {
-  const confirmed = await showConfirm({
-    title: "Update Student?",
-    text: "Do you want to save these changes?",
-    confirmButtonText: "Yes, Update",
-  });
-
-  if (!confirmed) {
-    showAlert({
-      type: "info",
-      title: "Cancelled",
-      message: "No changes were saved.",
+  // ---------------- DELETE ----------------
+  const handleDelete = async (student: Student) => {
+    const confirmed = await showConfirm({
+      title: "Delete Student?",
+      text: `Are you sure you want to delete ${student.name}?`,
+      confirmButtonText: "Delete",
     });
-    return;
-  }
 
-  // try {
-  //   // If you later connect API:
-  //   // await updateStudentAPI(updated);
+    if (!confirmed) return;
 
-  //   showSuccess("Student information updated successfully!");
-  //   setOpenEdit(false);
+    console.log("Delete:", student);
+    showAlert({ type: "success", title: "Student deleted successfully!" });
+  };
 
-  // } catch (err) {
-  //   showError("Failed to update student.");
-  // }
-};
+  // ---------------- SAVE (ADD / EDIT) ----------------
+  const handleSave = async (values: StudentFormType) => {
+    console.log("All form data:", values);
+    const isEdit = Boolean(editingStudent);
 
+    const confirmed = await showConfirm({
+      title: isEdit ? "Update Student?" : "Add Student?",
+      text: isEdit
+        ? "Do you want to save these changes?"
+        : "Do you want to add this student?",
+      confirmButtonText: isEdit ? "Update" : "Add",
+    });
+
+    if (!confirmed) return;
+
+    if (isEdit) {
+      console.log("Updating:", values);
+      showAlert({ type: "success", title: "Student updated successfully!" });
+    } else {
+      console.log("Adding:", values);
+      showAlert({ type: "success", title: "Student added successfully!" });
+    }
+
+    setOpenAddEdit(false);
+  };
 
   return (
     <div className="p-8">
-      <h1 className="text-2xl font-bold mb-4">Student Details</h1>
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-2xl font-bold">Student Details</h1>
+      </div>
 
       <CustomTable
         caption="Student Details"
         columns={studentColumns(handleView, handleEdit, handleDelete)}
         data={students}
         limit={5}
+        addButtonLabel="Add Student"
+        onAddClick={handleAdd}
+        searchableKeys={["name", "parent", "grade"]}
+        filterOptions={statusFilterOptions}
         renderCell={(row, key) => {
           if (key === "photo") {
             return (
@@ -84,24 +113,19 @@ const handleUpdate = async (updated: Student) => {
         }}
       />
 
-      <ReusableDetailsModal
-        open={open}
-        onClose={() => setOpen(false)}
-        title="Student Details"
-        subtitle={`Viewing details for ${selectedStudent?.name}`}
-        data={selectedStudent}
-        fields={studentModalFields}
-        size="lg"
-      />
+      {selectedStudent && (
+        <StudentViewModal
+          isOpen={openView}
+          onClose={() => setOpenView(false)}
+          data={selectedStudent as StudentFormType}
+        />
+      )}
 
-      <ReusableEditModal<Student>
-        open={openEdit}
-        onClose={() => setOpenEdit(false)}
-        title="Edit Student"
-        data={selectedStudent}
-        fields={studentModalFields}
-        onSubmit={handleUpdate}
-        size="lg"
+      <StudentAddEditModal
+        isOpen={openAddEdit}
+        onClose={() => setOpenAddEdit(false)}
+        data={editingStudent as Partial<StudentFormType> | null}
+        onSave={handleSave}
       />
     </div>
   );

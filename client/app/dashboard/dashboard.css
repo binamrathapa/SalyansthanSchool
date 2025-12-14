@@ -24,3 +24,12 @@
   --logout-hover-bg: #fef2f2;
   --logout-hover-text: #dc2626;
 }
+
+.swal2-container {
+  pointer-events: auto !important;
+}
+
+.swal2-container.swal2-backdrop-show,
+.swal2-container.swal2-noanimation {
+  pointer-events: auto !important;
+}
