@@ -22,40 +22,23 @@ export default function StudentAddEditModal({
   const [loading, setLoading] = useState(false);
 
   const initialValues: StudentFormType = {
-    photo: data?.photo ?? "",
-    name: data?.name ?? "",
-    grade: data?.grade ?? "",
-    rollNo: data?.rollNo ?? "",
-    parent: data?.parent ?? "",
-    dob: data?.dob ?? "",
-    admissionDate: data?.admissionDate ?? "",
-    address: data?.address ?? "",
-    contact: data?.contact ?? "",
-    parentContact: data?.parentContact ?? "",
-    gender: data?.gender ?? "Male",
-  };
+  photo: data?.photo ?? "",
+  name: data?.name ?? "",
+  grade: data?.grade ?? "",
+  rollNo: data?.rollNo ?? "",
+  parent: data?.parent ?? "",
+  dob: data?.dob ?? "",
+  admissionDate: data?.admissionDate ?? "",
+  address: data?.address ?? "",
+  parentContact: data?.parentContact ?? "",
+  gender: data?.gender ?? "",
+};
+
 
   const handleSubmit = async (values: StudentFormType) => {
     try {
-      const confirmed = await showConfirm({
-        title: data ? "Update Student?" : "Add Student?",
-        text: data
-          ? "Do you want to save these changes?"
-          : "Do you want to add this student?",
-        confirmButtonText: data ? "Update" : "Add",
-      });
-
-      if (!confirmed) return;
-
       setLoading(true);
-
-      await onSave(values);
-
-      showSuccess(
-        data ? "Student updated successfully!" : "Student added successfully!"
-      );
-
-      onClose();
+      await onSave(values); // parent handles confirm
     } catch (error: any) {
       showError(error?.message || "Something went wrong.");
     } finally {
@@ -71,6 +54,7 @@ export default function StudentAddEditModal({
       size="lg"
     >
       <StudentForm
+        key={data ? "edit" : "add"}
         initialValues={initialValues}
         onSubmit={handleSubmit}
         disabled={loading}
