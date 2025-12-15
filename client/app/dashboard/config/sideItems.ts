@@ -3,7 +3,6 @@ import {
   Users,
   BookOpen,
   Calendar,
-  FileText,
   GraduationCap,
   Settings,
   School,
@@ -11,99 +10,103 @@ import {
   Bell,
   Library,
   Award,
-} from 'lucide-react';
+} from "lucide-react";
 
 export interface SidebarItem {
   name: string;
   icon: React.FC<React.SVGProps<SVGSVGElement>>;
-  children?: { name: string }[];
+  path?: string; // top-level route
+  children?: { name: string; path: string }[];
 }
 
 export const sidebarItems: SidebarItem[] = [
   {
-    name: 'Dashboard',
+    name: "Dashboard",
     icon: LayoutDashboard,
+    path: "/dashboard",
   },
   {
-    name: 'Students',
+    name: "Students",
     icon: Users,
     children: [
-      { name: 'All Students' }, 
-      { name: 'Admissions' }, 
-      { name: 'Student Records' },
-      { name: 'Promotions' }
+      { name: "All Students", path: "/dashboard/student" },
+      { name: "Admissions", path: "/dashboard/students/admissions" },
+      { name: "Student Records", path: "/dashboard/students/records" },
+      { name: "Promotions", path: "/dashboard/students/promotions" },
     ],
   },
   {
-    name: 'Teachers',
+    name: "Teachers",
     icon: GraduationCap,
     children: [
-      { name: 'Faculty' }, 
-      { name: 'Add Teacher' }, 
-      { name: 'Teacher Schedule' }
+      { name: "Faculty", path: "/dashboard/teachers/faculty" },
+      { name: "Add Teacher", path: "/dashboard/teachers/add" },
+      { name: "Teacher Schedule", path: "/dashboard/teachers/schedule" },
     ],
   },
   {
-    name: 'Academics',
+    name: "Academics",
     icon: BookOpen,
     children: [
-      { name: 'Subjects' }, 
-      { name: 'Assignments' },
-      { name: 'Examinations' },
-      { name: 'Grades' }
+      { name: "Subjects", path: "/dashboard/academics/subjects" },
+      { name: "Assignments", path: "/dashboard/academics/assignments" },
+      { name: "Examinations", path: "/dashboard/academics/exams" },
+      { name: "Grades", path: "/dashboard/academics/grades" },
     ],
   },
   {
-    name: 'Classes',
+    name: "Classes",
     icon: School,
     children: [
-      { name: 'All Classes' }, 
-      { name: 'Timetable' }, 
-      { name: 'Class Teacher' }
+      { name: "All Classes", path: "/dashboard/classes" },
+      { name: "Timetable", path: "/dashboard/classes/timetable" },
+      { name: "Class Teacher", path: "/dashboard/classes/teacher" },
     ],
   },
   {
-    name: 'Attendance',
+    name: "Attendance",
     icon: ClipboardList,
     children: [
-      { name: 'Student Attendance' }, 
-      { name: 'Staff Attendance' }, 
-      { name: 'Reports' }
+      { name: "Student Attendance", path: "/dashboard/attendance/student" },
+      { name: "Staff Attendance", path: "/dashboard/attendance/staff" },
+      { name: "Reports", path: "/dashboard/attendance/reports" },
     ],
   },
   {
-    name: 'Library',
+    name: "Library",
     icon: Library,
     children: [
-      { name: 'Books' }, 
-      { name: 'Issue/Return' }, 
-      { name: 'Members' }
+      { name: "Books", path: "/dashboard/library/books" },
+      { name: "Issue/Return", path: "/dashboard/library/issue" },
+      { name: "Members", path: "/dashboard/library/members" },
     ],
   },
   {
-    name: 'Calendar',
+    name: "Calendar",
     icon: Calendar,
     children: [
-      { name: 'School Events' }, 
-      { name: 'Holidays' }, 
-      { name: 'Exams' }
+      { name: "School Events", path: "/dashboard/calendar/events" },
+      { name: "Holidays", path: "/dashboard/calendar/holidays" },
+      { name: "Exams", path: "/dashboard/calendar/exams" },
     ],
   },
   {
-    name: 'Results',
+    name: "Results",
     icon: Award,
     children: [
-      { name: 'Report Cards' }, 
-      { name: 'Merit List' }, 
-      { name: 'Progress' }
+      { name: "Report Cards", path: "/dashboard/results/report-cards" },
+      { name: "Merit List", path: "/dashboard/results/merit-list" },
+      { name: "Progress", path: "/dashboard/results/progress" },
     ],
   },
   {
-    name: 'Notices',
+    name: "Notices",
     icon: Bell,
+    path: "/dashboard/notices",
   },
   {
-    name: 'Settings',
+    name: "Settings",
     icon: Settings,
+    path: "/dashboard/settings",
   },
 ];
