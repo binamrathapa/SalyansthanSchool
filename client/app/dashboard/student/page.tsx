@@ -53,14 +53,12 @@ const StudentList = () => {
     });
 
     if (!confirmed) return;
-
-    console.log("Delete:", student);
     showAlert({ type: "success", title: "Student deleted successfully!" });
   };
 
   // ---------------- SAVE (ADD / EDIT) ----------------
   const handleSave = async (values: StudentFormType) => {
-    console.log("All form data:", values);
+
     const isEdit = Boolean(editingStudent);
 
     const confirmed = await showConfirm({
@@ -73,13 +71,12 @@ const StudentList = () => {
 
     if (!confirmed) return;
 
-    if (isEdit) {
-      console.log("Updating:", values);
-      showAlert({ type: "success", title: "Student updated successfully!" });
-    } else {
-      console.log("Adding:", values);
-      showAlert({ type: "success", title: "Student added successfully!" });
-    }
+    showAlert({
+      type: "success",
+      title: isEdit
+        ? "Student updated successfully!"
+        : "Student added successfully!",
+    });
 
     setOpenAddEdit(false);
   };

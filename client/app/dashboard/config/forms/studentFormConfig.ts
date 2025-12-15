@@ -1,6 +1,15 @@
-// src/config/studentFormConfig.ts
 export interface StudentFieldConfig {
-  name: string;
+  name:
+    | "name"
+    | "grade"
+    | "rollNo"
+    | "parent"  
+    | "parentContact"
+    | "address"
+    | "dob"
+    | "admissionDate"
+    | "gender"
+    ;
   label: string;
   type?: "text" | "date" | "select";
   options?: string[];
@@ -11,36 +20,30 @@ export const studentFieldConfig: StudentFieldConfig[] = [
   {
     name: "name",
     label: "Name",
-    type: "text",
-    restrictInput: /[^a-zA-Z\s]/g, // only letters and spaces
+    restrictInput: /[^a-zA-Z\s]/g,
   },
   {
     name: "grade",
     label: "Grade",
-    type: "text",
   },
   {
     name: "rollNo",
     label: "Roll No",
-    type: "text",
-    restrictInput: /\D/g, // only numbers
+    restrictInput: /\D/g,
   },
   {
     name: "parent",
     label: "Parent Name",
-    type: "text",
-    restrictInput: /[^a-zA-Z\s]/g, // only letters and spaces
-  },
-  {
-    name: "address",
-    label: "Address",
-    type: "text",
+    restrictInput: /[^a-zA-Z\s]/g,
   },
   {
     name: "parentContact",
     label: "Parent Contact",
-    type: "text",
-    restrictInput: /\D/g, // only numbers
+    restrictInput: /\D/g,
+  },
+  {
+    name: "address",
+    label: "Address",
   },
   {
     name: "dob",

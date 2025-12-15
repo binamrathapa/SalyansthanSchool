@@ -37,6 +37,11 @@ export default function StudentForm({
 }: StudentFormProps) {
   const isView = mode === "view";
 
+  const handleSubmit = async (values: StudentFormType) => {
+    if (!isView && onSubmit) {
+      await onSubmit(values);
+    }
+  };
   return (
     <Formik
       initialValues={initialValues}
@@ -46,13 +51,20 @@ export default function StudentForm({
       validateOnChange
       validateOnBlur
       enableReinitialize
-      onSubmit={async (values) => {
-        console.log("Form submit values:", values);
-        if (!isView && onSubmit) await onSubmit(values);
-      }}
+      onSubmit={handleSubmit}
     >
-      {({ values, setFieldValue, touched, errors, isSubmitting }) => (
-        <Form className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {({
+        values,
+        setFieldValue,
+        touched,
+        errors,
+        isSubmitting,
+        handleSubmit,
+      }) => (
+        <Form
+          className="grid grid-cols-1 md:grid-cols-2 gap-4"
+          onSubmit={handleSubmit}
+        >
           {/* PHOTO */}
           <div className="md:col-span-2 flex flex-col items-center gap-2">
             <label className="block text-sm font-medium">Photo</label>
@@ -66,7 +78,7 @@ export default function StudentForm({
                   {!isView && (
                     <button
                       type="button"
-                      onClick={() => setFieldValue("photo", "")}
+                      onClick={() => setFieldValue("photo", undefined)}
                       className="absolute top-1 right-1 bg-white/80 rounded-full p-1"
                     >
                       <X className="w-3 h-3" />
