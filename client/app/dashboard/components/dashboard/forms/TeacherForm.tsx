@@ -5,11 +5,10 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import {
-  studentSchema,
-  StudentFormType,
-} from "@/lib/validation/student.schema";
-
-import { studentFieldConfig } from "@/app/dashboard/config/forms/studentFormConfig";
+  teacherSchema,
+  TeacherFormType,
+} from "@/lib/validation/teacher.schema";
+import { teacherFieldConfig } from "@/app/dashboard/config/forms/teacherFormConfig";
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -23,35 +22,39 @@ import {
 
 import { Upload, X, AlertCircle } from "lucide-react";
 
-interface StudentFormProps {
-  initialValues?: Partial<StudentFormType>;
-  onSubmit?: (values: StudentFormType) => Promise<void> | void;
+interface TeacherFormProps {
+  initialValues?: Partial<TeacherFormType>;
+  onSubmit?: (values: TeacherFormType) => Promise<void> | void;
   submitLabel?: string;
   disabled?: boolean;
   mode?: "add" | "edit" | "view";
 }
 
 /* DEFAULT VALUES (important for ADD) */
-const DEFAULT_VALUES: StudentFormType = {
+const DEFAULT_VALUES: TeacherFormType = {
   photo: "",
   name: "",
-  grade: "",
-  rollNo: "",
-  parent: "",
+  subject: "",
+  qualification: "",
+  designation: "",
+  experience: "",
   dob: "",
-  admissionDate: "",
+  joiningDate: "",
   address: "",
-  parentContact: "",
+  contact: "",
+  panNumber: "",
+  nidNumber: "",
+  citizenshipNumber: "",
   gender: "Male",
 };
 
-export default function StudentForm({
+export default function TeacherForm({
   initialValues,
   onSubmit,
   submitLabel = "Save",
   disabled = false,
   mode = "add",
-}: StudentFormProps) {
+}: TeacherFormProps) {
   const isView = mode === "view";
 
   const {
@@ -61,14 +64,14 @@ export default function StudentForm({
     setValue,
     formState: { errors, isSubmitting },
     watch,
-  } = useForm<StudentFormType>({
-    resolver: isView ? undefined : zodResolver(studentSchema),
+  } = useForm<TeacherFormType>({
+    resolver: isView ? undefined : zodResolver(teacherSchema),
     defaultValues: { ...DEFAULT_VALUES, ...initialValues },
   });
 
   const photo = watch("photo");
 
-  const submitHandler = async (values: StudentFormType) => {
+  const submitHandler = async (values: TeacherFormType) => {
     if (!isView && onSubmit) {
       await onSubmit(values);
     }
@@ -133,77 +136,79 @@ export default function StudentForm({
       </div>
 
       {/* FIELDS */}
-      {studentFieldConfig.map(({ name, label, type, restrictInput }) => {
-        if (name === "gender") {
+      {teacherFieldConfig.map(
+        ({ name, label, type, restrictInput, options }) => {
+          if (name === "gender") {
+            return (
+              <div key={name}>
+                <label className="text-sm font-medium">{label}</label>
+
+                <Controller
+                  control={control}
+                  name="gender"
+                  render={({ field }) => (
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      disabled={isView}
+                    >
+                      <SelectTrigger
+                        className={`w-full ${
+                          errors.gender ? "border-red-500" : ""
+                        }`}
+                      >
+                        <SelectValue placeholder="Select gender" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Male">Male</SelectItem>
+                        <SelectItem value="Female">Female</SelectItem>
+                        <SelectItem value="Other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+
+                {errors.gender && (
+                  <p className="text-red-500 text-sm flex items-center gap-1 mt-1">
+                    <AlertCircle className="w-4 h-4" />
+                    {errors.gender.message}
+                  </p>
+                )}
+              </div>
+            );
+          }
+
           return (
             <div key={name}>
               <label className="text-sm font-medium">{label}</label>
 
-              <Controller
-                control={control}
-                name="gender"
-                render={({ field }) => (
-                  <Select
-                    value={field.value}
-                    onValueChange={field.onChange}
-                    disabled={isView}
-                  >
-                    <SelectTrigger
-                      className={`w-full ${
-                        errors.gender ? "border-red-500" : ""
-                      }`}
-                    >
-                      <SelectValue placeholder="Select gender" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Male">Male</SelectItem>
-                      <SelectItem value="Female">Female</SelectItem>
-                      <SelectItem value="Other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                )}
+              <Input
+                {...register(name as keyof TeacherFormType)}
+                type={type || "text"}
+                disabled={isView}
+                onInput={(e) => {
+                  if (restrictInput) {
+                    e.currentTarget.value = e.currentTarget.value.replace(
+                      restrictInput,
+                      ""
+                    );
+                  }
+                }}
+                className={
+                  errors[name as keyof TeacherFormType] ? "border-red-500" : ""
+                }
               />
 
-              {errors.gender && (
+              {errors[name as keyof TeacherFormType] && (
                 <p className="text-red-500 text-sm flex items-center gap-1 mt-1">
                   <AlertCircle className="w-4 h-4" />
-                  {errors.gender.message}
+                  {errors[name as keyof TeacherFormType]?.message as string}
                 </p>
               )}
             </div>
           );
         }
-
-        return (
-          <div key={name}>
-            <label className="text-sm font-medium">{label}</label>
-
-            <Input
-              {...register(name as keyof StudentFormType)}
-              type={type || "text"}
-              disabled={isView}
-              onInput={(e) => {
-                if (restrictInput) {
-                  e.currentTarget.value = e.currentTarget.value.replace(
-                    restrictInput,
-                    ""
-                  );
-                }
-              }}
-              className={
-                errors[name as keyof StudentFormType] ? "border-red-500" : ""
-              }
-            />
-
-            {errors[name as keyof StudentFormType] && (
-              <p className="text-red-500 text-sm flex items-center gap-1 mt-1">
-                <AlertCircle className="w-4 h-4" />
-                {errors[name as keyof StudentFormType]?.message as string}
-              </p>
-            )}
-          </div>
-        );
-      })}
+      )}
 
       {/* ACTIONS */}
       {!isView && (

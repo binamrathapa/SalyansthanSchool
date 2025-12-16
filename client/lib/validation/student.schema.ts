@@ -27,7 +27,7 @@ export const studentSchema = z.object({
     .min(1, "Admission date is required")
     .refine((val) => !isNaN(Date.parse(val)), "Invalid date"),
 
-  address: z.string().min(5, "Address is required"),
+  address: z.string().min(3, "Address is required"),
 
   // contact: z
   // .string()

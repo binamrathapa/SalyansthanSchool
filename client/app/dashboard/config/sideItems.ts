@@ -10,6 +10,7 @@ import {
   Bell,
   Library,
   Award,
+
 } from "lucide-react";
 
 export interface SidebarItem {
@@ -39,11 +40,11 @@ export const sidebarItems: SidebarItem[] = [
     name: "Teachers",
     icon: GraduationCap,
     children: [
-      { name: "Faculty", path: "/dashboard/teachers/faculty" },
-      { name: "Add Teacher", path: "/dashboard/teachers/add" },
-      { name: "Teacher Schedule", path: "/dashboard/teachers/schedule" },
+      { name: "All Teachers", path: "/dashboard/teacher" },
+      { name: "Teacher Schedule", path: "/dashboard/teacher/schedule" },
     ],
   },
+
   {
     name: "Academics",
     icon: BookOpen,
@@ -99,6 +100,17 @@ export const sidebarItems: SidebarItem[] = [
       { name: "Progress", path: "/dashboard/results/progress" },
     ],
   },
+  {
+  name: "Accounts",
+  icon: ClipboardList, // or another money/finance icon
+  children: [
+    { name: "Fee Collection", path: "/dashboard/accounts/fees" },
+    { name: "Payments Received", path: "/dashboard/accounts/payments" },
+    { name: "Expenses", path: "/dashboard/accounts/expenses" },
+    { name: "Reports", path: "/dashboard/accounts/reports" },
+    { name: "Bank / Transactions", path: "/dashboard/accounts/bank" },
+  ],
+},
   {
     name: "Notices",
     icon: Bell,

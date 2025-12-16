@@ -5,7 +5,7 @@ import CustomTable from "@/app/dashboard/components/dashboard/common/CustomTable
 import {
   studentColumns,
   Student,
-} from "@/app/dashboard/config/studentTableConfig";
+} from "@/app/dashboard/config/table/studentTableConfig";
 import { students } from "@/app/dashboard/data/studentsData";
 import StudentAddEditModal from "@/app/dashboard/student/StudentAddEditModal";
 import StudentViewModal from "@/app/dashboard/student/StudentViewModal";

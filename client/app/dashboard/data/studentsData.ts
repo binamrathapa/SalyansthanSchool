@@ -1,4 +1,4 @@
-import { Student } from "@/app/dashboard/config/studentTableConfig";
+import { Student } from "@/app/dashboard/config/table/studentTableConfig";
 
 const images = ["/students/student1.jpg", "/students/student2.jpg"];
 

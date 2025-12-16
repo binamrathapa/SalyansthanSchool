@@ -33,3 +33,68 @@
 .swal2-container.swal2-noanimation {
   pointer-events: auto !important;
 }
+
+
+.fc .fc-event {
+  border-radius: 10px;
+  border: none;
+  padding: 0;
+}
+
+.fc-event-custom {
+  padding: 4px 6px;
+  border-radius: 8px;
+  color: white;
+  line-height: 1.3;
+}
+
+.fc-timegrid-slot {
+  border-color: #f1f5f9;
+}
+
+.fc .fc-day-today {
+  background-color: #f8fafc !important;
+}
+
+/* Prevent overflow globally */
+.fc .fc-event {
+  overflow: hidden;
+  border-radius: 10px;
+  border: none;
+}
+
+/* Base event */
+.fc-event-custom {
+  padding: 4px 6px;
+  border-radius: 8px;
+  color: white;
+  line-height: 1.2;
+  overflow: hidden;
+}
+
+/* Subject text */
+.fc-event-custom .subject {
+  font-weight: 600;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Teacher text */
+.fc-event-custom .teacher {
+  font-size: 0.65rem;
+  opacity: 0.85;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Compact events (short time slots) */
+.fc-event-compact {
+  padding: 2px 4px;
+}
+
+.fc-event-compact .subject {
+  font-size: 0.65rem;
+}
