@@ -23,6 +23,8 @@ import {
   PaginationNext,
 } from "@/components/ui/pagination";
 
+import { Download, Trash } from "lucide-react";
+
 export interface Column<T> {
   key: keyof T | string;
   label: string;
@@ -102,13 +104,23 @@ const CustomTable = <T extends Record<string, any>>({
     setSelectedRows(newSet);
   };
 
+  // allSelected should only consider currently filtered data
   const allSelected =
-    selectedRows.size === filteredData.length && filteredData.length > 0;
+    filteredData.length > 0 &&
+    filteredData.every((_, i) => selectedRows.has(i));
 
   const toggleAll = () => {
-    allSelected
-      ? setSelectedRows(new Set())
-      : setSelectedRows(new Set(filteredData.map((_, i) => i)));
+    if (allSelected) {
+      // Deselect all filtered rows
+      const newSet = new Set(selectedRows);
+      filteredData.forEach((_, i) => newSet.delete(i));
+      setSelectedRows(newSet);
+    } else {
+      // Select all filtered rows
+      const newSet = new Set(selectedRows);
+      filteredData.forEach((_, i) => newSet.add(i));
+      setSelectedRows(newSet);
+    }
   };
 
   const selectedData = Array.from(selectedRows).map((idx) => filteredData[idx]);
@@ -127,6 +139,29 @@ const CustomTable = <T extends Record<string, any>>({
 
   return (
     <div>
+      {/* Bulk Actions */}
+      {selectedRows.size > 0 && (
+        <div className="flex justify-end gap-2 mb-4">
+          <Button
+            variant="destructive"
+            size="lg"
+            onClick={() => onDelete?.(selectedData)}
+            className="flex items-center gap-2"
+          >
+            <Trash className="w-5 h-5" /> Delete ({selectedRows.size})
+          </Button>
+
+          <Button
+            variant="default"
+            size="lg"
+              className="flex items-center gap-2 bg-[var(--brand-600)] hover:bg-[var(--brand-700)] text-white transition-colors duration-200"
+            onClick={handleExport}
+          >
+            <Download className="w-5 h-5 text-white" /> Export (
+            {selectedRows.size})
+          </Button>
+        </div>
+      )}
       {/* Search / Filter */}
       <SearchFilterBar
         search={search}
@@ -143,15 +178,12 @@ const CustomTable = <T extends Record<string, any>>({
       <div className="flex justify-end mb-4">
         <Button
           onClick={onAddClick}
-          className="
-    bg-[var(--brand-600)]
-    hover:bg-[var(--brand-700)]
-    text-white  mb-4
-  "
+          className="bg-[var(--brand-600)] hover:bg-[var(--brand-700)] text-white mb-4"
         >
           {addButtonLabel ?? "Add"}
         </Button>
       </div>
+
       {/* Table */}
       <Table>
         {caption && <TableCaption>{caption}</TableCaption>}

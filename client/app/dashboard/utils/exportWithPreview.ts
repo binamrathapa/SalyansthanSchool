@@ -25,7 +25,7 @@ export const exportWithPreview = <T>(
     margin-bottom:20px;
     text-align:center;
   ">
-      <img src="${logoUrl}" style="width:80px; height:80px; margin-bottom:10px;" />
+      <img src="${logoUrl}" style="width:80px; height:80px; margin: 0 auto 10px auto;" />
 
       <div style="font-style:italic; font-size:14px; margin:2px 0;">
         “Dedicated to Excellence”
@@ -90,18 +90,18 @@ export const exportWithPreview = <T>(
   `;
 
   Swal.fire({
-  title: "",
-  html: previewHTML,
-  width: "80%",
-  showCancelButton: true,
-  confirmButtonText: "Export Excel",
-  cancelButtonText: "Export PDF",
-}).then(async (result) => {
-  if (result.isConfirmed) {
-    exportExcel(previewHTML, title); 
-  } else if (result.dismiss === Swal.DismissReason.cancel) {
-    await exportPDF(previewHTML, title);
-  }
-});
-
+    title: "",
+    html: previewHTML,
+    width: "80%",
+    showCloseButton: true, // ✅ Close (X) button enabled
+    showCancelButton: true,
+    confirmButtonText: "Export Excel",
+    cancelButtonText: "Export PDF",
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      exportExcel(previewHTML, title);
+    } else if (result.dismiss === Swal.DismissReason.cancel) {
+      await exportPDF(previewHTML, title);
+    }
+  });
 };
