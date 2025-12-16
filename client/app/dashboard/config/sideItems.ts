@@ -102,13 +102,24 @@ export const sidebarItems: SidebarItem[] = [
   },
   {
   name: "Accounts",
-  icon: ClipboardList, // or another money/finance icon
+  icon: ClipboardList,
   children: [
-    { name: "Fee Collection", path: "/dashboard/accounts/fees" },
-    { name: "Payments Received", path: "/dashboard/accounts/payments" },
+    { name: "Dashboard", path: "/dashboard/accounts" },
+
+    // Billing / Cash Counter
+    { name: "Cash Counter", path: "/dashboard/account/cash-counter" },
+    { name: "Fee Collection", path: "/dashboard/account/fees" },
+
+    // Income & Expense
+    { name: "Income", path: "/dashboard/accounts/income" },
     { name: "Expenses", path: "/dashboard/accounts/expenses" },
-    { name: "Reports", path: "/dashboard/accounts/reports" },
-    { name: "Bank / Transactions", path: "/dashboard/accounts/bank" },
+
+    // Ledger & Setup
+    { name: "Ledger", path: "/dashboard/account/ledger" },
+    { name: "Account Setup", path: "/dashboard/account/setup" },
+
+    // Reports
+    { name: "Reports", path: "/dashboard/account/reports" },
   ],
 },
   {
