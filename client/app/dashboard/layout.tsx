@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import "./dashboard.css";
-import Sidebar from './components/dashboard/Sidebar';
-import DashboardHeader from './components/dashboard/DashboardHeader';
+import Sidebar from "./components/dashboard/Sidebar";
+import DashboardHeader from "./components/dashboard/DashboardHeader";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -11,26 +11,30 @@ interface DashboardLayoutProps {
   pageDescription?: string;
 }
 
-export default function DashboardLayout({ 
-  children, 
+export default function DashboardLayout({
+  children,
   pageTitle,
-  pageDescription 
+  pageDescription,
 }: DashboardLayoutProps) {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      {/* Sidebar */}
-      <div className={`${isSidebarOpen ? 'w-64' : 'w-0'} transition-all duration-300`}>
-        <Sidebar />
-      </div>
-      
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col">
+    <div className="flex h-screen w-full overflow-hidden bg-gray-50">
+      {/* Sidebar (NO WIDTH HERE) */}
+      <Sidebar
+        isCollapsed={isSidebarCollapsed}
+        setIsCollapsed={setIsSidebarCollapsed}
+      />
+
+      {/* Main Content */}
+      <div className="flex flex-1 flex-col overflow-hidden">
         {/* Header */}
-        <DashboardHeader 
-          isSidebarOpen={isSidebarOpen}
-          setIsSidebarOpen={setIsSidebarOpen}
+        <DashboardHeader
+          isSidebarOpen={!isSidebarCollapsed}
+          setIsSidebarOpen={() =>
+            setIsSidebarCollapsed((prev) => !prev)
+          }
           pageTitle={pageTitle}
           pageDescription={pageDescription}
         />

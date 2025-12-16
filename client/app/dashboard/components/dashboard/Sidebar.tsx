@@ -2,12 +2,23 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { ChevronDown, ChevronRight, LogOut, School } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronRight,
+  LogOut,
+  School,
+  PanelLeft,
+} from "lucide-react";
 import { sidebarItems, SidebarItem } from "@/app/dashboard/config/sideItems";
 import { usePathname } from "next/navigation";
 
-export default function Sidebar() {
-  const pathname = usePathname(); // current route
+interface SidebarProps {
+  isCollapsed: boolean;
+  setIsCollapsed: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+export default function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
+  const pathname = usePathname();
   const [openAccordion, setOpenAccordion] = useState<number | null>(null);
 
   const toggleAccordion = (index: number) => {
@@ -17,10 +28,25 @@ export default function Sidebar() {
   const isActive = (path?: string) => path && pathname.startsWith(path);
 
   return (
-    <div className="h-screen w-64 bg-[var(--sidebar-bg)] border-r border-[var(--sidebar-border)] flex flex-col">
+    <div
+      className={`h-screen bg-[var(--sidebar-bg)] border-r border-[var(--sidebar-border)] flex flex-col transition-all duration-300 ${
+        isCollapsed ? "w-20" : "w-64"
+      }`}
+    >
       {/* Header */}
-      <div className="p-6 border-b border-[var(--brand-200)] bg-[var(--brand-50)]">
-        <div className="flex items-center gap-3">
+      <div className="relative p-6 border-b border-[var(--brand-200)] bg-[var(--brand-50)]">
+        <button
+          onClick={() => setIsCollapsed((prev) => !prev)}
+          className="absolute -right-3 top-6 bg-white border rounded-full p-1 shadow"
+        >
+          <PanelLeft className="h-4 w-4" />
+        </button>
+
+        <div
+          className={`flex items-center ${
+            isCollapsed ? "justify-center" : "gap-3"
+          }`}
+        >
           <div
             className="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg"
             style={{
@@ -30,14 +56,17 @@ export default function Sidebar() {
           >
             <School className="h-6 w-6 text-white" />
           </div>
-          <div>
-            <h1 className="text-lg font-bold text-[var(--text-default)] leading-none">
-              Salyansthan School
-            </h1>
-            <p className="text-xs font-medium text-[var(--brand-600)]">
-              Education Excellence
-            </p>
-          </div>
+
+          {!isCollapsed && (
+            <div>
+              <h1 className="text-lg font-bold text-[var(--text-default)] leading-none">
+                Salyansthan School
+              </h1>
+              <p className="text-xs font-medium text-[var(--brand-600)]">
+                Education Excellence
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -49,12 +78,12 @@ export default function Sidebar() {
               {item.children ? (
                 <>
                   <button
-                    onClick={() => toggleAccordion(idx)}
-                    className={`flex items-center w-full p-3 rounded-lg justify-between ${
+                    onClick={() => !isCollapsed && toggleAccordion(idx)}
+                    className={`flex items-center w-full p-3 rounded-lg transition-all duration-200 ${
                       openAccordion === idx
                         ? "bg-[var(--brand-50)] text-[var(--brand-700)] border border-[var(--brand-200)]"
                         : "text-[var(--text-default)] hover:bg-[var(--brand-50)] hover:text-[var(--brand-600)]"
-                    }`}
+                    } ${isCollapsed ? "justify-center" : "justify-between"}`}
                   >
                     <div className="flex items-center gap-3">
                       <item.icon
@@ -64,18 +93,24 @@ export default function Sidebar() {
                             : "text-[var(--text-muted)]"
                         }`}
                       />
-                      <span className="font-medium">{item.name}</span>
+
+                      {!isCollapsed && (
+                        <span className="font-medium">{item.name}</span>
+                      )}
                     </div>
-                    <ChevronDown
-                      className={`h-4 w-4 transition-all duration-200 ${
-                        openAccordion === idx
-                          ? "rotate-180 text-[var(--brand-600)]"
-                          : "text-[var(--text-muted)]"
-                      }`}
-                    />
+
+                    {!isCollapsed && (
+                      <ChevronDown
+                        className={`h-4 w-4 transition-all duration-200 ${
+                          openAccordion === idx
+                            ? "rotate-180 text-[var(--brand-600)]"
+                            : "text-[var(--text-muted)]"
+                        }`}
+                      />
+                    )}
                   </button>
 
-                  {openAccordion === idx && (
+                  {!isCollapsed && openAccordion === idx && (
                     <ul className="mt-1 ml-4 space-y-1">
                       {item.children.map((child) => (
                         <li key={child.name}>
@@ -98,11 +133,11 @@ export default function Sidebar() {
               ) : (
                 <Link
                   href={item.path || "#"}
-                  className={`flex items-center gap-3 w-full p-3 rounded-lg transition-all duration-200 ${
+                  className={`flex items-center w-full p-3 rounded-lg transition-all duration-200 ${
                     isActive(item.path)
-                      ? "bg-[var(--brand-50)] text-[var(--brand-700)] border border-[var(--brand-200)] font-medium"
+                      ? "bg-[var(--brand-50)] text-[var(--brand-700)] border border-[var(--brand-200)]"
                       : "text-[var(--text-default)] hover:bg-[var(--brand-50)] hover:text-[var(--brand-600)]"
-                  }`}
+                  } ${isCollapsed ? "justify-center" : "gap-3"}`}
                 >
                   <item.icon
                     className={`h-5 w-5 ${
@@ -111,7 +146,10 @@ export default function Sidebar() {
                         : "text-[var(--text-muted)]"
                     }`}
                   />
-                  <span className="font-medium">{item.name}</span>
+
+                  {!isCollapsed && (
+                    <span className="font-medium">{item.name}</span>
+                  )}
                 </Link>
               )}
             </li>
@@ -121,9 +159,13 @@ export default function Sidebar() {
 
       {/* Logout */}
       <div className="p-4 border-t border-[var(--sidebar-border)]">
-        <button className="flex items-center gap-3 w-full p-3 rounded-lg text-[var(--text-default)] hover:bg-[var(--logout-hover-bg)] hover:text-[var(--logout-hover-text)] transition-all duration-200">
+        <button
+          className={`flex items-center w-full p-3 rounded-lg transition-all duration-200 hover:bg-[var(--logout-hover-bg)] hover:text-[var(--logout-hover-text)] ${
+            isCollapsed ? "justify-center" : "gap-3"
+          }`}
+        >
           <LogOut className="h-5 w-5" />
-          <span className="font-medium">Log Out</span>
+          {!isCollapsed && <span className="font-medium">Log Out</span>}
         </button>
       </div>
     </div>
