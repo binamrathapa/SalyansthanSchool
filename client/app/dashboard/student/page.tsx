@@ -56,9 +56,27 @@ const StudentList = () => {
     showAlert({ type: "success", title: "Student deleted successfully!" });
   };
 
+  // ---------------- BULK DELETE ----------------
+  const handleBulkDelete = async (selectedStudents: Student[]) => {
+    const confirmed = await showConfirm({
+      title: "Delete Students?",
+      text: `Are you sure you want to delete ${selectedStudents.length} students?`,
+      confirmButtonText: "Delete",
+    });
+
+    if (!confirmed) return;
+
+    // 👉 API call later
+    // await deleteStudents(selectedStudents.map(s => s.id));
+
+    showAlert({
+      type: "success",
+      title: `${selectedStudents.length} students deleted successfully!`,
+    });
+  };
+
   // ---------------- SAVE (ADD / EDIT) ----------------
   const handleSave = async (values: StudentFormType) => {
-
     const isEdit = Boolean(editingStudent);
 
     const confirmed = await showConfirm({
@@ -94,6 +112,8 @@ const StudentList = () => {
         limit={5}
         addButtonLabel="Add Student"
         onAddClick={handleAdd}
+        showDelete 
+        onDelete={handleBulkDelete}
         searchableKeys={["name", "parent", "grade"]}
         filterOptions={statusFilterOptions}
         renderCell={(row, key) => {

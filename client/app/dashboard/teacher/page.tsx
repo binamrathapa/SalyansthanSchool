@@ -60,6 +60,25 @@ const TeacherList = () => {
     });
   };
 
+  // ---------------- BULK DELETE ----------------
+  const handleBulkDelete = async (selectedTeachers: Teacher[]) => {
+    const confirmed = await showConfirm({
+      title: "Delete Teachers?",
+      text: `Are you sure you want to delete ${selectedTeachers.length} teachers?`,
+      confirmButtonText: "Delete",
+    });
+
+    if (!confirmed) return;
+
+    // 👉 Call API here (later)
+    // await deleteTeachers(selectedTeachers.map(t => t.id));
+
+    showAlert({
+      type: "success",
+      title: `${selectedTeachers.length} teachers deleted successfully!`,
+    });
+  };
+
   // ---------------- SAVE (ADD / EDIT) ----------------
   const handleSave = async (values: TeacherFormType) => {
     const isEdit = Boolean(editingTeacher);
@@ -97,6 +116,8 @@ const TeacherList = () => {
         limit={5}
         addButtonLabel="Add Teacher"
         onAddClick={handleAdd}
+        showDelete
+        onDelete={handleBulkDelete}
         searchableKeys={["name", "designation", "subject"]}
         filterOptions={departmentFilterOptions}
         renderCell={(row, key) => {

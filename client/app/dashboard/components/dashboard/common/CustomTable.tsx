@@ -31,7 +31,7 @@ export interface Column<T> {
   className?: string;
   cellClassName?: string;
   exportable?: boolean;
-  render?: (row: T) => React.ReactNode;
+  render?: (row: T, index: number) => React.ReactNode;
 }
 
 interface CustomTableProps<T> {
@@ -43,6 +43,7 @@ interface CustomTableProps<T> {
 
   onSelectionChange?: (rows: T[]) => void;
   onDelete?: (rows: T[]) => void;
+  showDelete?: boolean;
 
   addButtonLabel?: string;
   onAddClick?: () => void;
@@ -59,6 +60,7 @@ const CustomTable = <T extends Record<string, any>>({
   renderCell,
   onSelectionChange,
   onDelete,
+  showDelete = false,
   addButtonLabel,
   onAddClick,
   searchableKeys = [],
@@ -142,24 +144,28 @@ const CustomTable = <T extends Record<string, any>>({
       {/* Bulk Actions */}
       {selectedRows.size > 0 && (
         <div className="flex justify-end gap-2 mb-4">
-          <Button
-            variant="destructive"
-            size="lg"
-            onClick={() => onDelete?.(selectedData)}
-            className="flex items-center gap-2"
-          >
-            <Trash className="w-5 h-5" /> Delete ({selectedRows.size})
-          </Button>
+          {showDelete && onDelete && (
+            <Button
+              variant="destructive"
+              size="lg"
+              onClick={() => onDelete(selectedData)}
+              className="flex items-center gap-2"
+            >
+              <Trash className="w-5 h-5" /> Delete ({selectedRows.size})
+            </Button>
+          )}
 
-          <Button
-            variant="default"
-            size="lg"
+          {
+            <Button
+              variant="default"
+              size="lg"
               className="flex items-center gap-2 bg-[var(--brand-600)] hover:bg-[var(--brand-700)] text-white transition-colors duration-200"
-            onClick={handleExport}
-          >
-            <Download className="w-5 h-5 text-white" /> Export (
-            {selectedRows.size})
-          </Button>
+              onClick={handleExport}
+            >
+              <Download className="w-5 h-5 text-white" /> Export (
+              {selectedRows.size})
+            </Button>
+          }
         </div>
       )}
       {/* Search / Filter */}
@@ -175,14 +181,16 @@ const CustomTable = <T extends Record<string, any>>({
       />
 
       {/* Add Button */}
-      <div className="flex justify-end mb-4">
-        <Button
-          onClick={onAddClick}
-          className="bg-[var(--brand-600)] hover:bg-[var(--brand-700)] text-white mb-4"
-        >
-          {addButtonLabel ?? "Add"}
-        </Button>
-      </div>
+      {addButtonLabel && onAddClick && (
+        <div className="flex justify-end mb-4">
+          <Button
+            onClick={onAddClick}
+            className="flex items-center gap-2 bg-[var(--brand-600)] hover:bg-[var(--brand-700)] text-white transition-colors duration-200"
+          >
+            {addButtonLabel}
+          </Button>
+        </div>
+      )}
 
       {/* Table */}
       <Table>
@@ -213,7 +221,7 @@ const CustomTable = <T extends Record<string, any>>({
                   {col.key === "sn"
                     ? startIndex + idx + 1
                     : col.render
-                    ? col.render(row)
+                    ? col.render(row, startIndex + idx)
                     : renderCell
                     ? renderCell(row, col.key as keyof T)
                     : row[col.key]}
