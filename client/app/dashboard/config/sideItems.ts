@@ -104,12 +104,11 @@ export const sidebarItems: SidebarItem[] = [
   name: "Accounts",
   icon: ClipboardList,
   children: [
-    { name: "Dashboard", path: "/dashboard/accounts" },
+    { name: "Dashboard", path: "/dashboard/account" },
 
     // Billing / Cash Counter
     { name: "Cash Counter", path: "/dashboard/account/cash-counter" },
     { name: "Fee Collection", path: "/dashboard/account/fees" },
-
     // Income & Expense
     { name: "Income", path: "/dashboard/accounts/income" },
     { name: "Expenses", path: "/dashboard/accounts/expenses" },
