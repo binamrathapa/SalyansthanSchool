@@ -40,7 +40,7 @@ builder.Services.AddControllers()
 
         // Optional: format DateTime as yyyy-MM-dd
         options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
-        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonDateTimeConverter("yyyy-MM-dd"));
+        //options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonDateTimeConverter("yyyy-MM-dd"));
     });
 
 // ---------------------------
