@@ -21,5 +21,6 @@ namespace SalyanthanSchool.WebAPI.Data
         public DbSet<SalyanthanSchool.Core.Entities.Grade> Grades { get; set; } = default!;
         public DbSet<SalyanthanSchool.Core.Entities.TeacherP> TeacherP { get; set; } = default!;
         public DbSet<SalyanthanSchool.Core.Entities.NeA> NeA { get; set; } = default!;
+        public DbSet<SalyanthanSchool.Core.Entities.Hagu> Hagu { get; set; } = default!;
     }
 }
