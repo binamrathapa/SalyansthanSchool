@@ -1,25 +1,24 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SalyanthanSchool.Core.Entities
 {
-    [Table("Grade")]
+    [Table("grade")]
     public class Grade
     {
-        [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        [Column("Id")]
-        public int Id{get; set;}
+        [Column("id")]
+        public int Id { get; set; }
 
-        [Required (ErrorMessage = "Gradename is required")]
-        [Column("GradeName")]
-        [StringLength(50,MinimumLength = 3, ErrorMessage ="GradeName cannot empty")]
-        public string Name{get; set;}
+        [Column("name")]
+        public string Name { get; set; } = null!;
 
+        [Column("is_active")]
+        public bool IsActive { get; set; } = true;
+
+        [Column("created_at")]
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        [Column("updated_at")]
+        public DateTime? UpdatedAt { get; set; }
     }
 }
