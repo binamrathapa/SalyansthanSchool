@@ -1,18 +1,26 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-using SalyanthanSchool.Core.DTOs;
+﻿using SalyanthanSchool.Core.DTOs;
+using SalyanthanSchool.Core.DTOs.Grade;
 
 namespace SalyanthanSchool.Core.Interfaces
 {
     public interface IGradeService
     {
-        Task<IEnumerable<GradeDto>> GetAllAsync();
-        Task<GradeDto?> GetByIdAsync(int id);
-        Task<GradeDto> CreateAsync(GradeDto dto);
-        Task<GradeDto?> UpdateAsync(int id, GradeDto dto);
-        Task<bool> DeleteAsync(int id);
+        // Single GET (Paging + Search + Filter + Sort)
+        Task<PagedResult<GradeResponseDto>> GetAsync(
+            GradeQueryParameter query);
 
-        // pagination
-        Task<PagedResult<GradeDto>> GetPagedAsync(int pageNumber, int pageSize = 30);
+        // GET by ID
+        Task<GradeResponseDto?> GetByIdAsync(int id);
+
+        // CREATE
+        Task<GradeResponseDto> CreateAsync(GradeRequestDto dto);
+
+        // UPDATE
+        Task<GradeResponseDto?> UpdateAsync(
+            int id,
+            GradeRequestDto dto);
+
+        // DELETE
+        Task<bool> DeleteAsync(int id);
     }
 }

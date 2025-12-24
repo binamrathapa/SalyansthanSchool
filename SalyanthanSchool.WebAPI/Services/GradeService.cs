@@ -1,13 +1,11 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using SalyanthanSchool.Core.DTOs;
+using SalyanthanSchool.Core.DTOs.Grade;
 using SalyanthanSchool.Core.Entities;
 using SalyanthanSchool.Core.Interfaces;
 using SalyanthanSchool.WebAPI.Data;
 
-namespace SalyanthanSchool.Core.Services
+namespace SalyanthanSchool.Infrastructure.Services
 {
     public class GradeService : IGradeService
     {
@@ -18,86 +16,143 @@ namespace SalyanthanSchool.Core.Services
             _context = context;
         }
 
-        public async Task<IEnumerable<GradeDto>> GetAllAsync()
+        // -----------------------------
+        // GET (Paged + Filter + Search + Sort)
+        // -----------------------------
+        public async Task<PagedResult<GradeResponseDto>> GetAsync(
+            GradeQueryParameter query)
         {
-            return await _context.Grades
-                .OrderBy(g => g.Id)
-                .Select(g => MapToDTO(g))
-                .ToListAsync();
-        }
+            var grades = _context.Grades.AsNoTracking();
 
-        public async Task<GradeDto?> GetByIdAsync(int id)
-        {
-            var g = await _context.Grades.FindAsync(id);
-            return g == null ? null : MapToDTO(g);
-        }
-
-        public async Task<GradeDto> CreateAsync(GradeDto dto)
-        {
-            var entity = new Grade
+            // -------- Search --------
+            if (!string.IsNullOrWhiteSpace(query.Search))
             {
-                Name = dto.Name
+                grades = grades.Where(g =>
+                    g.Name.Contains(query.Search));
+            }
+
+            // -------- Filter --------
+            if (query.IsActive.HasValue)
+            {
+                grades = grades.Where(g =>
+                    g.IsActive == query.IsActive);
+            }
+
+            // -------- Sorting --------
+            grades = query.SortBy.ToLower() switch
+            {
+                "name" => query.SortDir == "desc"
+                    ? grades.OrderByDescending(g => g.Name)
+                    : grades.OrderBy(g => g.Name),
+
+                "createdat" => query.SortDir == "desc"
+                    ? grades.OrderByDescending(g => g.CreatedAt)
+                    : grades.OrderBy(g => g.CreatedAt),
+
+                _ => query.SortDir == "desc"
+                    ? grades.OrderByDescending(g => g.Id)
+                    : grades.OrderBy(g => g.Id)
             };
 
-            _context.Grades.Add(entity);
-            await _context.SaveChangesAsync();
+            // -------- Paging --------
+            var totalCount = await grades.CountAsync();
 
-            dto.Id = entity.Id;
-            return dto;
+            var items = await grades
+                .Skip((query.PageNumber - 1) * query.PageSize)
+                .Take(query.PageSize)
+                .Select(g => new GradeResponseDto
+                {
+                    Id = g.Id,
+                    Name = g.Name,
+                    IsActive = g.IsActive,
+                    CreatedAt = g.CreatedAt
+                })
+                .ToListAsync();
+
+            return new PagedResult<GradeResponseDto>(
+                items,
+                totalCount,
+                query.PageNumber,
+                query.PageSize
+            );
         }
 
-        public async Task<GradeDto?> UpdateAsync(int id, GradeDto dto)
+        // -----------------------------
+        // GET BY ID
+        // -----------------------------
+        public async Task<GradeResponseDto?> GetByIdAsync(int id)
         {
-            var entity = await _context.Grades.FindAsync(id);
-            if (entity == null) return null;
+            var grade = await _context.Grades.FindAsync(id);
+            if (grade == null) return null;
 
-            entity.Name = dto.Name;
-            await _context.SaveChangesAsync();
-
-            dto.Id = entity.Id;
-            return dto;
+            return new GradeResponseDto
+            {
+                Id = grade.Id,
+                Name = grade.Name,
+                IsActive = grade.IsActive,
+                CreatedAt = grade.CreatedAt
+            };
         }
 
+        // -----------------------------
+        // CREATE
+        // -----------------------------
+        public async Task<GradeResponseDto> CreateAsync(GradeRequestDto dto)
+        {
+            var grade = new Grade
+            {
+                Name = dto.Name,
+                IsActive = dto.IsActive
+            };
+
+            _context.Grades.Add(grade);
+            await _context.SaveChangesAsync();
+
+            return new GradeResponseDto
+            {
+                Id = grade.Id,
+                Name = grade.Name,
+                IsActive = grade.IsActive,
+                CreatedAt = grade.CreatedAt
+            };
+        }
+
+        // -----------------------------
+        // UPDATE
+        // -----------------------------
+        public async Task<GradeResponseDto?> UpdateAsync(
+            int id,
+            GradeRequestDto dto)
+        {
+            var grade = await _context.Grades.FindAsync(id);
+            if (grade == null) return null;
+
+            grade.Name = dto.Name;
+            grade.IsActive = dto.IsActive;
+            grade.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            return new GradeResponseDto
+            {
+                Id = grade.Id,
+                Name = grade.Name,
+                IsActive = grade.IsActive,
+                CreatedAt = grade.CreatedAt
+            };
+        }
+
+        // -----------------------------
+        // DELETE
+        // -----------------------------
         public async Task<bool> DeleteAsync(int id)
         {
-            var entity = await _context.Grades.FindAsync(id);
-            if (entity == null) return false;
+            var grade = await _context.Grades.FindAsync(id);
+            if (grade == null) return false;
 
-            _context.Grades.Remove(entity);
+            _context.Grades.Remove(grade);
             await _context.SaveChangesAsync();
             return true;
-        }
-
-        public async Task<PagedResult<GradeDto>> GetPagedAsync(int pageNumber, int pageSize = 30)
-        {
-            if (pageNumber < 1) pageNumber = 1;
-
-            var total = await _context.Grades.CountAsync();
-            var skip = (pageNumber - 1) * pageSize;
-
-            var data = await _context.Grades
-                .OrderBy(g => g.Id)
-                .Skip(skip)
-                .Take(pageSize)
-                .Select(g => MapToDTO(g))
-                .ToListAsync();
-
-            return new PagedResult<GradeDto>
-            {
-                Data = data,
-                PageNumber = pageNumber,
-                PageSize = pageSize,
-                TotalRecords = total
-            };
-        }
-
-        private static GradeDto MapToDTO(Grade g)
-        {
-            return new GradeDto
-            {
-                Id = g.Id,
-                Name = g.Name
-            };
         }
     }
 }
