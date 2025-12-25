@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using SalyanthanSchool.Core.DTOs;
 using SalyanthanSchool.Core.DTOs.Common;
 using SalyanthanSchool.Core.DTOs.Grade;
 using SalyanthanSchool.Core.Entities;
