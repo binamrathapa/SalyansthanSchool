@@ -1,8 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-<<<<<<< HEAD
 using SalyanthanSchool.Core.DTOs;
-=======
->>>>>>> 572ef5109281b630c5102c2e62166bcfa3b965c3
 using SalyanthanSchool.Core.DTOs.Common;
 using SalyanthanSchool.Core.DTOs.Grade;
 using SalyanthanSchool.Core.Entities;
