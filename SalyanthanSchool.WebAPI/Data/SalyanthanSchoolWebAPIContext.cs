@@ -14,6 +14,11 @@ namespace SalyanthanSchool.WebAPI.Data
         {
         }
 
+        //public DbSet<SalyanthanSchool.Core.Entities.Teacher> Teachers { get; set; } = default!;
+        //public DbSet<SalyanthanSchool.Core.Entities.Routine> Routines { get; set; } = default!;
+
+        //public DbSet<SalyanthanSchool.Core.Entities.Student> Students { get; set; } = default!;
+
         public DbSet<SalyanthanSchool.Core.Entities.Grade> Grades { get; set; } = default!;
     }
 }
