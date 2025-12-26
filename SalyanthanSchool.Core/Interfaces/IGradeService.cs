@@ -1,5 +1,4 @@
-﻿using SalyanthanSchool.Core.DTOs;
-using SalyanthanSchool.Core.DTOs.Common;
+﻿using SalyanthanSchool.Core.DTOs.Common;
 using SalyanthanSchool.Core.DTOs.Grade;
 
 namespace SalyanthanSchool.Core.Interfaces
