@@ -15,5 +15,6 @@ namespace SalyanthanSchool.WebAPI.Data
         }
 
         public DbSet<SalyanthanSchool.Core.Entities.Grade> Grades { get; set; } = default!;
+        public DbSet<SalyanthanSchool.Core.Entities.SystemUser> SystemUser { get; set; } = default!;
     }
 }
