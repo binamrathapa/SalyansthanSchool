@@ -5,8 +5,12 @@ using SalyanthanSchool.Core.Interfaces;
 // Remove or comment out the following line, as 'SalyanthanSchool.Core.Services' does not exist or is not needed
 // using SalyanthanSchool.Core.Services;
 //using SalyanthanSchool.Core.Services;
+using SalyanthanSchool.Core.Validators.Teacher;
 using SalyanthanSchool.Core.Validators.Grade;
+using SalyanthanSchool.Core.Validators.Section;
+using SalyanthanSchool.Core.Validators.Subject;
 using SalyanthanSchool.Infrastructure.Services;
+using SalyanthanSchool.Core.Validators.ClassRoutine;
 using SalyanthanSchool.WebAPI.Data;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -26,7 +30,11 @@ builder.Services.AddDbContext<SalyanthanSchoolWebAPIContext>(options =>
 builder.Services.AddScoped<IGradeService, GradeService>();
 //builder.Services.AddScoped<IRoutineService, RoutineService>();
 //builder.Services.AddScoped<IStudentService, StudentService>();
-//builder.Services.AddScoped<ITeacherService, TeacherService>();
+builder.Services.AddScoped<ISectionService, SectionService>();
+builder.Services.AddScoped<ISectionService, SectionService>();
+builder.Services.AddScoped<ITeacherService, TeacherService>();
+builder.Services.AddScoped<ISubjectService, SubjectService>();
+builder.Services.AddScoped<IClassRoutineService, ClassRoutineService>();
 
 // ------------------------------------
 // FluentValidation
