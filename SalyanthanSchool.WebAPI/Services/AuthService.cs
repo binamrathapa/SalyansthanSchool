@@ -20,21 +20,20 @@ namespace SalyanthanSchool.WebAPI.Services
 
         public async Task<AuthResponseDto> RegisterAsync(RegisterRequestDto dto)
         {
-            var exists = await _context.SystemUser
-                .AnyAsync(x => x.Username == dto.Username);
-
-            if (exists)
+            if (await _context.SystemUser.AnyAsync(x => x.Username == dto.Username))
+            {
                 return new AuthResponseDto
                 {
                     IsSuccess = false,
                     Message = "Username already exists"
                 };
+            }
 
             var user = new SystemUser
             {
                 Username = dto.Username,
                 Password = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-                Role = dto.Role ?? "User",
+                Role = dto.Role,
                 FirstName = dto.FirstName,
                 LastName = dto.LastName,
                 Email = dto.Email,
@@ -49,9 +48,8 @@ namespace SalyanthanSchool.WebAPI.Services
             return new AuthResponseDto
             {
                 IsSuccess = true,
-                Username = user.Username,
-                Role = user.Role,
                 Token = token,
+                ExpiresAt = DateTime.UtcNow.AddHours(3),
                 Message = "Registration successful"
             };
         }
@@ -62,30 +60,31 @@ namespace SalyanthanSchool.WebAPI.Services
                 .FirstOrDefaultAsync(x => x.Username == dto.Username && x.Status);
 
             if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.Password))
+            {
                 return new AuthResponseDto
                 {
                     IsSuccess = false,
                     Message = "Invalid username or password"
                 };
+            }
 
             var token = JwtHelper.GenerateToken(user, _config);
 
             return new AuthResponseDto
             {
                 IsSuccess = true,
-                Username = user.Username,
-                Role = user.Role,
                 Token = token,
+                ExpiresAt = DateTime.UtcNow.AddHours(3),
                 Message = "Login successful"
             };
         }
 
-        public async Task<AuthResponseDto> LogoutAsync()
+        public Task<AuthResponseDto> LogoutAsync()
         {
-            return await Task.FromResult(new AuthResponseDto
+            return Task.FromResult(new AuthResponseDto
             {
                 IsSuccess = true,
-                Message = "Logged out successfully. Please delete the token from client storage."
+                Message = "Logout successful"
             });
         }
     }

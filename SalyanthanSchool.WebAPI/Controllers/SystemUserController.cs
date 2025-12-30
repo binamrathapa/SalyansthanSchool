@@ -3,52 +3,47 @@ using Microsoft.AspNetCore.Mvc;
 using SalyanthanSchool.Core.DTOs.Auth;
 using SalyanthanSchool.Core.Interfaces;
 
-namespace SalyanthanSchool.WebAPI.Controllers
+[Authorize(Roles = "Admin")]
+[ApiController]
+[Route("api/users")]
+public class SystemUserController : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    [Authorize(Roles = "Admin")] 
-    public class SystemUserController : ControllerBase
+    private readonly IUserService _userService;
+
+    public SystemUserController(IUserService userService)
     {
-        private readonly IUserService _userService;
+        _userService = userService;
+    }
 
-        public SystemUserController(IUserService userService)
-        {
-            _userService = userService;
-        }
+    [HttpGet]
+    public async Task<IActionResult> GetAll()
+        => Ok(await _userService.GetAllAsync());
 
-        [HttpGet]
-        public async Task<IActionResult> Get()
-        {
-            return Ok(await _userService.GetAllAsync());
-        }
+    [HttpGet("{id}")]
+    public async Task<IActionResult> Get(int id)
+    {
+        var user = await _userService.GetByIdAsync(id);
+        return user == null ? NotFound() : Ok(user);
+    }
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> Get(int id)
-        {
-            var user = await _userService.GetByIdAsync(id);
-            return user == null ? NotFound() : Ok(user);
-        }
+    [HttpPost]
+    public async Task<IActionResult> Create(RegisterRequestDto dto)
+    {
+        var user = await _userService.CreateAsync(dto);
+        return CreatedAtAction(nameof(Get), new { id = user.Id }, user);
+    }
 
-        [HttpPost]
-        public async Task<IActionResult> Post([FromBody] RegisterRequestDto dto)
-        {
-            var createdUser = await _userService.CreateAsync(dto);
-            return CreatedAtAction(nameof(Get), new { id = createdUser.Id }, createdUser);
-        }
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(int id, UpdateUserDto dto)
+    {
+        var updated = await _userService.UpdateAsync(id, dto);
+        return updated ? NoContent() : NotFound();
+    }
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Put(int id, [FromBody] RegisterRequestDto dto)
-        {
-            var updated = await _userService.UpdateAsync(id, dto);
-            return updated == null ? NotFound() : Ok(updated);
-        }
-
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
-        {
-            var result = await _userService.DeleteAsync(id);
-            return result ? NoContent() : NotFound();
-        }
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var deleted = await _userService.DeleteAsync(id);
+        return deleted ? NoContent() : NotFound();
     }
 }

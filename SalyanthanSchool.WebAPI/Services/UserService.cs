@@ -15,24 +15,42 @@ namespace SalyanthanSchool.WebAPI.Services
             _context = context;
         }
 
-        public async Task<IEnumerable<AuthResponseDto>> GetAllAsync()
+        public async Task<IEnumerable<UserListDto>> GetAllAsync()
         {
-            var users = await _context.SystemUser.ToListAsync();
-            return users.Select(u => MapToResponse(u));
+            return await _context.SystemUser
+                .Select(u => new UserListDto
+                {
+                    Id = u.Id,
+                    Username = u.Username,
+                    Role = u.Role,
+                    FirstName = u.FirstName,
+                    LastName = u.LastName,
+                    Email = u.Email
+                })
+                .ToListAsync();
         }
 
-        public async Task<AuthResponseDto?> GetByIdAsync(int id)
+        public async Task<UserListDto?> GetByIdAsync(int id)
         {
-            var user = await _context.SystemUser.FindAsync(id);
-            return user == null ? null : MapToResponse(user);
+            return await _context.SystemUser
+                .Where(u => u.Id == id)
+                .Select(u => new UserListDto
+                {
+                    Id = u.Id,
+                    Username = u.Username,
+                    Role = u.Role,
+                    FirstName = u.FirstName,
+                    LastName = u.LastName,
+                    Email = u.Email
+                })
+                .FirstOrDefaultAsync();
         }
 
-        public async Task<AuthResponseDto> CreateAsync(RegisterRequestDto dto)
+        public async Task<UserListDto> CreateAsync(RegisterRequestDto dto)
         {
             var user = new SystemUser
             {
                 Username = dto.Username,
-                // Encrypt password before saving
                 Password = BCrypt.Net.BCrypt.HashPassword(dto.Password),
                 Role = dto.Role,
                 FirstName = dto.FirstName,
@@ -43,25 +61,34 @@ namespace SalyanthanSchool.WebAPI.Services
 
             _context.SystemUser.Add(user);
             await _context.SaveChangesAsync();
-            return MapToResponse(user);
+
+            return new UserListDto
+            {
+                Id = user.Id,
+                Username = user.Username,
+                Role = user.Role,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Email = user.Email
+            };
         }
 
-        public async Task<AuthResponseDto?> UpdateAsync(int id, RegisterRequestDto dto)
+        public async Task<bool> UpdateAsync(int id, UpdateUserDto dto)
         {
             var user = await _context.SystemUser.FindAsync(id);
-            if (user == null) return null;
+            if (user == null) return false;
 
-            user.FirstName = dto.FirstName;
-            user.LastName = dto.LastName;
-            user.Email = dto.Email;
-            user.Role = dto.Role;
+            if (!string.IsNullOrWhiteSpace(dto.Username)) user.Username = dto.Username;
+            if (!string.IsNullOrWhiteSpace(dto.FirstName)) user.FirstName = dto.FirstName;
+            if (!string.IsNullOrWhiteSpace(dto.LastName)) user.LastName = dto.LastName;
+            if (!string.IsNullOrWhiteSpace(dto.Email)) user.Email = dto.Email;
+            if (!string.IsNullOrWhiteSpace(dto.Role)) user.Role = dto.Role;
 
-            // Only update password if a new one is provided
             if (!string.IsNullOrWhiteSpace(dto.Password))
                 user.Password = BCrypt.Net.BCrypt.HashPassword(dto.Password);
 
             await _context.SaveChangesAsync();
-            return MapToResponse(user);
+            return true;
         }
 
         public async Task<bool> DeleteAsync(int id)
@@ -73,14 +100,5 @@ namespace SalyanthanSchool.WebAPI.Services
             await _context.SaveChangesAsync();
             return true;
         }
-
-        // Helper to convert Entity to Response DTO
-        private static AuthResponseDto MapToResponse(SystemUser u) => new AuthResponseDto
-        {
-            IsSuccess = true,
-            Username = u.Username,
-            Role = u.Role,
-            Message = "User data retrieved"
-        };
     }
 }
