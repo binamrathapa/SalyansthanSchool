@@ -21,7 +21,7 @@ namespace SalyanthanSchool.Core.Entities
         public string LastName { get; set; } = null!;
 
         [Column("gender")]
-        public string Gender { get; set; } = null!; // Storing as string based on enum description
+        public string Gender { get; set; } = null!; 
 
         [Column("date_of_birth")]
         public DateOnly DateOfBirth { get; set; }

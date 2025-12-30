@@ -1,43 +1,50 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using SalyanthanSchool.Core.Entities;
 
 namespace SalyanthanSchool.WebAPI.Data
 {
     public class SalyanthanSchoolWebAPIContext : DbContext
     {
-        public SalyanthanSchoolWebAPIContext(DbContextOptions<SalyanthanSchoolWebAPIContext> options)
+        public SalyanthanSchoolWebAPIContext(
+            DbContextOptions<SalyanthanSchoolWebAPIContext> options)
             : base(options)
         {
         }
 
-        public DbSet<SalyanthanSchool.Core.Entities.Grade> Grades { get; set; } = default!;
-        public DbSet<SalyanthanSchool.Core.Entities.Teacher> Teachers { get; set; } = default!;
-        public DbSet<SalyanthanSchool.Core.Entities.Section> Sections { get; set; } = default!;
-        public DbSet<SalyanthanSchool.Core.Entities.Subject> Subjects { get; set; } = default!;
-        public DbSet<SalyanthanSchool.Core.Entities.ClassRoutine> ClassRoutines { get; set; } = default!;
-        public DbSet<SalyanthanSchool.Core.Entities.SystemUser> SystemUser { get; set; } = default!;
+        public DbSet<Grade> Grades { get; set; } = default!;
+        public DbSet<Teacher> Teachers { get; set; } = default!;
+        public DbSet<Student> Student { get; set; } = default!;
+        public DbSet<Section> Sections { get; set; } = default!;
+        public DbSet<Subject> Subjects { get; set; } = default!;
+        public DbSet<ClassRoutine> ClassRoutines { get; set; } = default!;
+        public DbSet<SystemUser> SystemUser { get; set; } = default!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // Define the foreign key relationship and index for efficiency
+            // 🔹 STUDENT → HAS DATABASE TRIGGER (IMPORTANT)
+            modelBuilder.Entity<Student>()
+                .ToTable("Student", tb =>
+                {
+                    tb.HasTrigger("TR_Student_AdmissionNo");
+                });
+
+            // 🔹 SECTION → GRADE FK
             modelBuilder.Entity<Section>()
                 .HasOne(s => s.Grade)
-                .WithMany() // Assuming Grade doesn't need a navigation property to Sections yet, or use .WithMany(g => g.Sections)
-                .HasForeignKey(s => s.GradeId);
+                .WithMany()
+                .HasForeignKey(s => s.GradeId)
+                .OnDelete(DeleteBehavior.Restrict);
 
+            // 🔹 SUBJECT NAME UNIQUE
             modelBuilder.Entity<Subject>()
                 .HasIndex(s => s.Name)
                 .IsUnique();
 
+            // 🔹 CLASS ROUTINE COMPOSITE INDEX
             modelBuilder.Entity<ClassRoutine>()
                 .HasIndex(cr => new { cr.DayOfWeek, cr.GradeId, cr.SectionId });
 
             base.OnModelCreating(modelBuilder);
         }
-     }
-
+    }
 }
