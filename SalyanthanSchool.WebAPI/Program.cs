@@ -71,13 +71,15 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddScoped<IGradeService, GradeService>();
 //builder.Services.AddScoped<IRoutineService, RoutineService>();
 builder.Services.AddScoped<IStudentService, StudentService>();
-builder.Services.AddScoped<ISectionService, SectionService>();
+//builder.Services.AddScoped<ISectionService, SectionService>();
 builder.Services.AddScoped<ISectionService, SectionService>();
 builder.Services.AddScoped<ITeacherService, TeacherService>();
 builder.Services.AddScoped<ISubjectService, SubjectService>();
 builder.Services.AddScoped<IClassRoutineService, ClassRoutineService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IAcademicYearService, AcademicYearService>();
+
 
 
 // ------------------------------------

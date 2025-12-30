@@ -46,5 +46,6 @@ namespace SalyanthanSchool.WebAPI.Data
 
             base.OnModelCreating(modelBuilder);
         }
+        public DbSet<SalyanthanSchool.Core.Entities.AcademicYear> AcademicYear { get; set; } = default!;
     }
 }
