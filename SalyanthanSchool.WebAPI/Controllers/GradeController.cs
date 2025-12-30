@@ -1,11 +1,13 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SalyanthanSchool.Core.DTOs.Grade;
 using SalyanthanSchool.Core.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 
 namespace SalyanthanSchool.WebAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class GradeController : ControllerBase
     {
         private readonly IGradeService _service;

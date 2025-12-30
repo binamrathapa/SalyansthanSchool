@@ -19,6 +19,7 @@ namespace SalyanthanSchool.WebAPI.Data
         public DbSet<SalyanthanSchool.Core.Entities.Section> Sections { get; set; } = default!;
         public DbSet<SalyanthanSchool.Core.Entities.Subject> Subjects { get; set; } = default!;
         public DbSet<SalyanthanSchool.Core.Entities.ClassRoutine> ClassRoutines { get; set; } = default!;
+        public DbSet<SalyanthanSchool.Core.Entities.SystemUser> SystemUser { get; set; } = default!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -38,4 +39,5 @@ namespace SalyanthanSchool.WebAPI.Data
             base.OnModelCreating(modelBuilder);
         }
      }
+
 }
