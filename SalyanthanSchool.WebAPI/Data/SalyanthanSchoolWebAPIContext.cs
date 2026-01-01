@@ -18,6 +18,8 @@ namespace SalyanthanSchool.WebAPI.Data
         public DbSet<Subject> Subjects { get; set; } = default!;
         public DbSet<ClassRoutine> ClassRoutines { get; set; } = default!;
         public DbSet<SystemUser> SystemUser { get; set; } = default!;
+        public DbSet<FeeCategory> FeeCategory { get; set; } = default!;
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

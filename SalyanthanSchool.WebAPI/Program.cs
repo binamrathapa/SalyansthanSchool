@@ -71,7 +71,6 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddScoped<IGradeService, GradeService>();
 //builder.Services.AddScoped<IRoutineService, RoutineService>();
 builder.Services.AddScoped<IStudentService, StudentService>();
-//builder.Services.AddScoped<ISectionService, SectionService>();
 builder.Services.AddScoped<ISectionService, SectionService>();
 builder.Services.AddScoped<ITeacherService, TeacherService>();
 builder.Services.AddScoped<ISubjectService, SubjectService>();
@@ -79,7 +78,12 @@ builder.Services.AddScoped<IClassRoutineService, ClassRoutineService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IAcademicYearService, AcademicYearService>();
+builder.Services.AddScoped<IFeeCategoryService, FeeCategoryService>();
 
+
+builder.Services.AddCors(options => {
+    options.AddPolicy("AllowAll", b => b.AllowAnyMethod().AllowAnyHeader().AllowAnyOrigin());
+});
 
 
 // ------------------------------------
@@ -140,6 +144,7 @@ app.UseHttpsRedirection();
 app.UseRouting();
 // IMPORTANT: Authentication must come BEFORE Authorization
 app.UseAuthentication();
+app.UseCors("AllowAll");
 app.UseAuthorization();
 app.UseStaticFiles();
 
