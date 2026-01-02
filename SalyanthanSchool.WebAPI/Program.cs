@@ -79,6 +79,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IAcademicYearService, AcademicYearService>();
 builder.Services.AddScoped<IFeeCategoryService, FeeCategoryService>();
+builder.Services.AddScoped<IFeeHeadService, FeeHeadService>();
 
 
 builder.Services.AddCors(options => {
