@@ -21,7 +21,7 @@ namespace SalyanthanSchool.WebAPI.Data
         public DbSet<FeeCategory> FeeCategory { get; set; } = default!;
         public DbSet<FeeHead> FeeHead { get; set; } = default!;
         public DbSet<FeeStructure> FeeStructure { get; set; } = default!;
-
+        public DbSet<StudentDiscount> StudentDiscount { get; set; } = default!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

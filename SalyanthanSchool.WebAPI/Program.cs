@@ -81,6 +81,8 @@ builder.Services.AddScoped<IAcademicYearService, AcademicYearService>();
 builder.Services.AddScoped<IFeeCategoryService, FeeCategoryService>();
 builder.Services.AddScoped<IFeeHeadService, FeeHeadService>();
 builder.Services.AddScoped<IFeeStructureService, FeeStructureService>();
+builder.Services.AddScoped<IStudentDiscountService, StudentDiscountService>();
+
 
 
 builder.Services.AddCors(options => {
