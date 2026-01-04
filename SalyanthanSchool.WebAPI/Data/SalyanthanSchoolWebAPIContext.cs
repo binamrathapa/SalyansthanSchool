@@ -22,29 +22,33 @@ namespace SalyanthanSchool.WebAPI.Data
         public DbSet<FeeHead> FeeHead { get; set; } = default!;
         public DbSet<FeeStructure> FeeStructure { get; set; } = default!;
         public DbSet<StudentDiscount> StudentDiscount { get; set; } = default!;
+        public DbSet<PaymentMode> PaymentMode{ get; set; } = default!;
+        public DbSet<Invoice> Invoice { get; set; } = default!;
+        public DbSet<InvoiceItem> InvoiceItem { get; set; } = default!;
+        public DbSet<StudentPayment> StudentPayment { get; set; } = default!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // 🔹 STUDENT → HAS DATABASE TRIGGER (IMPORTANT)
+            // STUDENT → HAS DATABASE TRIGGER (IMPORTANT)
             modelBuilder.Entity<Student>()
                 .ToTable("Student", tb =>
                 {
                     tb.HasTrigger("TR_Student_AdmissionNo");
                 });
 
-            // 🔹 SECTION → GRADE FK
+            // SECTION → GRADE FK
             modelBuilder.Entity<Section>()
                 .HasOne(s => s.Grade)
                 .WithMany()
                 .HasForeignKey(s => s.GradeId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // 🔹 SUBJECT NAME UNIQUE
+            // SUBJECT NAME UNIQUE
             modelBuilder.Entity<Subject>()
                 .HasIndex(s => s.Name)
                 .IsUnique();
 
-            // 🔹 CLASS ROUTINE COMPOSITE INDEX
+            // CLASS ROUTINE COMPOSITE INDEX
             modelBuilder.Entity<ClassRoutine>()
                 .HasIndex(cr => new { cr.DayOfWeek, cr.GradeId, cr.SectionId });
 
