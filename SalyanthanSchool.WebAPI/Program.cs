@@ -5,15 +5,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using SalyanthanSchool.Core.Interfaces;
-// Remove or comment out the following line, as 'SalyanthanSchool.Core.Services' does not exist or is not needed
-// using SalyanthanSchool.Core.Services;
-//using SalyanthanSchool.Core.Services;
-using SalyanthanSchool.Core.Validators.Teacher;
 using SalyanthanSchool.Core.Validators.Grade;
-using SalyanthanSchool.Core.Validators.Section;
-using SalyanthanSchool.Core.Validators.Subject;
 using SalyanthanSchool.Infrastructure.Services;
-using SalyanthanSchool.Core.Validators.ClassRoutine;
 using SalyanthanSchool.WebAPI.Data;
 using SalyanthanSchool.WebAPI.Filters;
 using SalyanthanSchool.WebAPI.Services;
@@ -70,14 +63,27 @@ builder.Services.AddAuthentication(options =>
 // ------------------------------------
 builder.Services.AddScoped<IGradeService, GradeService>();
 //builder.Services.AddScoped<IRoutineService, RoutineService>();
-//builder.Services.AddScoped<IStudentService, StudentService>();
-builder.Services.AddScoped<ISectionService, SectionService>();
+builder.Services.AddScoped<IStudentService, StudentService>();
 builder.Services.AddScoped<ISectionService, SectionService>();
 builder.Services.AddScoped<ITeacherService, TeacherService>();
 builder.Services.AddScoped<ISubjectService, SubjectService>();
 builder.Services.AddScoped<IClassRoutineService, ClassRoutineService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IAcademicYearService, AcademicYearService>();
+builder.Services.AddScoped<IFeeCategoryService, FeeCategoryService>();
+builder.Services.AddScoped<IFeeHeadService, FeeHeadService>();
+builder.Services.AddScoped<IFeeStructureService, FeeStructureService>();
+builder.Services.AddScoped<IStudentDiscountService, StudentDiscountService>();
+builder.Services.AddScoped<IPaymentModeService, PaymentModeService>();
+builder.Services.AddScoped<IInvoiceService, InvoiceService>();
+
+
+
+builder.Services.AddCors(options => {
+    options.AddPolicy("AllowAll", b => b.AllowAnyMethod().AllowAnyHeader().AllowAnyOrigin());
+});
+
 
 // ------------------------------------
 // 4. FluentValidation
@@ -137,7 +143,9 @@ app.UseHttpsRedirection();
 app.UseRouting();
 // IMPORTANT: Authentication must come BEFORE Authorization
 app.UseAuthentication();
+app.UseCors("AllowAll");
 app.UseAuthorization();
+app.UseStaticFiles();
 
 app.MapControllers();
 
