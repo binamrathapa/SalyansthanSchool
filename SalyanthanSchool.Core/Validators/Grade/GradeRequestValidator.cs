@@ -13,6 +13,10 @@ namespace SalyanthanSchool.Core.Validators.Grade
 
             RuleFor(x => x.IsActive)
                 .NotNull();
+
+            RuleFor(x => x.SectionId)
+                .NotNull().WithMessage("Section is required")
+                .GreaterThan(0).WithMessage("Invalid Section ID");
         }
     }
 }

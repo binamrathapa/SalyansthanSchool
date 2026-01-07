@@ -7,15 +7,9 @@ namespace SalyanthanSchool.Core.Validators.Section
     {
         public SectionRequestDtoValidator()
         {
-            RuleFor(x => x.GradeId)
-                .GreaterThan(0).WithMessage("Grade ID must be a valid positive number.");
-
-            RuleFor(x => x.Name)
-                .NotEmpty().WithMessage("Section name is required.")
-                .MaximumLength(50);
-
-            RuleFor(x => x.IsActive)
-                .NotNull();
+            RuleFor(x => x.SectionName)
+                .NotEmpty().WithMessage("Section name is required")
+                .MaximumLength(100);
         }
     }
 }

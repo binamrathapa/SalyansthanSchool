@@ -5,22 +5,10 @@ namespace SalyanthanSchool.Core.Interfaces
 {
     public interface ISectionService
     {
-        // Single GET (Paging + Search + Filter + Sort)
-        Task<PagedResult<SectionResponseDto>> GetAsync(
-            SectionQueryParameter query);
-
-        // GET by ID
+        Task<PagedResult<SectionResponseDto>> GetAsync(SectionQueryParameter query);
         Task<SectionResponseDto?> GetByIdAsync(int id);
-
-        // CREATE
         Task<SectionResponseDto> CreateAsync(SectionRequestDto dto);
-
-        // UPDATE
-        Task<SectionResponseDto?> UpdateAsync(
-            int id,
-            SectionRequestDto dto);
-
-        // DELETE
+        Task<SectionResponseDto?> UpdateAsync(int id, SectionRequestDto dto);
         Task<bool> DeleteAsync(int id);
     }
 }

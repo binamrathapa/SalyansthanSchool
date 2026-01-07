@@ -16,205 +16,104 @@ namespace SalyanthanSchool.Infrastructure.Services
             _context = context;
         }
 
-        // Static helper to map Entity to DTO (safe for EF Core projection)
-        private static SectionResponseDto MapToResponse(Section section)
+        public async Task<PagedResult<SectionResponseDto>> GetAsync(SectionQueryParameter query)
         {
-            return new SectionResponseDto
-            {
-                Id = section.Id,
-                GradeId = section.GradeId,
-                // Note: GradeName must be manually handled in the query (See GetAsync)
-                Name = section.Name,
-                IsActive = section.IsActive,
-                CreatedAt = section.CreatedAt
-            };
-        }
+            var sections = _context.Section.AsNoTracking();
 
-        // -----------------------------
-        // GET (Paged + Filter + Search + Sort)
-        // -----------------------------
-        public async Task<PagedResult<SectionResponseDto>> GetAsync(
-            SectionQueryParameter query)
-        {
-            // Include Grade for projection (to get GradeName)
-            var sections = _context.Sections
-                .Include(s => s.Grade)
-                .AsNoTracking();
-
-            // -------- Search --------
             if (!string.IsNullOrWhiteSpace(query.Search))
-            {
-                sections = sections.Where(s =>
-                    s.Name.Contains(query.Search) ||
-                    s.Grade.Name.Contains(query.Search));
-            }
+                sections = sections.Where(s => s.SectionName.Contains(query.Search));
 
-            // -------- Filter (IsActive) --------
             if (query.IsActive.HasValue)
-            {
-                sections = sections.Where(s =>
-                    s.IsActive == query.IsActive);
-            }
+                sections = sections.Where(s => s.IsActive == query.IsActive);
 
-            // -------- Filter (GradeId) --------
-            if (query.GradeId.HasValue && query.GradeId.Value > 0)
-            {
-                sections = sections.Where(s =>
-                    s.GradeId == query.GradeId.Value);
-            }
-
-            // -------- Sorting --------
             sections = query.SortBy.ToLower() switch
             {
-                "name" => query.SortDir == "desc"
-                    ? sections.OrderByDescending(s => s.Name)
-                    : sections.OrderBy(s => s.Name),
-
-                "gradename" => query.SortDir == "desc"
-                    ? sections.OrderByDescending(s => s.Grade.Name)
-                    : sections.OrderBy(s => s.Grade.Name),
-
-                "createdat" => query.SortDir == "desc"
-                    ? sections.OrderByDescending(s => s.CreatedAt)
-                    : sections.OrderBy(s => s.CreatedAt),
-
-                _ => query.SortDir == "desc"
-                    ? sections.OrderByDescending(s => s.Id)
-                    : sections.OrderBy(s => s.Id)
+                "name" => query.SortDir == "desc" ? sections.OrderByDescending(s => s.SectionName) : sections.OrderBy(s => s.SectionName),
+                _ => query.SortDir == "desc" ? sections.OrderByDescending(s => s.Id) : sections.OrderBy(s => s.Id)
             };
 
-            // -------- Paging --------
             var totalCount = await sections.CountAsync();
-
-            // Projection using inline mapping for GradeName
             var items = await sections
                 .Skip((query.PageNumber - 1) * query.PageSize)
                 .Take(query.PageSize)
                 .Select(s => new SectionResponseDto
                 {
                     Id = s.Id,
-                    GradeId = s.GradeId,
-                    GradeName = s.Grade.Name, // Pull Grade Name from the included navigation property
-                    Name = s.Name,
-                    IsActive = s.IsActive,
-                    CreatedAt = s.CreatedAt
-                })
-                .ToListAsync();
+                    SectionName = s.SectionName,
+                    IsActive = s.IsActive ?? false,
+                    CreatedAt = s.CreatedAt ?? DateTime.Now
+                }).ToListAsync();
 
-            return new PagedResult<SectionResponseDto>(
-                items,
-                totalCount,
-                query.PageNumber,
-                query.PageSize
-            );
+            return new PagedResult<SectionResponseDto>(items, totalCount, query.PageNumber, query.PageSize);
         }
 
-        // -----------------------------
-        // GET BY ID
-        // -----------------------------
         public async Task<SectionResponseDto?> GetByIdAsync(int id)
         {
-            var section = await _context.Sections
-                .Include(s => s.Grade) // Include Grade for the response DTO
-                .AsNoTracking()
-                .FirstOrDefaultAsync(s => s.Id == id);
-
+            var section = await _context.Section.FindAsync(id);
             if (section == null) return null;
 
             return new SectionResponseDto
             {
                 Id = section.Id,
-                GradeId = section.GradeId,
-                GradeName = section.Grade.Name,
-                Name = section.Name,
-                IsActive = section.IsActive,
-                CreatedAt = section.CreatedAt
+                SectionName = section.SectionName,
+                IsActive = section.IsActive ?? false,
+                CreatedAt = section.CreatedAt ?? DateTime.Now
             };
         }
 
-        // -----------------------------
-        // CREATE
-        // -----------------------------
         public async Task<SectionResponseDto> CreateAsync(SectionRequestDto dto)
         {
-            // 1. Validate GradeId exists
-            var gradeExists = await _context.Grades.AnyAsync(g => g.Id == dto.GradeId);
-            if (!gradeExists)
-            {
-                throw new InvalidOperationException($"Grade with ID {dto.GradeId} not found.");
-            }
+            // Normalize input: Trim and Uppercase
+            var normalizedName = dto.SectionName.Trim().ToUpper();
 
-            // 2. Validate uniqueness (Name + GradeId combo)
-            var nameExists = await _context.Sections.AnyAsync(s =>
-                s.Name == dto.Name && s.GradeId == dto.GradeId);
-
-            if (nameExists)
+            var exists = await _context.Section.AnyAsync(s => s.SectionName == normalizedName);
+            if (exists)
             {
-                throw new InvalidOperationException($"Section '{dto.Name}' already exists for Grade ID {dto.GradeId}.");
+                throw new InvalidOperationException($"Section '{normalizedName}' already exists.");
             }
 
             var section = new Section
             {
-                GradeId = dto.GradeId,
-                Name = dto.Name,
-                IsActive = dto.IsActive
+                SectionName = normalizedName,
+                IsActive = dto.IsActive,
+                CreatedAt = DateTime.UtcNow
             };
 
-            _context.Sections.Add(section);
+            _context.Section.Add(section);
             await _context.SaveChangesAsync();
 
-            // To get GradeName for response, reload the entity with Grade included
-            var createdSection = await GetByIdAsync(section.Id);
-            return createdSection!;
+            return await GetByIdAsync(section.Id);
         }
 
-        // -----------------------------
-        // UPDATE
-        // -----------------------------
-        public async Task<SectionResponseDto?> UpdateAsync(
-            int id,
-            SectionRequestDto dto)
+        public async Task<SectionResponseDto?> UpdateAsync(int id, SectionRequestDto dto)
         {
-            var section = await _context.Sections.FindAsync(id);
+            var section = await _context.Section.FindAsync(id);
             if (section == null) return null;
 
-            // 1. Validate GradeId exists
-            var gradeExists = await _context.Grades.AnyAsync(g => g.Id == dto.GradeId);
-            if (!gradeExists)
+          
+            var normalizedName = dto.SectionName.Trim().ToUpper();
+
+            // Optional: Check for duplicates (excluding current record)
+            var exists = await _context.Section.AnyAsync(s => s.SectionName == normalizedName && s.Id != id);
+            if (exists)
             {
-                throw new InvalidOperationException($"Grade with ID {dto.GradeId} not found.");
+                throw new InvalidOperationException($"Another section with the name '{normalizedName}' already exists.");
             }
 
-            // 2. Validate uniqueness (Name + GradeId combo, excluding current ID)
-            var nameExists = await _context.Sections.AnyAsync(s =>
-                s.Name == dto.Name && s.GradeId == dto.GradeId && s.Id != id);
-
-            if (nameExists)
-            {
-                throw new InvalidOperationException($"Section '{dto.Name}' already exists for Grade ID {dto.GradeId}.");
-            }
-
-            section.GradeId = dto.GradeId;
-            section.Name = dto.Name;
+            section.SectionName = normalizedName; // Update as Uppercase
             section.IsActive = dto.IsActive;
             section.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
-
-            // To get GradeName for response, reload the entity with Grade included
-            var updatedSection = await GetByIdAsync(section.Id);
-            return updatedSection!;
+            return await GetByIdAsync(id);
         }
 
-        // -----------------------------
-        // DELETE
-        // -----------------------------
         public async Task<bool> DeleteAsync(int id)
         {
-            var section = await _context.Sections.FindAsync(id);
+            var section = await _context.Section.FindAsync(id);
             if (section == null) return false;
 
-            _context.Sections.Remove(section);
+            _context.Section.Remove(section);
             await _context.SaveChangesAsync();
             return true;
         }
