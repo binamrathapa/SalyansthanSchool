@@ -36,7 +36,7 @@ namespace SalyanthanSchool.Infrastructure.Services
                 GradeId = cr.GradeId,
                 GradeName = cr.Grade.Name,
                 SectionId = cr.SectionId,
-                SectionName = cr.Section?.Name, // Null check for optional section
+                SectionName = cr.Section?.SectionName,
                 SubjectId = cr.SubjectId,
                 SubjectName = cr.Subject.Name,
                 TeacherId = cr.TeacherId,
@@ -158,11 +158,11 @@ namespace SalyanthanSchool.Infrastructure.Services
         public async Task<ClassRoutineResponseDto> CreateAsync(ClassRoutineRequestDto dto)
         {
             // 1. Validate FKs exist
-            if (!await _context.Grades.AnyAsync(g => g.Id == dto.GradeId))
+            if (!await _context.Grade.AnyAsync(g => g.Id == dto.GradeId))
                 throw new InvalidOperationException($"Grade ID {dto.GradeId} not found.");
-            if (dto.SectionId.HasValue && !await _context.Sections.AnyAsync(s => s.Id == dto.SectionId))
+            if (dto.SectionId.HasValue && !await _context.Section.AnyAsync(s => s.Id == dto.SectionId))
                 throw new InvalidOperationException($"Section ID {dto.SectionId} not found.");
-            if (!await _context.Subjects.AnyAsync(s => s.Id == dto.SubjectId))
+            if (!await _context.Subject.AnyAsync(s => s.Id == dto.SubjectId))
                 throw new InvalidOperationException($"Subject ID {dto.SubjectId} not found.");
             if (!await _context.Teachers.AnyAsync(t => t.Id == dto.TeacherId))
                 throw new InvalidOperationException($"Teacher ID {dto.TeacherId} not found.");
@@ -203,11 +203,11 @@ namespace SalyanthanSchool.Infrastructure.Services
             if (routine == null) return null;
 
             // 1. Validate FKs exist
-            if (!await _context.Grades.AnyAsync(g => g.Id == dto.GradeId))
+            if (!await _context.Grade.AnyAsync(g => g.Id == dto.GradeId))
                 throw new InvalidOperationException($"Grade ID {dto.GradeId} not found.");
-            if (dto.SectionId.HasValue && !await _context.Sections.AnyAsync(s => s.Id == dto.SectionId))
+            if (dto.SectionId.HasValue && !await _context.Section.AnyAsync(s => s.Id == dto.SectionId))
                 throw new InvalidOperationException($"Section ID {dto.SectionId} not found.");
-            if (!await _context.Subjects.AnyAsync(s => s.Id == dto.SubjectId))
+            if (!await _context.Subject.AnyAsync(s => s.Id == dto.SubjectId))
                 throw new InvalidOperationException($"Subject ID {dto.SubjectId} not found.");
             if (!await _context.Teachers.AnyAsync(t => t.Id == dto.TeacherId))
                 throw new InvalidOperationException($"Teacher ID {dto.TeacherId} not found.");

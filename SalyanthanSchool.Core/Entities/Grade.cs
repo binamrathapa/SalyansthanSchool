@@ -15,6 +15,12 @@ namespace SalyanthanSchool.Core.Entities
         [Column("is_active")]
         public bool IsActive { get; set; } = true;
 
+        [Column("section_id")]
+        public int? SectionId { get; set; }
+
+        [ForeignKey("SectionId")]
+        public virtual Section? Section { get; set; }
+
         [Column("created_at")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

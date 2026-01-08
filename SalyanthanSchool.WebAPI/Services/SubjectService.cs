@@ -34,7 +34,7 @@ namespace SalyanthanSchool.Infrastructure.Services
         public async Task<PagedResult<SubjectResponseDto>> GetAsync(
             SubjectQueryParameter query)
         {
-            var subjects = _context.Subjects.AsNoTracking();
+            var subjects = _context.Subject.AsNoTracking();
 
             // -------- Search --------
             if (!string.IsNullOrWhiteSpace(query.Search))
@@ -88,7 +88,7 @@ namespace SalyanthanSchool.Infrastructure.Services
         // -----------------------------
         public async Task<SubjectResponseDto?> GetByIdAsync(int id)
         {
-            var subject = await _context.Subjects.FindAsync(id);
+            var subject = await _context.Subject.FindAsync(id);
             return subject == null ? null : MapToResponse(subject);
         }
 
@@ -98,7 +98,7 @@ namespace SalyanthanSchool.Infrastructure.Services
         public async Task<SubjectResponseDto> CreateAsync(SubjectRequestDto dto)
         {
             // 1. Validate uniqueness
-            var nameExists = await _context.Subjects.AnyAsync(s => s.Name == dto.Name);
+            var nameExists = await _context.Subject.AnyAsync(s => s.Name == dto.Name);
 
             if (nameExists)
             {
@@ -111,7 +111,7 @@ namespace SalyanthanSchool.Infrastructure.Services
                 IsActive = dto.IsActive
             };
 
-            _context.Subjects.Add(subject);
+            _context.Subject.Add(subject);
             await _context.SaveChangesAsync();
 
             return MapToResponse(subject);
@@ -124,11 +124,11 @@ namespace SalyanthanSchool.Infrastructure.Services
             int id,
             SubjectRequestDto dto)
         {
-            var subject = await _context.Subjects.FindAsync(id);
+            var subject = await _context.Subject.FindAsync(id);
             if (subject == null) return null;
 
             // 1. Validate uniqueness (excluding the current ID)
-            var nameExists = await _context.Subjects.AnyAsync(s =>
+            var nameExists = await _context.Subject.AnyAsync(s =>
                 s.Name == dto.Name && s.Id != id);
 
             if (nameExists)
@@ -150,10 +150,10 @@ namespace SalyanthanSchool.Infrastructure.Services
         // -----------------------------
         public async Task<bool> DeleteAsync(int id)
         {
-            var subject = await _context.Subjects.FindAsync(id);
+            var subject = await _context.Subject.FindAsync(id);
             if (subject == null) return false;
 
-            _context.Subjects.Remove(subject);
+            _context.Subject.Remove(subject);
             await _context.SaveChangesAsync();
             return true;
         }

@@ -15,6 +15,9 @@ namespace SalyanthanSchool.WebAPI.Controllers
             _service = service;
         }
 
+        /// <summary>
+        /// Fetches list of invoices with pagination and filters (StudentId, Status, InvoiceNo)
+        /// </summary>
         [HttpGet]
         public async Task<IActionResult> Get([FromQuery] InvoiceQueryParameter query)
         {
@@ -25,6 +28,9 @@ namespace SalyanthanSchool.WebAPI.Controllers
             return Ok(result);
         }
 
+        /// <summary>
+        /// Gets detailed information for a specific invoice
+        /// </summary>
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
@@ -32,31 +38,46 @@ namespace SalyanthanSchool.WebAPI.Controllers
             return result == null ? NotFound() : Ok(result);
         }
 
+        /// <summary>
+        /// Triggers the bulk generation for a specific month (Handles Monthly + One-Time Fees + Carry Forward)
+        /// </summary>
         [HttpPost("generate-monthly")]
         public async Task<IActionResult> Generate([FromBody] GenerateInvoiceDto dto)
         {
             try
             {
                 int count = await _service.GenerateMonthlyInvoicesAsync(dto);
-                return Ok(new { Message = "Process Completed", InvoicesCreated = count });
+                return Ok(new
+                {
+                    Message = "Generation Process Completed",
+                    InvoicesCreated = count,
+                    BillingMonth = dto.BillingMonth
+                });
             }
             catch (Exception ex)
             {
-                return BadRequest(new { Error = ex.Message });
+                // Error might occur if FeeHeadId for Carry Forward is missing or DB constraints fail
+                return BadRequest(new { Error = "Generation failed", Details = ex.Message });
             }
         }
 
+        /// <summary>
+        /// Records a payment. This will fail if the invoice is already marked as 'Paid' (Lock Feature)
+        /// </summary>
         [HttpPost("pay")]
         public async Task<IActionResult> PostPayment([FromBody] PaymentRequestDto dto)
         {
-            // Note: Validation is handled automatically via FluentValidation 
-            // registered in Program.cs
             var success = await _service.ProcessPaymentAsync(dto);
 
             if (!success)
-                return BadRequest(new { Message = "Payment failed. Please verify Invoice ID and amount." });
+            {
+                return BadRequest(new
+                {
+                    Message = "Payment rejected. Possible reasons: Invoice is already PAID, invoice does not exist, or internal database error."
+                });
+            }
 
-            return Ok(new { Message = "Payment recorded successfully and invoice status updated." });
+            return Ok(new { Message = "Payment recorded successfully. Invoice status has been updated (Paid/Partial)." });
         }
     }
 }

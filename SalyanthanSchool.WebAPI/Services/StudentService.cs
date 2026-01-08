@@ -28,8 +28,8 @@ namespace SalyanthanSchool.WebAPI.Services
             if (parameters.GradeId.HasValue)
                 query = query.Where(s => s.GradeId == parameters.GradeId.Value);
 
-            if (parameters.SectionId.HasValue)
-                query = query.Where(s => s.SectionId == parameters.SectionId.Value);
+            //if (parameters.SectionId.HasValue)
+            //    query = query.Where(s => s.SectionId == parameters.SectionId.Value);
 
             return await query.Select(s => MapToResponse(s)).ToListAsync();
         }
@@ -44,32 +44,36 @@ namespace SalyanthanSchool.WebAPI.Services
         {
             var photoPath = await SavePhotoAsync(dto.PhotoFile);
 
-            // Generate AdmissionNo
-            string year = dto.AdmissionDate.Year.ToString();
+            // 1️⃣ Prepare year & month
             string prefix = "SSAD";
+            var date = dto.AdmissionDate; // or DateTime.UtcNow
+            string year = date.Year.ToString();
+            string month = date.Month.ToString("D2");
+            string datePart = $"{year}-{month}";
 
-            // Get the last admission number for this year
-            var lastStudent = await _context.Student
-                .Where(s => s.AdmissionNo.StartsWith($"{prefix}-{year}-"))
-                .OrderByDescending(s => s.AdmissionNo)
-                .FirstOrDefaultAsync();
+    //        var lastStudent = await _context.Student
+    //.Where(s => s.AdmissionNo != null && s.AdmissionNo.StartsWith($"{prefix}-{year}-"))
+    //.OrderByDescending(s => s.AdmissionNo)
+    //.FirstOrDefaultAsync();
 
-            int nextNumber = 1;
+    //        int nextNumber = 1;
 
-            if (lastStudent != null)
-            {
-                var lastNumberStr = lastStudent.AdmissionNo.Split('-').Last();
-                if (int.TryParse(lastNumberStr, out int lastNumber))
-                {
-                    nextNumber = lastNumber + 1;
-                }
-            }
+    //        if (lastStudent != null && !string.IsNullOrEmpty(lastStudent.AdmissionNo))
+    //        {
+    //            var parts = lastStudent.AdmissionNo.Split('-');
+    //            if (parts.Length >= 3 && int.TryParse(parts.Last(), out int lastNum))
+    //            {
+    //                nextNumber = lastNum + 1;
+    //            }
+    //        }
 
-            string admissionNo = $"{prefix}-{year}-{nextNumber.ToString("D4")}"; // D4 ensures 4 digits
+    //        string admissionNo = $"{prefix}-{year}-{nextNumber:D4}";
+
+
 
             var student = new Student
             {
-                AdmissionNo = admissionNo,
+                //AdmissionNo = admissionNo,
                 FirstName = dto.FirstName,
                 MiddleName = dto.MiddleName,
                 LastName = dto.LastName,
@@ -81,7 +85,7 @@ namespace SalyanthanSchool.WebAPI.Services
                 GuardianName = dto.GuardianName,
                 GuardianContact = dto.GuardianContact,
                 GradeId = dto.GradeId,
-                SectionId = dto.SectionId,
+                //SectionId = dto.SectionId,
                 Photo = photoPath,
                 IsActive = dto.IsActive,
                 CreatedAt = DateTime.UtcNow
@@ -109,7 +113,7 @@ namespace SalyanthanSchool.WebAPI.Services
             student.GuardianName = dto.GuardianName;
             student.GuardianContact = dto.GuardianContact;
             student.GradeId = dto.GradeId;
-            student.SectionId = dto.SectionId;
+            //student.SectionId = dto.SectionId;
             student.IsActive = dto.IsActive;
 
             // Update photo if a new file is uploaded
@@ -149,10 +153,10 @@ namespace SalyanthanSchool.WebAPI.Services
             if (dto.GuardianName != null) student.GuardianName = dto.GuardianName;
             if (dto.GuardianContact != null) student.GuardianContact = dto.GuardianContact;
             if (dto.GradeId.HasValue) student.GradeId = dto.GradeId.Value;
-            if (dto.SectionId.HasValue) student.SectionId = dto.SectionId.Value;
+            //if (dto.SectionId.HasValue) student.SectionId = dto.SectionId.Value;
             if (dto.IsActive.HasValue) student.IsActive = dto.IsActive.Value;
 
-            // ✅ PATCH IMAGE SUPPORT
+            // PATCH IMAGE SUPPORT
             if (dto.PhotoFile != null)
             {
                 var newPhotoPath = await SavePhotoAsync(dto.PhotoFile);
@@ -231,19 +235,19 @@ namespace SalyanthanSchool.WebAPI.Services
         private static StudentResponseDto MapToResponse(Student s) => new StudentResponseDto
         {
             Id = s.Id,
-            AdmissionNo = s.AdmissionNo,
+            //AdmissionNo = s.AdmissionNo,
             FirstName = s.FirstName,
             MiddleName = s.MiddleName,
             LastName = s.LastName,
             Gender = s.Gender,
             BloodGroup = s.BloodGroup,
             DateOfBirth = s.DateOfBirth.HasValue ? DateOnly.FromDateTime(s.DateOfBirth.Value) : null,
-            AdmissionDate = s.AdmissionDate.HasValue ? DateOnly.FromDateTime(s.AdmissionDate.Value) : default,
+            AdmissionDate = DateOnly.FromDateTime(s.AdmissionDate),
             Address = s.Address,
             GuardianName = s.GuardianName,
             GuardianContact = s.GuardianContact,
             GradeId = s.GradeId,
-            SectionId = s.SectionId,
+            //SectionId = s.SectionId,
             Photo = s.Photo,
             IsActive = s.IsActive,
             CreatedAt = s.CreatedAt ?? DateTime.UtcNow

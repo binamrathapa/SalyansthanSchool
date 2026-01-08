@@ -46,8 +46,8 @@ namespace SalyanthanSchool.Core.Validators.Student
             RuleFor(x => x.GradeId)
                 .GreaterThan(0).WithMessage("Please select a valid Grade");
 
-            RuleFor(x => x.SectionId)
-                .GreaterThan(0).WithMessage("Please select a valid Section");
+            //RuleFor(x => x.SectionId)
+            //    .GreaterThan(0).WithMessage("Please select a valid Section");
 
             RuleFor(x => x.GuardianContact)
             .NotEmpty().WithMessage("Guardian contact is required")

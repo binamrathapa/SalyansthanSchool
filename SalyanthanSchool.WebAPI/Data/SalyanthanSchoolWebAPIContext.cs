@@ -11,11 +11,11 @@ namespace SalyanthanSchool.WebAPI.Data
         {
         }
 
-        public DbSet<Grade> Grades { get; set; } = default!;
+        public DbSet<Grade> Grade { get; set; } = default!;
         public DbSet<Teacher> Teachers { get; set; } = default!;
         public DbSet<Student> Student { get; set; } = default!;
-        public DbSet<Section> Sections { get; set; } = default!;
-        public DbSet<Subject> Subjects { get; set; } = default!;
+        public DbSet<Section> Section { get; set; } = default!;
+        public DbSet<Subject> Subject { get; set; } = default!;
         public DbSet<ClassRoutine> ClassRoutines { get; set; } = default!;
         public DbSet<SystemUser> SystemUser { get; set; } = default!;
         public DbSet<FeeCategory> FeeCategory { get; set; } = default!;
@@ -36,12 +36,12 @@ namespace SalyanthanSchool.WebAPI.Data
                     tb.HasTrigger("TR_Student_AdmissionNo");
                 });
 
-            // SECTION → GRADE FK
-            modelBuilder.Entity<Section>()
-                .HasOne(s => s.Grade)
-                .WithMany()
-                .HasForeignKey(s => s.GradeId)
-                .OnDelete(DeleteBehavior.Restrict);
+            //// SECTION → GRADE FK
+            //modelBuilder.Entity<Section>()
+            //    .HasOne(s => s.Grade)
+            //    .WithMany()
+            //    .HasForeignKey(s => s.GradeId)
+            //    .OnDelete(DeleteBehavior.Restrict);
 
             // SUBJECT NAME UNIQUE
             modelBuilder.Entity<Subject>()
