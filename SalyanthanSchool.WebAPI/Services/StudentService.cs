@@ -28,8 +28,8 @@ namespace SalyanthanSchool.WebAPI.Services
             if (parameters.GradeId.HasValue)
                 query = query.Where(s => s.GradeId == parameters.GradeId.Value);
 
-            if (parameters.SectionId.HasValue)
-                query = query.Where(s => s.SectionId == parameters.SectionId.Value);
+            //if (parameters.SectionId.HasValue)
+            //    query = query.Where(s => s.SectionId == parameters.SectionId.Value);
 
             return await query.Select(s => MapToResponse(s)).ToListAsync();
         }
@@ -85,7 +85,7 @@ namespace SalyanthanSchool.WebAPI.Services
                 GuardianName = dto.GuardianName,
                 GuardianContact = dto.GuardianContact,
                 GradeId = dto.GradeId,
-                SectionId = dto.SectionId,
+                //SectionId = dto.SectionId,
                 Photo = photoPath,
                 IsActive = dto.IsActive,
                 CreatedAt = DateTime.UtcNow
@@ -113,7 +113,7 @@ namespace SalyanthanSchool.WebAPI.Services
             student.GuardianName = dto.GuardianName;
             student.GuardianContact = dto.GuardianContact;
             student.GradeId = dto.GradeId;
-            student.SectionId = dto.SectionId;
+            //student.SectionId = dto.SectionId;
             student.IsActive = dto.IsActive;
 
             // Update photo if a new file is uploaded
@@ -153,7 +153,7 @@ namespace SalyanthanSchool.WebAPI.Services
             if (dto.GuardianName != null) student.GuardianName = dto.GuardianName;
             if (dto.GuardianContact != null) student.GuardianContact = dto.GuardianContact;
             if (dto.GradeId.HasValue) student.GradeId = dto.GradeId.Value;
-            if (dto.SectionId.HasValue) student.SectionId = dto.SectionId.Value;
+            //if (dto.SectionId.HasValue) student.SectionId = dto.SectionId.Value;
             if (dto.IsActive.HasValue) student.IsActive = dto.IsActive.Value;
 
             // PATCH IMAGE SUPPORT
@@ -247,7 +247,7 @@ namespace SalyanthanSchool.WebAPI.Services
             GuardianName = s.GuardianName,
             GuardianContact = s.GuardianContact,
             GradeId = s.GradeId,
-            SectionId = s.SectionId,
+            //SectionId = s.SectionId,
             Photo = s.Photo,
             IsActive = s.IsActive,
             CreatedAt = s.CreatedAt ?? DateTime.UtcNow

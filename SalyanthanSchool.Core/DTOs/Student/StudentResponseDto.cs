@@ -5,7 +5,7 @@ namespace SalyanthanSchool.Core.DTOs.Student
     public class StudentResponseDto
     {
         public int Id { get; set; }
-        public string AdmissionNo { get; set; } = null!;
+        //public string AdmissionNo { get; set; } = null!;
         public string FullName => $"{FirstName} {MiddleName} {LastName}".Replace("  ", " ").Trim();
         public string FirstName { get; set; } = null!;
         public string? MiddleName { get; set; }
@@ -18,7 +18,7 @@ namespace SalyanthanSchool.Core.DTOs.Student
         public string? GuardianName { get; set; }
         public string? GuardianContact { get; set; }
         public int GradeId { get; set; }
-        public int SectionId { get; set; }
+        //public int SectionId { get; set; }
         public string? Photo { get; set; }
         public bool IsActive { get; set; }
         public DateTime CreatedAt { get; set; }

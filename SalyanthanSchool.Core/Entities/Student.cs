@@ -44,9 +44,6 @@ public class Student
     [Column("grade_id")]
     public int GradeId { get; set; }
 
-    [Column("section_id")]
-    public int SectionId { get; set; }
-
     [Column("photo")]
     public string? Photo { get; set; }
 
