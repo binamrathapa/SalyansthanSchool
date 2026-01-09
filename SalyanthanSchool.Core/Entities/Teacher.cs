@@ -1,111 +1,59 @@
-﻿using SalyanthanSchool.Core.Validators;
-using System;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Text.RegularExpressions;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SalyanthanSchool.Core.Entities
 {
-    [Table("Teacher")]
+    [Table("teacher")]
     public class Teacher
     {
-        [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        [Column("Id")]
-        [Display(Name = "TeacherID")]
+        [Column("id")]
         public int Id { get; set; }
 
-        [Required(ErrorMessage = "First Name is required")]
-        [Column("FirstName")]
-        [Display(Name = "FirstName")]
-        [StringLength(50, MinimumLength = 3, ErrorMessage = "First Name must be at least 3 characters and at most 50 characters")]
-        public string FirstName { get; set; }
+        [Column("employee_code")]
+        public string EmployeeCode { get; set; } = null!;
 
-        [Column("MiddleName")]
-        [Display(Name = "MiddleName")]
-        [StringLength(50, MinimumLength = 3, ErrorMessage = "Middle Name must be at least 3 characters if provided")]
+        [Column("first_name")]
+        public string FirstName { get; set; } = null!;
+
+        [Column("middle_name")]
         public string? MiddleName { get; set; }
 
-        [Required(ErrorMessage = "Last Name is required")]
-        [Column("LastName")]
-        [Display(Name = "LastName")]
-        [StringLength(50, MinimumLength = 3, ErrorMessage = "Last Name must be at least 3 characters and at most 50 characters")]
-        public string LastName { get; set; }
+        [Column("last_name")]
+        public string LastName { get; set; } = null!;
 
-        [Required(ErrorMessage = "Address is required")]
-        [Column("Address")]
-        [Display(Name = "Address")]
-        [StringLength(200, MinimumLength = 3, ErrorMessage = "Address must be at least 3 characters")]
-        public string Address { get; set; }
+        [Column("gender")]
+        public string Gender { get; set; } = null!; 
 
-        [Required(ErrorMessage = "Email is required")]
-        [EmailAddress(ErrorMessage = "Invalid Email Address")]
-        [Column("Email")]
-        [Display(Name = "EmailAddress")]
-        [StringLength(100)]
-        public string Email { get; set; }
+        [Column("date_of_birth")]
+        public DateOnly DateOfBirth { get; set; }
 
-        [Column("PAN")]
-        [Display(Name = "PAN")]
-        public string? PAN { get; set; } // Optional
+        [Column("email")]
+        public string Email { get; set; } = null!;
 
-        [Column("NID")]
-        [Display(Name = "NID")]
-        public string? NID { get; set; } // Optional
+        [Column("mobile_no")]
+        public string MobileNo { get; set; } = null!;
 
-        [Required(ErrorMessage = "Mobile number is required")]
-        [Column("Mobile")]
-        [Display(Name = "Mobile")]
-        [MinLength(10, ErrorMessage = "Mobile number must be at least 10 digits")]
-        [RegularExpression(@"^\d+$", ErrorMessage = "Mobile number must contain only digits")]
-        [DataType(DataType.PhoneNumber)]
-        public string Mobile { get; set; }
+        [Column("address")]
+        public string? Address { get; set; }
 
-        [Required(ErrorMessage = "Date of Birth is required")]
-        [Column("DateOfBirth")]
-        [Display(Name = "DOB")]
-        [PastOrToday] // Custom validation to prevent future dates
-        [DataType(DataType.Date)]
-        public DateTime DateOfBirth { get; set; }
+        [Column("pan_number")]
+        public string PanNumber { get; set; } = null!;
 
-        [Required(ErrorMessage = "Gender is required")]
-        [Column("Gender")]
-        [Display(Name = "Gender")]
-        [RegularExpression("Male|Female", ErrorMessage = "Gender must be either Male or Female")]
-        [MinLength(1, ErrorMessage = "Gender must be selected")]
-        public string Gender { get; set; }
+        [Column("qualification")]
+        public string Qualification { get; set; } = null!;
 
-        [Required(ErrorMessage = "Citizenship is required")]
-        [Column("Citizenship")]
-        [Display(Name = "Citizenship")]
-        public string Citizenship { get; set; }
+        [Column("joining_date")]
+        public DateOnly JoiningDate { get; set; }
 
-        [Required(ErrorMessage = "Qualification is required")]
-        [Column("Qualification")]
-        [Display(Name = "Qualification")]
-        public string Qualification { get; set; } // Can be used as textarea in UI
+        [Column("photo")]
+        public string? Photo { get; set; }
 
-        [Column("Photo")]
-        [Display(Name = "Photo")]
+        [Column("is_active")]
+        public bool IsActive { get; set; } = true;
 
-        public string? Photo { get; set; } // Optional
+        [Column("created_at")]
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-
-        // Optional
-
-
-        // Update method for multiple properties
-        public void UpdateDetails(string firstname, string middlename, string lastname, string email, string? address = null,
-                               string? qualification = null, string? photo = null)
-        {
-           /* SetFirstName(firstname);
-            SetMiddleName(middlename);
-            SetLastName(lastname);
-            SetEmail(email);
-            SetAddress(address);
-            SetQualification(qualification);
-            SetPhoto(photo);*/
-        }
+        [Column("updated_at")]
+        public DateTime? UpdatedAt { get; set; }
     }
 }
-    

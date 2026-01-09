@@ -1,16 +1,26 @@
-﻿using System.Threading.Tasks;
-using SalyanthanSchool.Core.DTOs;
-using System.Collections.Generic;
+﻿using SalyanthanSchool.Core.DTOs.Common;
+using SalyanthanSchool.Core.DTOs.Teacher;
 
 namespace SalyanthanSchool.Core.Interfaces
 {
     public interface ITeacherService
     {
-        Task<IEnumerable<TeacherDTO>> GetAllAsync();
-        Task<TeacherDTO?> GetByIdAsync(int id);
-        Task<TeacherDTO> CreateAsync(TeacherDTO dto);
-        Task<TeacherDTO?> UpdateAsync(int id, TeacherDTO dto);
+        // Single GET (Paging + Search + Filter + Sort)
+        Task<PagedResult<TeacherResponseDto>> GetAsync(
+            TeacherQueryParameter query);
+
+        // GET by ID
+        Task<TeacherResponseDto?> GetByIdAsync(int id);
+
+        // CREATE
+        Task<TeacherResponseDto> CreateAsync(TeacherRequestDto dto);
+
+        // UPDATE
+        Task<TeacherResponseDto?> UpdateAsync(
+            int id,
+            TeacherRequestDto dto);
+
+        // DELETE
         Task<bool> DeleteAsync(int id);
-        Task<PagedResult<TeacherDTO>> GetPagedAsync(int pageNumber, int pageSize);
     }
 }

@@ -1,69 +1,74 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using SalyanthanSchool.Core.DTOs;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using SalyanthanSchool.Core.DTOs.Student;
 using SalyanthanSchool.Core.Interfaces;
-using FluentValidation;
 
 namespace SalyanthanSchool.WebAPI.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
+    [Route("api/[controller]")]
+    [Authorize]
     public class StudentController : ControllerBase
     {
-        private readonly IStudentService _service;
-        private readonly IValidator<StudentDto> _validator;
+        private readonly IStudentService _studentService;
 
-        public StudentController(IStudentService service, IValidator<StudentDto> validator)
+        public StudentController(IStudentService studentService)
         {
-            _service = service;
-            _validator = validator;
+            _studentService = studentService;
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll() => Ok(await _service.GetAllAsync());
-
-        [HttpGet("paged")]
-        public async Task<IActionResult> GetPaged([FromQuery] int pageNumber = 1)
+        public async Task<IActionResult> GetAll([FromQuery] StudentQueryParameter parameters)
         {
-            if (pageNumber < 1) return BadRequest("Page number must be at least 1");
-            var result = await _service.GetPagedAsync(pageNumber, 30);
-            return Ok(result);
+            return Ok(await _studentService.GetAllAsync(parameters));
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
-            var item = await _service.GetByIdAsync(id);
-            if (item == null) return NotFound();
-            return Ok(item);
+            var student = await _studentService.GetByIdAsync(id);
+            return student == null ? NotFound() : Ok(student);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] StudentDto dto)
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> Create([FromForm] StudentRequestDto dto)
         {
-            var result = await _validator.ValidateAsync(dto);
-            if (!result.IsValid) return BadRequest(result.Errors);
-
-            var created = await _service.CreateAsync(dto);
-            return Ok(created);
+            var result = await _studentService.CreateAsync(dto);
+            return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
         }
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] StudentDto dto)
+        [HttpPut("{id:int}")]
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> Update(int id, [FromForm] StudentRequestDto dto)
         {
-            var result = await _validator.ValidateAsync(dto);
-            if (!result.IsValid) return BadRequest(result.Errors);
-
-            var updated = await _service.UpdateAsync(id, dto);
-            if (updated == null) return NotFound();
-            return Ok(updated);
+            var result = await _studentService.UpdateAsync(id, dto);
+            return result == null ? NotFound() : Ok(result);
         }
 
-        [HttpDelete("{id}")]
+        [HttpPatch("{id:int}")]
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> Patch(int id, [FromForm] StudentPatchDto dto)
+        {
+            var result = await _studentService.PatchAsync(id, dto);
+            return result == null ? NotFound() : Ok(result);
+        }
+
+        [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var deleted = await _service.DeleteAsync(id);
-            if (!deleted) return NotFound();
-            return NoContent();
+            var result = await _studentService.DeleteAsync(id);
+            return result ? NoContent() : NotFound();
+        }
+
+        [HttpPost("bulk-delete")]
+        public async Task<IActionResult> BulkDelete([FromBody] List<int> ids)
+        {
+            if (ids == null || !ids.Any())
+                return BadRequest("No IDs provided.");
+
+            var result = await _studentService.BulkDeleteAsync(ids);
+            return result ? NoContent() : NotFound();
         }
     }
 }

@@ -1,79 +1,79 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using SalyanthanSchool.Core.DTOs;
+using SalyanthanSchool.Core.DTOs.Teacher;
 using SalyanthanSchool.Core.Interfaces;
-using FluentValidation;
 
 namespace SalyanthanSchool.WebAPI.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
+    [Route("api/[controller]")]
     public class TeacherController : ControllerBase
     {
-        private readonly ITeacherService _teacherService;
-        private readonly IValidator<TeacherDTO> _validator;
+        private readonly ITeacherService _service;
 
-        public TeacherController(ITeacherService teacherService, IValidator<TeacherDTO> validator)
+        public TeacherController(ITeacherService service)
         {
-            _teacherService = teacherService;
-            _validator = validator;
+            _service = service;
         }
 
-        // GET all
+        // GET: api/teacher
+        // Supports paging, sorting, searching, filtering
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> Get([FromQuery] TeacherQueryParameter query)
         {
-            var teachers = await _teacherService.GetAllAsync();
-            return Ok(teachers);
-        }
+            if (query.PageNumber < 1)
+                return BadRequest("PageNumber must be greater than or equal to 1");
 
-        // GET paged
-        [HttpGet("paged")]
-        public async Task<IActionResult> GetPaged([FromQuery] int pageNumber = 1)
-        {
-            if (pageNumber < 1) return BadRequest("Page number must be at least 1");
-            var result = await _teacherService.GetPagedAsync(pageNumber, 30);
+            if (query.PageSize < 1)
+                return BadRequest("PageSize must be greater than or equal to 1");
+
+            var result = await _service.GetAsync(query);
             return Ok(result);
         }
 
-        // GET by ID
-        [HttpGet("{id}")]
+        // GET: api/teacher/{id}
+        [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
-            var teacher = await _teacherService.GetByIdAsync(id);
-            if (teacher == null) return NotFound();
-            return Ok(teacher);
+            var teacher = await _service.GetByIdAsync(id);
+            return teacher == null ? NotFound() : Ok(teacher);
         }
 
-        // POST
+        // POST: api/teacher
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] TeacherDTO dto)
+        public async Task<IActionResult> Create([FromBody] TeacherRequestDto dto)
         {
-            var validationResult = await _validator.ValidateAsync(dto);
-            if (!validationResult.IsValid) return BadRequest(validationResult.Errors);
-
-            var created = await _teacherService.CreateAsync(dto);
-            return Ok(created);
+            try
+            {
+                var created = await _service.CreateAsync(dto);
+                return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(ex.Message);
+            }
         }
 
-        // PUT
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] TeacherDTO dto)
+        // PUT: api/teacher/{id}
+        [HttpPut("{id:int}")]
+        public async Task<IActionResult> Update(int id, [FromBody] TeacherRequestDto dto)
         {
-            var validationResult = await _validator.ValidateAsync(dto);
-            if (!validationResult.IsValid) return BadRequest(validationResult.Errors);
-
-            var updated = await _teacherService.UpdateAsync(id, dto);
-            if (updated == null) return NotFound();
-            return Ok(updated);
+            try
+            {
+                var updated = await _service.UpdateAsync(id, dto);
+                return updated == null ? NotFound() : Ok(updated);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(ex.Message);
+            }
         }
 
-        // DELETE
-        [HttpDelete("{id}")]
+        // DELETE: api/teacher/{id}
+        [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var deleted = await _teacherService.DeleteAsync(id);
-            if (!deleted) return NotFound();
-            return NoContent();
+            var deleted = await _service.DeleteAsync(id);
+            return deleted ? NoContent() : NotFound();
         }
     }
 }

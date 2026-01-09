@@ -1,16 +1,21 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-using SalyanthanSchool.Core.DTOs;
+﻿using SalyanthanSchool.Core.DTOs.Student;
 
 namespace SalyanthanSchool.Core.Interfaces
 {
     public interface IStudentService
     {
-        Task<IEnumerable<StudentDto>> GetAllAsync();
-        Task<StudentDto?> GetByIdAsync(int id);
-        Task<StudentDto> CreateAsync(StudentDto dto);
-        Task<StudentDto?> UpdateAsync(int id, StudentDto dto);
+        Task<IEnumerable<StudentResponseDto>> GetAllAsync(StudentQueryParameter parameters);
+
+        Task<StudentResponseDto?> GetByIdAsync(int id);
+
+        Task<StudentResponseDto> CreateAsync(StudentRequestDto dto);
+
+        Task<StudentResponseDto?> UpdateAsync(int id, StudentRequestDto dto);
+
+        Task<StudentResponseDto?> PatchAsync(int id, StudentPatchDto dto);
+
         Task<bool> DeleteAsync(int id);
-        Task<PagedResult<StudentDto>> GetPagedAsync(int pageNumber, int pageSize = 30);
+
+        Task<bool> BulkDeleteAsync(List<int> ids);
     }
 }
