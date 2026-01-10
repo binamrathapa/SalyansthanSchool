@@ -1,17 +1,19 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import CustomTable from "@/app/dashboard/components/dashboard/common/CustomTable";
 import {
   studentColumns,
   Student,
 } from "@/app/dashboard/config/table/studentTableConfig";
-import { students } from "@/app/dashboard/data/studentsData";
+// import { students } from "@/app/dashboard/data/studentsData";
 import StudentAddEditModal from "@/app/dashboard/student/StudentAddEditModal";
 import StudentViewModal from "@/app/dashboard/student/StudentViewModal";
 import { showAlert, showConfirm } from "@/lib/sweet-alert";
 import { StudentFormType } from "@/lib/validation/student.schema";
 import { generateFilterOptions } from "@/app/dashboard/utils/generateFilterOptions";
+import { useGetAllStudents, useDeleteStudent, useUpdateStudent } from "@/server-action/api/student.api";
+
 
 const StudentList = () => {
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
@@ -19,12 +21,11 @@ const StudentList = () => {
 
   const [openView, setOpenView] = useState(false);
   const [openAddEdit, setOpenAddEdit] = useState(false);
+  const {data: students = [], isLoading}= useGetAllStudents();
 
-  /* ✅ CORRECT: memoized filter options */
-  const statusFilterOptions = useMemo(
-    () => generateFilterOptions(students, "grade"),
-    []
-  );
+
+  /* CORRECT: memoized filter options */
+  const statusFilterOptions = useMemo(() => generateFilterOptions(students, "grade"), [students]);
 
   // ---------------- VIEW ----------------
   const handleView = (student: Student) => {
