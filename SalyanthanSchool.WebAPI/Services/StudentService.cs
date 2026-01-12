@@ -5,6 +5,7 @@ using SalyanthanSchool.Core.DTOs.Student;
 using SalyanthanSchool.Core.Entities;
 using SalyanthanSchool.Core.Interfaces;
 using SalyanthanSchool.WebAPI.Data;
+using System.Linq.Dynamic.Core;
 
 namespace SalyanthanSchool.WebAPI.Services
 {
@@ -19,52 +20,57 @@ namespace SalyanthanSchool.WebAPI.Services
             _env = env;
         }
 
-        /// <summary>
-        /// Get all students (interface-compatible)
-        /// </summary>
         public async Task<IEnumerable<StudentResponseDto>> GetAllAsync(StudentQueryParameter parameters)
         {
-            var query = _context.Student.AsQueryable();
+            // Use .Include(s => s.Grade) to perform a SQL JOIN and get Grade data
+            var query = _context.Student
+                .Include(s => s.Grade)
+                .AsQueryable();
 
-            // Filters
+            // --- Filtering ---
             if (parameters.IsActive.HasValue)
                 query = query.Where(s => s.IsActive == parameters.IsActive.Value);
 
-            if (parameters.GradeId.HasValue)
-                query = query.Where(s => s.GradeId == parameters.GradeId.Value);
+            if (!string.IsNullOrWhiteSpace(parameters.GradeName))
+            {
+                var gradeSearch = parameters.GradeName.Trim().ToLower();
+                query = query.Where(s => s.Grade.Name.ToLower() == gradeSearch);
 
-            //if (parameters.SectionId.HasValue)
-            //    query = query.Where(s => s.SectionId == parameters.SectionId.Value);
-
+            }
             if (!string.IsNullOrEmpty(parameters.Gender))
                 query = query.Where(s => s.Gender == parameters.Gender);
 
-            // Search
+            // --- Search (Full Name) ---
             if (!string.IsNullOrEmpty(parameters.Search))
+            {
+                var search = parameters.Search.Trim().ToLower();
                 query = query.Where(s =>
-                    (s.FirstName != null && s.FirstName.Contains(parameters.Search)) ||
-                    (s.MiddleName != null && s.MiddleName.Contains(parameters.Search)) ||
-                    (s.LastName != null && s.LastName.Contains(parameters.Search)));
+                    s.FirstName.ToLower().Contains(search) ||
+                    (s.MiddleName != null && s.MiddleName.ToLower().Contains(search)) ||
+                    s.LastName.ToLower().Contains(search));
+            }
 
-            // Sorting
-            query = query.OrderByDynamic(parameters.SortBy, parameters.SortDir);
+            // --- Sorting & Pagination ---
+            // Note: OrderByDynamic is a custom extension method assumed to be in your Core.Common
+            query = query.OrderByDynamic(parameters.SortBy ?? "Id", parameters.SortDir ?? "asc");
 
-            // Pagination
-            query = query
-                .Skip((parameters.PageNumber - 1) * parameters.PageSize)
-                .Take(parameters.PageSize);
+            var totalItems = await query.CountAsync();
 
-            // Map to DTO
             var students = await query
-                .Select(s => MapToResponse(s))
+                .Skip((parameters.PageNumber - 1) * parameters.PageSize)
+                .Take(parameters.PageSize)
                 .ToListAsync();
 
-            return students;
+            return students.Select(MapToResponse);
         }
 
         public async Task<StudentResponseDto?> GetByIdAsync(int id)
         {
-            var student = await _context.Student.FindAsync(id);
+            // FindAsync does not support Include, so we use FirstOrDefaultAsync
+            var student = await _context.Student
+                .Include(s => s.Grade)
+                .FirstOrDefaultAsync(s => s.Id == id);
+
             return student == null ? null : MapToResponse(student);
         }
 
@@ -74,9 +80,10 @@ namespace SalyanthanSchool.WebAPI.Services
 
             var student = new Student
             {
-                FirstName = dto.FirstName,
-                MiddleName = dto.MiddleName,
-                LastName = dto.LastName,
+                // AdmissionNo is handled automatically by the Database Sequence/Default
+                FirstName = dto.FirstName.Trim(),
+                MiddleName = dto.MiddleName?.Trim(),
+                LastName = dto.LastName.Trim(),
                 Gender = dto.Gender,
                 BloodGroup = dto.BloodGroup,
                 DateOfBirth = dto.DateOfBirth?.ToDateTime(TimeOnly.MinValue),
@@ -85,7 +92,6 @@ namespace SalyanthanSchool.WebAPI.Services
                 GuardianName = dto.GuardianName,
                 GuardianContact = dto.GuardianContact,
                 GradeId = dto.GradeId,
-                //SectionId = dto.SectionId,
                 Photo = photoPath,
                 IsActive = dto.IsActive,
                 CreatedAt = DateTime.UtcNow
@@ -94,7 +100,8 @@ namespace SalyanthanSchool.WebAPI.Services
             _context.Student.Add(student);
             await _context.SaveChangesAsync();
 
-            return MapToResponse(student);
+            // Refresh from DB to get the Grade Name and the DB-generated AdmissionNo
+            return (await GetByIdAsync(student.Id))!;
         }
 
         public async Task<StudentResponseDto?> UpdateAsync(int id, StudentRequestDto dto)
@@ -102,9 +109,9 @@ namespace SalyanthanSchool.WebAPI.Services
             var student = await _context.Student.FindAsync(id);
             if (student == null) return null;
 
-            student.FirstName = dto.FirstName;
-            student.MiddleName = dto.MiddleName;
-            student.LastName = dto.LastName;
+            student.FirstName = dto.FirstName.Trim();
+            student.MiddleName = dto.MiddleName?.Trim();
+            student.LastName = dto.LastName.Trim();
             student.Gender = dto.Gender;
             student.BloodGroup = dto.BloodGroup;
             student.DateOfBirth = dto.DateOfBirth?.ToDateTime(TimeOnly.MinValue);
@@ -112,25 +119,19 @@ namespace SalyanthanSchool.WebAPI.Services
             student.Address = dto.Address;
             student.GuardianName = dto.GuardianName;
             student.GuardianContact = dto.GuardianContact;
-            student.GradeId = dto.GradeId;
-            //student.SectionId = dto.SectionId;
+            //student.GradeId = dto.GradeId;
             student.IsActive = dto.IsActive;
+            student.UpdatedAt = DateTime.UtcNow;
 
             if (dto.PhotoFile != null)
             {
-                var newPhoto = await SavePhotoAsync(dto.PhotoFile);
-                if (!string.IsNullOrEmpty(student.Photo))
-                {
-                    var oldPath = Path.Combine(_env.WebRootPath, student.Photo.TrimStart('/'));
-                    if (File.Exists(oldPath)) File.Delete(oldPath);
-                }
-                student.Photo = newPhoto;
+                // Delete old photo
+                DeleteExistingPhoto(student.Photo);
+                student.Photo = await SavePhotoAsync(dto.PhotoFile);
             }
 
-            student.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
-
-            return MapToResponse(student);
+            return await GetByIdAsync(id);
         }
 
         public async Task<StudentResponseDto?> PatchAsync(int id, StudentPatchDto dto)
@@ -138,35 +139,23 @@ namespace SalyanthanSchool.WebAPI.Services
             var student = await _context.Student.FindAsync(id);
             if (student == null) return null;
 
-            if (dto.FirstName != null) student.FirstName = dto.FirstName;
-            if (dto.MiddleName != null) student.MiddleName = dto.MiddleName;
-            if (dto.LastName != null) student.LastName = dto.LastName;
+            if (dto.FirstName != null) student.FirstName = dto.FirstName.Trim();
+            if (dto.LastName != null) student.LastName = dto.LastName.Trim();
+            if (dto.MiddleName != null) student.MiddleName = dto.MiddleName.Trim();
             if (dto.Gender != null) student.Gender = dto.Gender;
-            if (dto.BloodGroup != null) student.BloodGroup = dto.BloodGroup;
-            if (dto.DateOfBirth.HasValue)
-                student.DateOfBirth = dto.DateOfBirth.Value.ToDateTime(TimeOnly.MinValue);
-            if (dto.Address != null) student.Address = dto.Address;
-            if (dto.GuardianName != null) student.GuardianName = dto.GuardianName;
-            if (dto.GuardianContact != null) student.GuardianContact = dto.GuardianContact;
             if (dto.GradeId.HasValue) student.GradeId = dto.GradeId.Value;
-            //if (dto.SectionId.HasValue) student.SectionId = dto.SectionId.Value;
             if (dto.IsActive.HasValue) student.IsActive = dto.IsActive.Value;
+            if (dto.Address != null) student.Address = dto.Address;
 
             if (dto.PhotoFile != null)
             {
-                var newPhoto = await SavePhotoAsync(dto.PhotoFile);
-                if (!string.IsNullOrEmpty(student.Photo))
-                {
-                    var oldPath = Path.Combine(_env.WebRootPath, student.Photo.TrimStart('/'));
-                    if (File.Exists(oldPath)) File.Delete(oldPath);
-                }
-                student.Photo = newPhoto;
+                DeleteExistingPhoto(student.Photo);
+                student.Photo = await SavePhotoAsync(dto.PhotoFile);
             }
 
             student.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
-
-            return MapToResponse(student);
+            return await GetByIdAsync(id);
         }
 
         public async Task<bool> DeleteAsync(int id)
@@ -174,11 +163,7 @@ namespace SalyanthanSchool.WebAPI.Services
             var student = await _context.Student.FindAsync(id);
             if (student == null) return false;
 
-            if (!string.IsNullOrEmpty(student.Photo))
-            {
-                var path = Path.Combine(_env.WebRootPath, student.Photo.TrimStart('/'));
-                if (File.Exists(path)) File.Delete(path);
-            }
+            DeleteExistingPhoto(student.Photo);
 
             _context.Student.Remove(student);
             await _context.SaveChangesAsync();
@@ -190,13 +175,9 @@ namespace SalyanthanSchool.WebAPI.Services
             var students = await _context.Student.Where(s => ids.Contains(s.Id)).ToListAsync();
             if (!students.Any()) return false;
 
-            foreach (var s in students)
+            foreach (var student in students)
             {
-                if (!string.IsNullOrEmpty(s.Photo))
-                {
-                    var path = Path.Combine(_env.WebRootPath, s.Photo.TrimStart('/'));
-                    if (File.Exists(path)) File.Delete(path);
-                }
+                DeleteExistingPhoto(student.Photo);
             }
 
             _context.Student.RemoveRange(students);
@@ -204,20 +185,31 @@ namespace SalyanthanSchool.WebAPI.Services
             return true;
         }
 
+        // --- Helper Methods ---
+
         private async Task<string?> SavePhotoAsync(IFormFile? file)
         {
             if (file == null || file.Length == 0) return null;
 
             var uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", "students");
-            Directory.CreateDirectory(uploadsFolder);
+            if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
 
             var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
             var filePath = Path.Combine(uploadsFolder, fileName);
 
-            using var stream = new FileStream(filePath, FileMode.Create);
-            await file.CopyToAsync(stream);
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
 
             return $"/uploads/students/{fileName}";
+        }
+
+        private void DeleteExistingPhoto(string? photoPath)
+        {
+            if (string.IsNullOrEmpty(photoPath)) return;
+            var fullPath = Path.Combine(_env.WebRootPath, photoPath.TrimStart('/'));
+            if (File.Exists(fullPath)) File.Delete(fullPath);
         }
 
         private static StudentResponseDto MapToResponse(Student s) => new StudentResponseDto
@@ -233,8 +225,8 @@ namespace SalyanthanSchool.WebAPI.Services
             Address = s.Address,
             GuardianName = s.GuardianName,
             GuardianContact = s.GuardianContact,
-            GradeId = s.GradeId,
-            //SectionId = s.SectionId,
+            //GradeId = s.GradeId,
+            GradeName = s.Grade?.Name, 
             Photo = s.Photo,
             IsActive = s.IsActive,
             CreatedAt = s.CreatedAt ?? DateTime.UtcNow

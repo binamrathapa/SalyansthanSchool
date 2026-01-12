@@ -34,7 +34,8 @@ namespace SalyanthanSchool.Core.DTOs.Student
 
         public string? GuardianContact { get; set; }
 
-        public int GradeId { get; set; }
+        //public int GradeId { get; set; }
+        public string? GradeName { get; set; }
 
         public string? Photo { get; set; }
 

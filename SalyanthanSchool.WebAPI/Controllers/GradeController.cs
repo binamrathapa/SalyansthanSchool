@@ -7,7 +7,7 @@ namespace SalyanthanSchool.WebAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize] // Keep your existing security
+    //[Authorize] 
     public class GradeController : ControllerBase
     {
         private readonly IGradeService _service;
