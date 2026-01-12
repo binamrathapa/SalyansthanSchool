@@ -33,7 +33,7 @@ export const DB = {
   STUDENT: "Student",
   TEACHER: "Teacher",
   STAFF: "staff",
-  CLASS: "Class",
+  GRADE: "Grade",
   SECTION: "Section",
   SUBJECT: "subject",
 

@@ -1,18 +1,18 @@
 export interface StudentFieldConfig {
   name:
     | "name"
-    | "grade"
+    | "gradeId"
+    | "sectionId"
     | "rollNo"
-    | "parent"  
+    | "parent"
     | "parentContact"
     | "address"
     | "dob"
     | "admissionDate"
     | "gender"
-    ;
+    | "bloodGroup";
   label: string;
   type?: "text" | "date" | "select";
-  options?: string[];
   restrictInput?: RegExp;
 }
 
@@ -23,8 +23,14 @@ export const studentFieldConfig: StudentFieldConfig[] = [
     restrictInput: /[^a-zA-Z\s]/g,
   },
   {
-    name: "grade",
+    name: "gradeId",
     label: "Grade",
+    type: "select",
+  },
+  {
+    name: "sectionId",
+    label: "Section",
+    type: "select",
   },
   {
     name: "rollNo",
@@ -40,6 +46,11 @@ export const studentFieldConfig: StudentFieldConfig[] = [
     name: "parentContact",
     label: "Parent Contact",
     restrictInput: /\D/g,
+  },
+  {
+    name: "bloodGroup",
+    label: "Blood Group",
+    type: "select",
   },
   {
     name: "address",
@@ -59,6 +70,5 @@ export const studentFieldConfig: StudentFieldConfig[] = [
     name: "gender",
     label: "Gender",
     type: "select",
-    options: ["Male", "Female", "Other"],
   },
 ];

@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SalyanthanSchool.Core.DTOs.Grade;
 using SalyanthanSchool.Core.Interfaces;
+using SalyanthanSchool.Core.DTOs.Common;
 using Microsoft.AspNetCore.Authorization;
 
 namespace SalyanthanSchool.WebAPI.Controllers
@@ -17,41 +18,94 @@ namespace SalyanthanSchool.WebAPI.Controllers
             _service = service;
         }
 
+        // Fetches a paged list of grades, each containing its associated sections
         [HttpGet]
         public async Task<IActionResult> Get([FromQuery] GradeQueryParameter query)
         {
             var result = await _service.GetAsync(query);
-            return Ok(result);
+
+            return Ok(ApiResponse<IEnumerable<GradeResponseDto>>.Ok(
+                data: result.Items,
+                message: "Grades with sections fetched successfully",
+                meta: new
+                {
+                    query.PageNumber,
+                    query.PageSize,
+                    total = result.TotalCount
+                }
+            ));
         }
+
+        // Fetches a specific grade and all its sections by the grade's database ID.
 
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
             var grade = await _service.GetByIdAsync(id);
-            return grade == null ? NotFound() : Ok(grade);
+
+            if (grade == null)
+                return NotFound(ApiResponse<GradeResponseDto>.Fail("Grade not found"));
+
+            return Ok(ApiResponse<GradeResponseDto>.Ok(
+                grade,
+                "Grade fetched successfully"
+            ));
         }
+
+
+        /// Creates a new Grade-Section entry.
 
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] GradeRequestDto dto)
         {
-            var created = await _service.CreateAsync(dto);
+            try
+            {
+                var created = await _service.CreateAsync(dto);
 
-            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+                return CreatedAtAction(
+                    nameof(GetById),
+                    new { id = created.Id },
+                    ApiResponse<GradeResponseDto>.Ok(created, "Grade created successfully")
+                );
+            }
+            catch (InvalidOperationException ex)
+            {
+                // Handles duplicate names or missing sections
+                return BadRequest(ApiResponse<GradeResponseDto>.Fail(ex.Message));
+            }
         }
 
+
+        /// Updates an existing Grade-Section entry
         [HttpPut("{id:int}")]
         public async Task<IActionResult> Update(int id, [FromBody] GradeRequestDto dto)
         {
-            var updated = await _service.UpdateAsync(id, dto);
+            try
+            {
+                var updated = await _service.UpdateAsync(id, dto);
 
-            return updated == null ? NotFound() : Ok(updated);
+                if (updated == null)
+                    return NotFound(ApiResponse<GradeResponseDto>.Fail("Grade not found"));
+
+                return Ok(ApiResponse<GradeResponseDto>.Ok(updated, "Grade updated successfully"));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ApiResponse<GradeResponseDto>.Fail(ex.Message));
+            }
         }
 
+        // Deletes a specific Grade-Section entry.
+        
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
             var deleted = await _service.DeleteAsync(id);
-            return deleted ? NoContent() : NotFound();
+
+            if (!deleted)
+                return NotFound(ApiResponse<bool>.Fail("Grade not found"));
+
+            return Ok(ApiResponse<bool>.Ok(true, "Grade deleted successfully"));
         }
     }
 }
