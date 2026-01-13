@@ -24,7 +24,12 @@ import {
 } from "@/components/ui/pagination";
 import { Download, Trash } from "lucide-react";
 
+<<<<<<< HEAD
 /* ---------------- COLUMN TYPES ---------------- */
+=======
+import { Download, Trash } from "lucide-react";
+
+>>>>>>> 840f115b709da100e16d6bbd5b40713a743d6502
 export interface Column<T> {
   key: keyof T | string;
   label: string;
@@ -53,7 +58,10 @@ interface CustomTableProps<T> {
   filterOptions?: { label: string; value: string; key: keyof T }[];
 }
 
+<<<<<<< HEAD
 /* ---------------- COMPONENT ---------------- */
+=======
+>>>>>>> 840f115b709da100e16d6bbd5b40713a743d6502
 const CustomTable = <T extends Record<string, any>>({
   caption,
   columns,
@@ -79,9 +87,13 @@ const CustomTable = <T extends Record<string, any>>({
       const matchesSearch =
         !search ||
         searchableKeys.some((key) =>
+<<<<<<< HEAD
           String(row[key] ?? "")
             .toLowerCase()
             .includes(search.toLowerCase())
+=======
+          String(row[key]).toLowerCase().includes(search.toLowerCase())
+>>>>>>> 840f115b709da100e16d6bbd5b40713a743d6502
         );
 
       const filterConfig = filterOptions.find((f) => f.value === filter);
@@ -110,6 +122,7 @@ const CustomTable = <T extends Record<string, any>>({
     setSelectedRows(newSet);
   };
 
+<<<<<<< HEAD
   const allSelected =
     filteredData.length > 0 &&
     filteredData.every((_, i) => selectedRows.has(i + startIndex));
@@ -128,6 +141,28 @@ const CustomTable = <T extends Record<string, any>>({
   const selectedData = Array.from(selectedRows).map(
     (idx) => filteredData[idx - startIndex] || filteredData[0]
   );
+=======
+  // allSelected should only consider currently filtered data
+  const allSelected =
+    filteredData.length > 0 &&
+    filteredData.every((_, i) => selectedRows.has(i));
+
+  const toggleAll = () => {
+    if (allSelected) {
+      // Deselect all filtered rows
+      const newSet = new Set(selectedRows);
+      filteredData.forEach((_, i) => newSet.delete(i));
+      setSelectedRows(newSet);
+    } else {
+      // Select all filtered rows
+      const newSet = new Set(selectedRows);
+      filteredData.forEach((_, i) => newSet.add(i));
+      setSelectedRows(newSet);
+    }
+  };
+
+  const selectedData = Array.from(selectedRows).map((idx) => filteredData[idx]);
+>>>>>>> 840f115b709da100e16d6bbd5b40713a743d6502
 
   useEffect(() => {
     onSelectionChange?.(selectedData);
@@ -157,7 +192,36 @@ const CustomTable = <T extends Record<string, any>>({
             </Button>
           )}
 
+          {
+            <Button
+              variant="default"
+              size="lg"
+              className="flex items-center gap-2 bg-[var(--brand-600)] hover:bg-[var(--brand-700)] text-white transition-colors duration-200"
+              onClick={handleExport}
+            >
+              <Download className="w-5 h-5 text-white" /> Export (
+              {selectedRows.size})
+            </Button>
+          }
+        </div>
+      )}
+      {/* Search / Filter */}
+      <SearchFilterBar
+        search={search}
+        filter={filter}
+        onSearchChange={setSearch}
+        onFilterChange={setFilter}
+        filterOptions={filterOptions.map(({ label, value }) => ({
+          label,
+          value,
+        }))}
+      />
+
+      {/* Add Button */}
+      {addButtonLabel && onAddClick && (
+        <div className="flex justify-end mb-4">
           <Button
+<<<<<<< HEAD
             variant="default"
             size="lg"
             className="flex items-center gap-2 bg-[var(--brand-600)] hover:bg-[var(--brand-700)] text-white transition-colors duration-200"
@@ -184,6 +248,11 @@ const CustomTable = <T extends Record<string, any>>({
             onClick={onAddClick}
             className="flex items-center gap-2 bg-[var(--brand-600)] hover:bg-[var(--brand-700)] text-white transition-colors duration-200"
           >
+=======
+            onClick={onAddClick}
+            className="flex items-center gap-2 bg-[var(--brand-600)] hover:bg-[var(--brand-700)] text-white transition-colors duration-200"
+          >
+>>>>>>> 840f115b709da100e16d6bbd5b40713a743d6502
             {addButtonLabel}
           </Button>
         </div>
@@ -221,7 +290,11 @@ const CustomTable = <T extends Record<string, any>>({
                     ? col.render(row, startIndex + idx)
                     : renderCell
                     ? renderCell(row, col.key as keyof T)
+<<<<<<< HEAD
                     : (row[col.key as keyof T] as React.ReactNode)}
+=======
+                    : row[col.key]}
+>>>>>>> 840f115b709da100e16d6bbd5b40713a743d6502
                 </TableCell>
               ))}
             </TableRow>

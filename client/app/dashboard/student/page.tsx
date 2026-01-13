@@ -149,6 +149,21 @@ const StudentList = () => {
         data={editingStudent ? mapStudentToForm(editingStudent) : null}
         onSave={handleSave}
       />
+
+      {selectedStudent && (
+        <StudentViewModal
+          isOpen={openView}
+          onClose={() => setOpenView(false)}
+          data={selectedStudent as StudentFormType}
+        />
+      )}
+
+      <StudentAddEditModal
+        isOpen={openAddEdit}
+        onClose={() => setOpenAddEdit(false)}
+        data={editingStudent as Partial<StudentFormType> | null}
+        onSave={handleSave}
+      />
     </div>
   );
 };

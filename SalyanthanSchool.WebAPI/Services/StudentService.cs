@@ -20,6 +20,9 @@ namespace SalyanthanSchool.WebAPI.Services
             _env = env;
         }
 
+        /// <summary>
+        /// Get all students (interface-compatible)
+        /// </summary>
         public async Task<IEnumerable<StudentResponseDto>> GetAllAsync(StudentQueryParameter parameters)
         {
             // Use .Include(s => s.Grade) to perform a SQL JOIN and get Grade data
