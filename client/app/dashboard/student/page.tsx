@@ -11,26 +11,29 @@ import StudentViewModal from "@/app/dashboard/student/StudentViewModal";
 import { showConfirm } from "@/lib/sweet-alert";
 import { StudentFormType } from "@/lib/validation/student.schema";
 import { generateFilterOptions } from "@/app/dashboard/utils/generateFilterOptions";
-import { 
-  useGetAllStudents, 
-  useDeleteStudent, 
-  useUpdateStudent, 
-  useCreateStudent 
+import {
+  useGetAllStudents,
+  useDeleteStudent,
+  useUpdateStudent,
+  useCreateStudent
 } from "@/server-action/api/student.api";
 
 // Helper to map API response to StudentFormType
 const mapStudentToForm = (student: Student): StudentFormType => ({
   name: student.fullName,
   grade: student.gradeName,
-  rollNo: "", 
+  rollNo: student.rollNo,
   parent: student.guardianName,
+  parentContact: student.guardianContact,
+  bloodGroup: student.bloodGroup,
   dob: student.dateOfBirth,
   admissionDate: student.admissionDate,
   address: student.address,
-  parentContact: student.guardianContact,
   gender: student.gender,
   photo: student.photo ? process.env.NEXT_PUBLIC_BASE_URL + student.photo : undefined,
 });
+
+
 
 const StudentList = () => {
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
@@ -117,14 +120,14 @@ const StudentList = () => {
     <div className="p-8">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold">Student Details</h1>
-      console.log("Students Data:", students)// Debugging line
+        {/* console.log("Students Data:", students)// Debugging line */}
       </div>
 
       <CustomTable
         caption="Student Details"
         columns={studentColumns(handleView, handleEdit, handleDelete)}
         data={students}
-        isLoading={isLoading} 
+        isLoading={isLoading}
         limit={5}
         addButtonLabel="Add Student"
         onAddClick={handleAdd}
@@ -138,7 +141,7 @@ const StudentList = () => {
         <StudentViewModal
           isOpen={openView}
           onClose={() => setOpenView(false)}
-          student={selectedStudent}
+          data={mapStudentToForm(selectedStudent)}
         />
       )}
 
