@@ -18,49 +18,64 @@ namespace SalyanthanSchool.Infrastructure.Services
 
         public async Task<PagedResult<GradeResponseDto>> GetAsync(GradeQueryParameter query)
         {
-            var grades = _context.Grade.Include(g => g.Section).AsNoTracking();
+            var gradesQuery = _context.Grade.Include(g => g.Section).AsNoTracking();
 
+            // --- Filtering ---
             if (!string.IsNullOrWhiteSpace(query.Search))
-            {
-                grades = grades.Where(g => g.Name.Contains(query.Search));
-            }
+                gradesQuery = gradesQuery.Where(g => g.Name.Contains(query.Search));
 
             if (query.IsActive.HasValue)
-            {
-                grades = grades.Where(g => g.IsActive == query.IsActive);
-            }
+                gradesQuery = gradesQuery.Where(g => g.IsActive == query.IsActive);
 
-            // Sorting logic remains same
-            grades = query.SortBy.ToLower() switch
+            // Get data from DB
+            var rawList = await gradesQuery.ToListAsync();
+
+            // --- Grouping Logic to create the nested structure ---
+            var groupedItems = rawList
+                .GroupBy(g => g.Name.ToLower())
+                .Select(group => new GradeResponseDto
+                {
+                    Id = group.First().Id, // Use the first ID found for this grade name
+                    Name = group.First().Name,
+                    IsActive = group.First().IsActive,
+                    CreatedAt = group.First().CreatedAt,
+                    Sections = group
+                        .Where(x => x.Section != null)
+                        .Select(s => new SectionSummaryDto
+                        {
+                            Id = s.SectionId ?? 0,
+                            Name = s.Section?.SectionName ?? "N/A"
+                        }).ToList()
+                });
+
+            // --- Sorting ---
+            groupedItems = query.SortBy.ToLower() switch
             {
-                "name" => query.SortDir == "desc" ? grades.OrderByDescending(g => g.Name) : grades.OrderBy(g => g.Name),
-                "createdat" => query.SortDir == "desc" ? grades.OrderByDescending(g => g.CreatedAt) : grades.OrderBy(g => g.CreatedAt),
-                _ => query.SortDir == "desc" ? grades.OrderByDescending(g => g.Id) : grades.OrderBy(g => g.Id)
+                "name" => query.SortDir == "desc" ? groupedItems.OrderByDescending(g => g.Name) : groupedItems.OrderBy(g => g.Name),
+                _ => query.SortDir == "desc" ? groupedItems.OrderByDescending(g => g.Id) : groupedItems.OrderBy(g => g.Id)
             };
 
-            var totalCount = await grades.CountAsync();
+            var totalCount = groupedItems.Count();
 
-            var items = await grades
+            var items = groupedItems
                 .Skip((query.PageNumber - 1) * query.PageSize)
                 .Take(query.PageSize)
-                .Select(g => new GradeResponseDto
-                {
-                    Id = g.Id,
-                    Name = g.Name,
-                    IsActive = g.IsActive,
-                    CreatedAt = g.CreatedAt,
-                    SectionId = g.SectionId,
-                    SectionName = g.Section != null ? g.Section.SectionName : "No Section"
-                })
-                .ToListAsync();
+                .ToList();
 
             return new PagedResult<GradeResponseDto>(items, totalCount, query.PageNumber, query.PageSize);
         }
 
         public async Task<GradeResponseDto?> GetByIdAsync(int id)
         {
+            // First find the grade to get its name
             var grade = await _context.Grade.Include(g => g.Section).FirstOrDefaultAsync(x => x.Id == id);
             if (grade == null) return null;
+
+            // Find all entries with the same name to gather all sections
+            var allSectionsForThisGrade = await _context.Grade
+                .Include(g => g.Section)
+                .Where(g => g.Name.ToLower() == grade.Name.ToLower())
+                .ToListAsync();
 
             return new GradeResponseDto
             {
@@ -68,32 +83,30 @@ namespace SalyanthanSchool.Infrastructure.Services
                 Name = grade.Name,
                 IsActive = grade.IsActive,
                 CreatedAt = grade.CreatedAt,
-                SectionId = grade.SectionId,
-                SectionName = grade.Section?.SectionName
+                Sections = allSectionsForThisGrade
+                    .Where(x => x.Section != null)
+                    .Select(s => new SectionSummaryDto
+                    {
+                        Id = s.SectionId ?? 0,
+                        Name = s.Section?.SectionName ?? "N/A"
+                    }).ToList()
             };
         }
+
         public async Task<GradeResponseDto> CreateAsync(GradeRequestDto dto)
         {
-            // 1. Normalize the name to lowercase (matching your requirement)
             var normalizedName = dto.Name.Trim().ToLower();
 
-            // 2. Check if a grade with this name already exists
-            // According to your SQL script, Grade names are varchar(50)
+            // Check if this specific Grade-Section combination already exists
             var exists = await _context.Grade
-                .AnyAsync(g => g.Name.ToLower() == normalizedName);
+                .AnyAsync(g => g.Name.ToLower() == normalizedName && g.SectionId == dto.SectionId);
 
             if (exists)
-            {
-                throw new InvalidOperationException($"A grade with the name '{dto.Name}' already exists.");
-            }
-
-            // 3. Check if the Section exists
-            if (!await _context.Section.AnyAsync(s => s.Id == dto.SectionId))
-                throw new InvalidOperationException("Selected section does not exist.");
+                throw new InvalidOperationException($"Grade '{dto.Name}' with this section already exists.");
 
             var grade = new Grade
             {
-                Name = normalizedName, // Save as lowercase
+                Name = dto.Name.Trim(),
                 IsActive = dto.IsActive,
                 SectionId = dto.SectionId,
                 CreatedAt = DateTime.UtcNow
@@ -102,7 +115,7 @@ namespace SalyanthanSchool.Infrastructure.Services
             _context.Grade.Add(grade);
             await _context.SaveChangesAsync();
 
-            return await GetByIdAsync(grade.Id);
+            return (await GetByIdAsync(grade.Id))!;
         }
 
         public async Task<GradeResponseDto?> UpdateAsync(int id, GradeRequestDto dto)
@@ -110,18 +123,7 @@ namespace SalyanthanSchool.Infrastructure.Services
             var grade = await _context.Grade.FindAsync(id);
             if (grade == null) return null;
 
-            var normalizedName = dto.Name.Trim().ToLower();
-
-            // Check for duplicates, excluding the current record we are updating
-            var exists = await _context.Grade
-                .AnyAsync(g => g.Name.ToLower() == normalizedName && g.Id != id);
-
-            if (exists)
-            {
-                throw new InvalidOperationException($"Another grade with the name '{dto.Name}' already exists.");
-            }
-
-            grade.Name = normalizedName;
+            grade.Name = dto.Name.Trim();
             grade.IsActive = dto.IsActive;
             grade.SectionId = dto.SectionId;
             grade.UpdatedAt = DateTime.UtcNow;
@@ -129,6 +131,7 @@ namespace SalyanthanSchool.Infrastructure.Services
             await _context.SaveChangesAsync();
             return await GetByIdAsync(id);
         }
+
         public async Task<bool> DeleteAsync(int id)
         {
             var grade = await _context.Grade.FindAsync(id);

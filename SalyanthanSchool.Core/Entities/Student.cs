@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using SalyanthanSchool.Core.Entities;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 [Table("Student")]
@@ -43,6 +44,9 @@ public class Student
 
     [Column("grade_id")]
     public int GradeId { get; set; }
+
+    [ForeignKey("GradeId")]
+    public virtual Grade Grade { get; set; } = null!;
 
     [Column("photo")]
     public string? Photo { get; set; }

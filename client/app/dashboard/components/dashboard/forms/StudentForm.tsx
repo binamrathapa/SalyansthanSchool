@@ -1,14 +1,10 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-import {
-  studentSchema,
-  StudentFormType,
-} from "@/lib/validation/student.schema";
-
+import { studentSchema, StudentFormType } from "@/lib/validation/student.schema";
 import { studentFieldConfig } from "@/app/dashboard/config/forms/studentFormConfig";
 
 import { Input } from "@/components/ui/input";
@@ -29,13 +25,16 @@ interface StudentFormProps {
   submitLabel?: string;
   disabled?: boolean;
   mode?: "add" | "edit" | "view";
+  grades?: { id: number; name: string; sections: { id: number; name: string }[] }[];
+  sections?: { id: number; name: string }[];
 }
 
-/* DEFAULT VALUES (important for ADD) */
+/* DEFAULT VALUES */
 const DEFAULT_VALUES: StudentFormType = {
   photo: "",
   name: "",
-  grade: "",
+  gradeId: "",
+  sectionId: "",
   rollNo: "",
   parent: "",
   dob: "",
@@ -43,6 +42,7 @@ const DEFAULT_VALUES: StudentFormType = {
   address: "",
   parentContact: "",
   gender: "Male",
+  bloodGroup: "A+",
 };
 
 export default function StudentForm({
@@ -51,6 +51,8 @@ export default function StudentForm({
   submitLabel = "Save",
   disabled = false,
   mode = "add",
+  grades = [],
+  sections = [],
 }: StudentFormProps) {
   const isView = mode === "view";
 
@@ -67,22 +69,36 @@ export default function StudentForm({
   });
 
   const photo = watch("photo");
+  const selectedGradeId = watch("gradeId");
+
+  // Reset sectionId when grade changes
+  useEffect(() => {
+    setValue("sectionId", "");
+  }, [selectedGradeId, setValue]);
 
   const submitHandler = async (values: StudentFormType) => {
     if (!isView && onSubmit) {
-      await onSubmit(values);
+      // Convert gradeId & sectionId to numbers for backend
+      await onSubmit({
+        ...values,
+        gradeId: Number(values.gradeId),
+        sectionId: values.sectionId ? Number(values.sectionId) : undefined,
+      });
     }
   };
+
+  // Compute sections for selected grade
+  const computedSections =
+    grades.find((g) => String(g.id) === selectedGradeId)?.sections || [];
 
   return (
     <form
       onSubmit={handleSubmit(submitHandler)}
       className="grid grid-cols-1 md:grid-cols-2 gap-4"
     >
-      {/* PHOTO */}
+      {/* PHOTO UPLOAD */}
       <div className="md:col-span-2 flex flex-col items-center gap-2">
         <label className="text-sm font-medium">Photo</label>
-
         <div className="relative w-32 h-32 border rounded-md overflow-hidden bg-muted">
           {photo ? (
             <>
@@ -103,7 +119,6 @@ export default function StudentForm({
             </div>
           )}
         </div>
-
         {!isView && (
           <label className="flex items-center gap-2 border rounded-md px-3 py-1.5 cursor-pointer text-sm">
             <Upload className="w-4 h-4" />
@@ -116,14 +131,12 @@ export default function StudentForm({
                 const file = e.target.files?.[0];
                 if (!file) return;
                 const reader = new FileReader();
-                reader.onload = () =>
-                  setValue("photo", reader.result as string);
+                reader.onload = () => setValue("photo", reader.result as string);
                 reader.readAsDataURL(file);
               }}
             />
           </label>
         )}
-
         {errors.photo && (
           <p className="text-red-500 text-sm flex items-center gap-1">
             <AlertCircle className="w-4 h-4" />
@@ -132,69 +145,72 @@ export default function StudentForm({
         )}
       </div>
 
-      {/* FIELDS */}
+      {/* DYNAMIC FIELDS */}
       {studentFieldConfig.map(({ name, label, type, restrictInput }) => {
-        if (name === "gender") {
+        // Dropdown fields: gender, bloodGroup, gradeId, sectionId
+        if (["gender", "bloodGroup", "gradeId", "sectionId"].includes(name)) {
+          const options =
+            name === "gender"
+              ? ["Male", "Female", "Other"]
+              : name === "bloodGroup"
+              ? ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"]
+              : name === "gradeId"
+              ? grades.map((g) => ({ label: g.name, value: String(g.id) }))
+              : computedSections.map((s) => ({ label: s.name, value: String(s.id) }));
+
           return (
             <div key={name}>
               <label className="text-sm font-medium">{label}</label>
-
               <Controller
                 control={control}
-                name="gender"
+                name={name as keyof StudentFormType}
                 render={({ field }) => (
                   <Select
-                    value={field.value}
+                    value={field.value ? String(field.value) : ""}
                     onValueChange={field.onChange}
                     disabled={isView}
                   >
                     <SelectTrigger
                       className={`w-full ${
-                        errors.gender ? "border-red-500" : ""
+                        errors[name as keyof StudentFormType] ? "border-red-500" : ""
                       }`}
                     >
-                      <SelectValue placeholder="Select gender" />
+                      <SelectValue placeholder={`Select ${label}`} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Male">Male</SelectItem>
-                      <SelectItem value="Female">Female</SelectItem>
-                      <SelectItem value="Other">Other</SelectItem>
+                      {options.map((opt: any) => (
+                        <SelectItem key={opt.value} value={String(opt.value)}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 )}
               />
-
-              {errors.gender && (
+              {errors[name as keyof StudentFormType] && (
                 <p className="text-red-500 text-sm flex items-center gap-1 mt-1">
                   <AlertCircle className="w-4 h-4" />
-                  {errors.gender.message}
+                  {errors[name as keyof StudentFormType]?.message as string}
                 </p>
               )}
             </div>
           );
         }
 
+        // Normal text/date fields
         return (
           <div key={name}>
             <label className="text-sm font-medium">{label}</label>
-
             <Input
               {...register(name as keyof StudentFormType)}
               type={type || "text"}
               disabled={isView}
               onInput={(e) => {
-                if (restrictInput) {
-                  e.currentTarget.value = e.currentTarget.value.replace(
-                    restrictInput,
-                    ""
-                  );
-                }
+                if (restrictInput)
+                  e.currentTarget.value = e.currentTarget.value.replace(restrictInput, "");
               }}
-              className={
-                errors[name as keyof StudentFormType] ? "border-red-500" : ""
-              }
+              className={errors[name as keyof StudentFormType] ? "border-red-500" : ""}
             />
-
             {errors[name as keyof StudentFormType] && (
               <p className="text-red-500 text-sm flex items-center gap-1 mt-1">
                 <AlertCircle className="w-4 h-4" />
@@ -205,7 +221,7 @@ export default function StudentForm({
         );
       })}
 
-      {/* ACTIONS */}
+      {/* SUBMIT BUTTON */}
       {!isView && (
         <div className="md:col-span-2 flex justify-end mt-2">
           <Button

@@ -8,16 +8,18 @@ import Swal from "sweetalert2";
 import { apiClient } from "../utils/ApiGateway";
 import { PostErrorConfig } from "../error-config/ErrorConfig";
 
-// Types 
-
+/* =======================
+   Types
+======================= */
 type QueryParams = Record<string, any>;
 
 type WithId = {
   id: number;
 };
 
-// API Factory 
-
+/* =======================
+   API Factory
+======================= */
 export function createApiConfig<
   TEntity,
   TCreate = TEntity,
@@ -27,71 +29,63 @@ export function createApiConfig<
   entityNameFormatted: string,
   additionalQueriesToInvalidate: string[] = []
 ) {
-  //Helpers 
-
-  const invalidateQueries = (
-    queryClient: ReturnType<typeof useQueryClient>
-  ) => {
+  /* =======================
+     Helper: Invalidate Queries
+  ======================== */
+  const invalidateQueries = (queryClient: ReturnType<typeof useQueryClient>) => {
     queryClient.invalidateQueries({ queryKey: [entityName] });
 
-    additionalQueriesToInvalidate.forEach((key) =>
-      queryClient.invalidateQueries({ queryKey: [key] })
-    );
+    additionalQueriesToInvalidate.forEach((key) => {
+      queryClient.invalidateQueries({ queryKey: [key] });
+    });
   };
 
-
-//   GET ALL 
-
-  const useGetAll = (
-    queryParams?: QueryParams,
-    options?: QueryObserverOptions<TEntity[]>
-  ) => {
+  /* =======================
+     GET ALL
+  ======================== */
+  const useGetAll = (queryParams?: QueryParams, options?: any) => {
     const stableKey = queryParams ? JSON.stringify(queryParams) : "all";
 
-    return useQuery<TEntity[]>({
+    return useQuery({
       queryKey: [entityName, stableKey],
       queryFn: async () => {
-        const { data } = await apiClient.get<TEntity[]>(
-          `/${entityName}`,
-          { params: queryParams }
-        );
-        return data;
+        const response = await apiClient.get(`/${entityName}`, { params: queryParams });
+        return response.data.data; // critical: Axios response structure
       },
       ...options,
     });
   };
 
-//GET BY ID 
-
+  /* =======================
+     GET BY ID
+  ======================== */
   const useGetById = (id: number) => {
-    return useQuery<TEntity>({
+    return useQuery({
       queryKey: [entityName, id],
       queryFn: async () => {
-        const { data } = await apiClient.get<TEntity>(
-          `/${entityName}/${id}`
-        );
-        return data;
+        const response = await apiClient.get(`/${entityName}/${id}`);
+        return response.data.data;
       },
       enabled: Boolean(id),
     });
   };
 
-//   GET BY ID WITH QUERY PARAMS 
-
+  /* =======================
+     GET BY ID WITH QUERY PARAMS
+  ======================== */
   const useGetByIdWithQueryParams = (
     id: number,
     queryParams?: QueryParams,
-    options?: QueryObserverOptions<TEntity>
+    options?: QueryObserverOptions<TEntity, Error>
   ) => {
     const stableKey = queryParams ? JSON.stringify(queryParams) : "single";
 
-    return useQuery<TEntity>({
+    return useQuery<TEntity, Error>({
       queryKey: [entityName, id, stableKey],
       queryFn: async () => {
-        const { data } = await apiClient.get<TEntity>(
-          `/${entityName}/${id}`,
-          { params: queryParams }
-        );
+        const { data } = await apiClient.get<TEntity>(`/${entityName}/${id}`, {
+          params: queryParams,
+        });
         return data;
       },
       enabled: Boolean(id),
@@ -99,18 +93,17 @@ export function createApiConfig<
     });
   };
 
-//CREATE 
-
+  /* =======================
+     CREATE
+  ======================== */
   const useCreate = () => {
     const queryClient = useQueryClient();
 
-    return useMutation<TEntity, unknown, TCreate>({
+    return useMutation<TEntity, Error, TCreate>({
       mutationFn: async (payload) => {
-        const { data } = await apiClient.post<TEntity>(
-          `/${entityName}`,
-          payload,
-          { headers: { "Content-Type": "application/json" } }
-        );
+        const { data } = await apiClient.post<TEntity>(`/${entityName}`, payload, {
+          headers: { "Content-Type": "application/json" },
+        });
         return data;
       },
       onSuccess: () => {
@@ -137,21 +130,17 @@ export function createApiConfig<
     });
   };
 
-//PATCH UPDATE 
-
+  /* =======================
+     PATCH UPDATE
+  ======================== */
   const useUpdate = () => {
     const queryClient = useQueryClient();
 
-    return useMutation<TEntity, unknown, TUpdate>({
-      mutationFn: async (variables) => {
-        const { id, ...payload } = variables;
-
-        const { data } = await apiClient.patch<TEntity>(
-          `/${entityName}/${id}`,
-          payload,
-          { headers: { "Content-Type": "application/json" } }
-        );
-
+    return useMutation<TEntity, Error, TUpdate>({
+      mutationFn: async ({ id, ...payload }) => {
+        const { data } = await apiClient.patch<TEntity>(`/${entityName}/${id}`, payload, {
+          headers: { "Content-Type": "application/json" },
+        });
         return data;
       },
       onSuccess: () => {
@@ -173,18 +162,17 @@ export function createApiConfig<
     });
   };
 
-  //FULL UPDATE (PUT) 
-
+  /* =======================
+     FULL UPDATE (PUT)
+  ======================== */
   const useFullUpdate = () => {
     const queryClient = useQueryClient();
 
-    return useMutation<TEntity, unknown, TUpdate>({
+    return useMutation<TEntity, Error, TUpdate>({
       mutationFn: async ({ id, ...payload }) => {
-        const { data } = await apiClient.put<TEntity>(
-          `/${entityName}/${id}`,
-          payload,
-          { headers: { "Content-Type": "application/json" } }
-        );
+        const { data } = await apiClient.put<TEntity>(`/${entityName}/${id}`, payload, {
+          headers: { "Content-Type": "application/json" },
+        });
         return data;
       },
       onSuccess: () => {
@@ -206,16 +194,15 @@ export function createApiConfig<
     });
   };
 
-//DELETE 
-
+  /* =======================
+     DELETE
+  ======================== */
   const useDelete = () => {
     const queryClient = useQueryClient();
 
-    return useMutation<TEntity, unknown, number>({
+    return useMutation<TEntity, Error, number>({
       mutationFn: async (id) => {
-        const { data } = await apiClient.delete<TEntity>(
-          `/${entityName}/${id}`
-        );
+        const { data } = await apiClient.delete<TEntity>(`/${entityName}/${id}`);
         return data;
       },
       onSuccess: () => {
@@ -236,17 +223,15 @@ export function createApiConfig<
     });
   };
 
-  //BULK DELETE 
-
+  /* =======================
+     BULK DELETE
+  ======================== */
   const useBulkDelete = () => {
     const queryClient = useQueryClient();
 
-    return useMutation<TEntity, unknown, { ids: number[] }>({
+    return useMutation<TEntity, Error, { ids: number[] }>({
       mutationFn: async (payload) => {
-        const { data } = await apiClient.post<TEntity>(
-          `/${entityName}/bulk-delete`,
-          payload
-        );
+        const { data } = await apiClient.post<TEntity>(`/${entityName}/bulk-delete`, payload);
         return data;
       },
       onSuccess: () => {
@@ -267,8 +252,9 @@ export function createApiConfig<
     });
   };
 
-  //EXPORT
-
+  /* =======================
+     EXPORT HOOKS
+  ======================== */
   return {
     useGetAll,
     useGetById,

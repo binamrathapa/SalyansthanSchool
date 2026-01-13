@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace SalyanthanSchool.Core.DTOs.Grade
+﻿namespace SalyanthanSchool.Core.DTOs.Grade
 {
     public class GradeResponseDto
     {
@@ -8,7 +6,12 @@ namespace SalyanthanSchool.Core.DTOs.Grade
         public string Name { get; set; } = null!;
         public bool IsActive { get; set; }
         public DateTime CreatedAt { get; set; }
-        public int? SectionId { get; set; }
-        public string? SectionName { get; set; }
+        public List<SectionSummaryDto> Sections { get; set; } = new();
+    }
+
+    public class SectionSummaryDto
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = null!;
     }
 }

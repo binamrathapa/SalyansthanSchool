@@ -1,19 +1,36 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import CustomTable from "@/app/dashboard/components/dashboard/common/CustomTable";
 import {
   studentColumns,
-  Student,
 } from "@/app/dashboard/config/table/studentTableConfig";
-// import { students } from "@/app/dashboard/data/studentsData";
+import { Student } from "@/app/dashboard/types/student";
 import StudentAddEditModal from "@/app/dashboard/student/StudentAddEditModal";
 import StudentViewModal from "@/app/dashboard/student/StudentViewModal";
-import { showAlert, showConfirm } from "@/lib/sweet-alert";
+import { showConfirm } from "@/lib/sweet-alert";
 import { StudentFormType } from "@/lib/validation/student.schema";
 import { generateFilterOptions } from "@/app/dashboard/utils/generateFilterOptions";
-import { useGetAllStudents, useDeleteStudent, useUpdateStudent } from "@/server-action/api/student.api";
+import { 
+  useGetAllStudents, 
+  useDeleteStudent, 
+  useUpdateStudent, 
+  useCreateStudent 
+} from "@/server-action/api/student.api";
 
+// Helper to map API response to StudentFormType
+const mapStudentToForm = (student: Student): StudentFormType => ({
+  name: student.fullName,
+  grade: student.gradeName,
+  rollNo: "", 
+  parent: student.guardianName,
+  dob: student.dateOfBirth,
+  admissionDate: student.admissionDate,
+  address: student.address,
+  parentContact: student.guardianContact,
+  gender: student.gender,
+  photo: student.photo ? process.env.NEXT_PUBLIC_BASE_URL + student.photo : undefined,
+});
 
 const StudentList = () => {
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
@@ -21,11 +38,19 @@ const StudentList = () => {
 
   const [openView, setOpenView] = useState(false);
   const [openAddEdit, setOpenAddEdit] = useState(false);
-  const {data: students = [], isLoading}= useGetAllStudents();
 
+  // Cast the data to Student[] to fix the 'unknown' type issue
+  const { data: studentsData, isLoading } = useGetAllStudents();
+  const students: Student[] = Array.isArray(studentsData) ? studentsData : [];
 
-  /* CORRECT: memoized filter options */
-  const statusFilterOptions = useMemo(() => generateFilterOptions(students, "grade"), [students]);
+  const createMutation = useCreateStudent();
+  const updateMutation = useUpdateStudent();
+  const deleteMutation = useDeleteStudent();
+
+  const statusFilterOptions = useMemo(
+    () => generateFilterOptions(students, "gradeName"),
+    [students]
+  );
 
   // ---------------- VIEW ----------------
   const handleView = (student: Student) => {
@@ -49,31 +74,13 @@ const StudentList = () => {
   const handleDelete = async (student: Student) => {
     const confirmed = await showConfirm({
       title: "Delete Student?",
-      text: `Are you sure you want to delete ${student.name}?`,
+      text: `Are you sure you want to delete ${student.fullName}?`,
       confirmButtonText: "Delete",
     });
 
-    if (!confirmed) return;
-    showAlert({ type: "success", title: "Student deleted successfully!" });
-  };
-
-  // ---------------- BULK DELETE ----------------
-  const handleBulkDelete = async (selectedStudents: Student[]) => {
-    const confirmed = await showConfirm({
-      title: "Delete Students?",
-      text: `Are you sure you want to delete ${selectedStudents.length} students?`,
-      confirmButtonText: "Delete",
-    });
-
-    if (!confirmed) return;
-
-    // 👉 API call later
-    // await deleteStudents(selectedStudents.map(s => s.id));
-
-    showAlert({
-      type: "success",
-      title: `${selectedStudents.length} students deleted successfully!`,
-    });
+    if (confirmed) {
+      deleteMutation.mutate(student.id);
+    }
   };
 
   // ---------------- SAVE (ADD / EDIT) ----------------
@@ -90,45 +97,57 @@ const StudentList = () => {
 
     if (!confirmed) return;
 
-    showAlert({
-      type: "success",
-      title: isEdit
-        ? "Student updated successfully!"
-        : "Student added successfully!",
-    });
+    try {
+      if (isEdit && editingStudent) {
+        await updateMutation.mutateAsync({
+          id: editingStudent.id,
+          ...values,
+        });
+      } else {
+        await createMutation.mutateAsync(values as any);
+      }
 
-    setOpenAddEdit(false);
+      setOpenAddEdit(false);
+    } catch (error) {
+      console.error("Submission error:", error);
+    }
   };
 
   return (
     <div className="p-8">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold">Student Details</h1>
+      console.log("Students Data:", students)// Debugging line
       </div>
 
       <CustomTable
         caption="Student Details"
         columns={studentColumns(handleView, handleEdit, handleDelete)}
         data={students}
+        isLoading={isLoading} 
         limit={5}
         addButtonLabel="Add Student"
         onAddClick={handleAdd}
-        showDelete 
-        onDelete={handleBulkDelete}
-        searchableKeys={["name", "parent", "grade"]}
+        showDelete
+        searchableKeys={["fullName", "guardianName", "gradeName"]}
         filterOptions={statusFilterOptions}
-        renderCell={(row, key) => {
-          if (key === "photo") {
-            return (
-              <img
-                src={row.photo}
-                alt={row.name}
-                className="w-12 h-12 rounded-full object-cover"
-              />
-            );
-          }
-          return row[key];
-        }}
+      />
+
+      {/* VIEW MODAL */}
+      {selectedStudent && (
+        <StudentViewModal
+          isOpen={openView}
+          onClose={() => setOpenView(false)}
+          student={selectedStudent}
+        />
+      )}
+
+      {/* ADD/EDIT MODAL */}
+      <StudentAddEditModal
+        isOpen={openAddEdit}
+        onClose={() => setOpenAddEdit(false)}
+        data={editingStudent ? mapStudentToForm(editingStudent) : null}
+        onSave={handleSave}
       />
 
       {selectedStudent && (

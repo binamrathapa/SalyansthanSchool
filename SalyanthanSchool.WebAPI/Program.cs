@@ -124,6 +124,8 @@ builder.Services.AddSwaggerGen(options =>
 
     options.OperationFilter<AuthorizeCheckOperationFilter>();
 });
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
 
 var app = builder.Build();
 
@@ -132,13 +134,17 @@ var app = builder.Build();
 // ------------------------------------
 if (app.Environment.IsDevelopment())
 {
+    app.UseDeveloperExceptionPage();
     app.UseSwagger();
     app.UseSwaggerUI(c =>
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "Salyanthan School API v1")
     );
 }
 
-app.UseHttpsRedirection();
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
 app.UseRouting();
 // IMPORTANT: Authentication must come BEFORE Authorization

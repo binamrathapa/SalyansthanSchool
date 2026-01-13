@@ -22,9 +22,9 @@ import {
   PaginationPrevious,
   PaginationNext,
 } from "@/components/ui/pagination";
-
 import { Download, Trash } from "lucide-react";
 
+/* ---------------- COLUMN TYPES ---------------- */
 export interface Column<T> {
   key: keyof T | string;
   label: string;
@@ -34,6 +34,7 @@ export interface Column<T> {
   render?: (row: T, index: number) => React.ReactNode;
 }
 
+/* ---------------- PROPS ---------------- */
 interface CustomTableProps<T> {
   caption?: string;
   columns: Column<T>[];
@@ -52,6 +53,7 @@ interface CustomTableProps<T> {
   filterOptions?: { label: string; value: string; key: keyof T }[];
 }
 
+/* ---------------- COMPONENT ---------------- */
 const CustomTable = <T extends Record<string, any>>({
   caption,
   columns,
@@ -77,7 +79,9 @@ const CustomTable = <T extends Record<string, any>>({
       const matchesSearch =
         !search ||
         searchableKeys.some((key) =>
-          String(row[key]).toLowerCase().includes(search.toLowerCase())
+          String(row[key] ?? "")
+            .toLowerCase()
+            .includes(search.toLowerCase())
         );
 
       const filterConfig = filterOptions.find((f) => f.value === filter);
@@ -106,26 +110,24 @@ const CustomTable = <T extends Record<string, any>>({
     setSelectedRows(newSet);
   };
 
-  // allSelected should only consider currently filtered data
   const allSelected =
     filteredData.length > 0 &&
-    filteredData.every((_, i) => selectedRows.has(i));
+    filteredData.every((_, i) => selectedRows.has(i + startIndex));
 
   const toggleAll = () => {
+    const newSet = new Set(selectedRows);
     if (allSelected) {
-      // Deselect all filtered rows
-      const newSet = new Set(selectedRows);
-      filteredData.forEach((_, i) => newSet.delete(i));
-      setSelectedRows(newSet);
+      // Deselect all visible rows
+      filteredData.forEach((_, i) => newSet.delete(i + startIndex));
     } else {
-      // Select all filtered rows
-      const newSet = new Set(selectedRows);
-      filteredData.forEach((_, i) => newSet.add(i));
-      setSelectedRows(newSet);
+      filteredData.forEach((_, i) => newSet.add(i + startIndex));
     }
+    setSelectedRows(newSet);
   };
 
-  const selectedData = Array.from(selectedRows).map((idx) => filteredData[idx]);
+  const selectedData = Array.from(selectedRows).map(
+    (idx) => filteredData[idx - startIndex] || filteredData[0]
+  );
 
   useEffect(() => {
     onSelectionChange?.(selectedData);
@@ -184,6 +186,29 @@ const CustomTable = <T extends Record<string, any>>({
       {addButtonLabel && onAddClick && (
         <div className="flex justify-end mb-4">
           <Button
+            variant="default"
+            size="lg"
+            className="flex items-center gap-2 bg-[var(--brand-600)] hover:bg-[var(--brand-700)] text-white transition-colors duration-200"
+            onClick={handleExport}
+          >
+            <Download className="w-5 h-5 text-white" /> Export ({selectedRows.size})
+          </Button>
+        </div>
+      )}
+
+      {/* Search / Filter */}
+      <SearchFilterBar
+        search={search}
+        filter={filter}
+        onSearchChange={setSearch}
+        onFilterChange={setFilter}
+        filterOptions={filterOptions.map(({ label, value }) => ({ label, value }))}
+      />
+
+      {/* Add Button */}
+      {addButtonLabel && onAddClick && (
+        <div className="flex justify-end mb-4">
+          <Button
             onClick={onAddClick}
             className="flex items-center gap-2 bg-[var(--brand-600)] hover:bg-[var(--brand-700)] text-white transition-colors duration-200"
           >
@@ -224,7 +249,7 @@ const CustomTable = <T extends Record<string, any>>({
                     ? col.render(row, startIndex + idx)
                     : renderCell
                     ? renderCell(row, col.key as keyof T)
-                    : row[col.key]}
+                    : (row[col.key as keyof T] as React.ReactNode)}
                 </TableCell>
               ))}
             </TableRow>
