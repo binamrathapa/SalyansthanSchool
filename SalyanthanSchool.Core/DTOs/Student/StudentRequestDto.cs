@@ -15,6 +15,7 @@ namespace SalyanthanSchool.Core.DTOs.Student
         public string? Address { get; set; }
         public string? GuardianName { get; set; }
         public string? GuardianContact { get; set; }
+        public string? RollNo { get; set; }
         public int GradeId { get; set; }
         public int SectionId { get; set; }
         //public string? Photo { get; set; }  // Keep for storing URL/path in DB

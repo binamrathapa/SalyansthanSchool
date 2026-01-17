@@ -27,8 +27,10 @@ namespace SalyanthanSchool.WebAPI.Services
         {
             // Use .Include(s => s.Grade) to perform a SQL JOIN and get Grade data
             var query = _context.Student
-                .Include(s => s.Grade)
-                .AsQueryable();
+        .Include(s => s.Grade)
+        .Include(s => s.Section)
+        .AsNoTracking() 
+        .AsQueryable();
 
             // --- Filtering ---
             if (parameters.IsActive.HasValue)
@@ -69,9 +71,10 @@ namespace SalyanthanSchool.WebAPI.Services
 
         public async Task<StudentResponseDto?> GetByIdAsync(int id)
         {
-            // FindAsync does not support Include, so we use FirstOrDefaultAsync
+            // Include both Grade and Section for the detailed view
             var student = await _context.Student
                 .Include(s => s.Grade)
+                .Include(s => s.Section)
                 .FirstOrDefaultAsync(s => s.Id == id);
 
             return student == null ? null : MapToResponse(student);
@@ -95,6 +98,7 @@ namespace SalyanthanSchool.WebAPI.Services
                 GuardianName = dto.GuardianName,
                 GuardianContact = dto.GuardianContact,
                 GradeId = dto.GradeId,
+                SectionId = dto.SectionId,
                 Photo = photoPath,
                 IsActive = dto.IsActive,
                 CreatedAt = DateTime.UtcNow
@@ -102,6 +106,8 @@ namespace SalyanthanSchool.WebAPI.Services
 
             _context.Student.Add(student);
             await _context.SaveChangesAsync();
+
+            await _context.Entry(student).ReloadAsync();
 
             // Refresh from DB to get the Grade Name and the DB-generated AdmissionNo
             return (await GetByIdAsync(student.Id))!;
@@ -122,7 +128,8 @@ namespace SalyanthanSchool.WebAPI.Services
             student.Address = dto.Address;
             student.GuardianName = dto.GuardianName;
             student.GuardianContact = dto.GuardianContact;
-            //student.GradeId = dto.GradeId;
+            student.GradeId = dto.GradeId;
+            student.SectionId = dto.SectionId;
             student.IsActive = dto.IsActive;
             student.UpdatedAt = DateTime.UtcNow;
 
@@ -228,8 +235,16 @@ namespace SalyanthanSchool.WebAPI.Services
             Address = s.Address,
             GuardianName = s.GuardianName,
             GuardianContact = s.GuardianContact,
-            //GradeId = s.GradeId,
-            GradeName = s.Grade?.Name, 
+            RollNo = s.RollNo,
+
+            // Map Grade Information
+            GradeId = s.GradeId,
+            GradeName = s.Grade?.Name,
+
+            // Map Section Information (Using s.Section navigation property)
+            SectionId = s.SectionId ?? 0,
+            SectionName = s.Section?.SectionName,
+
             Photo = s.Photo,
             IsActive = s.IsActive,
             CreatedAt = s.CreatedAt ?? DateTime.UtcNow
