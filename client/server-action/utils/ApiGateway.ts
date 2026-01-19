@@ -6,10 +6,9 @@ interface ApiErrorResponse {
 }
 
 export const apiClient = axios.create({
-  baseURL: `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`,  timeout: Number(process.env.NEXT_PUBLIC_API_TIMEOUT) || 30000,
+  baseURL: `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`, timeout: Number(process.env.NEXT_PUBLIC_API_TIMEOUT) || 30000,
   headers: {
     Accept: "application/json",
-    "Content-Type": "application/json",
   },
 });
 
@@ -35,7 +34,17 @@ apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
       config.headers.Authorization = `Bearer ${token}`;
     }
   }
+ 
+  //Dynamic content type 
+  config.headers = config.headers || {};
+  if (config.data instanceof FormData) {
+    if (config.headers) delete config.headers["Content-Type"];
+  } else {
+    if (config.headers) config.headers["Content-Type"] = "application/json";
+  }
 
+
+  //Cancel duplicate requests
   const requestKey = `${config.url}_${JSON.stringify(config.params || {})}_${config.method || "get"}`;
 
   if (controllers.has(requestKey)) {
@@ -58,7 +67,7 @@ apiClient.interceptors.response.use(
     return response;
   },
   (error: AxiosError<ApiErrorResponse>) => {
-    if (axios.isCancel(error)) return new Promise(() => {});
+    if (axios.isCancel(error)) return new Promise(() => { });
 
     if (error.config) {
       const requestKey = `${error.config.url}_${JSON.stringify(error.config.params || {})}_${error.config.method || "get"}`;

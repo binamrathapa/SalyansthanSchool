@@ -5,34 +5,15 @@ import { showError } from "@/lib/sweet-alert";
 import BaseModal from "../components/dashboard/common/modals/BaseModal";
 import StudentForm from "../components/dashboard/forms/StudentForm";
 import { useGetAllGrades } from "@/server-action/api/grade.api";
-
-/* ================= TYPES ================= */
-
-export interface StudentFormType {
-  firstName: string;
-  middleName?: string | null;
-  lastName: string;
-  gender: string;
-  bloodGroup: string;
-  dateOfBirth: string;
-  admissionDate: string;
-  address: string;
-  guardianName: string;
-  guardianContact: string;
-  gradeId: number;
-  sectionId?: number;
-  photo?: string;
-  isActive?: boolean;
-}
+import { StudentFormType } from "@/lib/validation/student.schema";
+import { Grade } from "@/app/dashboard/types/grade"; 
 
 interface StudentAddEditModalProps {
-  isOpen: boolean;
+  isOpen: boolean;  
   onClose: () => void;
   data?: Partial<StudentFormType> | null;
-  onSave: (values: StudentFormType) => Promise<void> | void;
+  onSave: (values: StudentFormType) => void | Promise<void>;
 }
-
-/* ================= COMPONENT ================= */
 
 export default function StudentAddEditModal({
   isOpen,
@@ -42,34 +23,28 @@ export default function StudentAddEditModal({
 }: StudentAddEditModalProps) {
   const [loading, setLoading] = useState(false);
 
-  // Fetch grades (new API structure)
-  const { data: gradesResponse, isLoading: gradesLoading } =
-    useGetAllGrades();
+  const { data: gradesResponse, isLoading: gradesLoading } = useGetAllGrades() as { data?: Grade[]; isLoading: boolean };
+  const grades: Grade[] = gradesResponse ?? [];
 
-    console.log("Grades Response:", gradesResponse);
-  const grades = gradesResponse?.data ?? [];
-   
 
-  /* ================= INITIAL VALUES ================= */
 
   const initialValues: StudentFormType = {
     firstName: data?.firstName ?? "",
     middleName: data?.middleName ?? "",
     lastName: data?.lastName ?? "",
+    gradeId: data?.gradeId ?? (grades[0]?.id ?? 0),
+    sectionId: data?.sectionId ?? (grades[0]?.sections?.[0]?.id ?? 0),
+    rollNo: data?.rollNo ?? 0,
     gender: data?.gender ?? "Male",
-    bloodGroup: data?.bloodGroup ?? "",
-    dateOfBirth: data?.dateOfBirth ?? "",
+    bloodGroup: data?.bloodGroup ?? "A+",
+    dob: data?.dob ?? "",
     admissionDate: data?.admissionDate ?? "",
     address: data?.address ?? "",
-    guardianName: data?.guardianName ?? "",
-    guardianContact: data?.guardianContact ?? "",
-    gradeId: data?.gradeId ?? 0,
-    sectionId: data?.sectionId ?? undefined,
+    parent: data?.parent ?? "",
+    parentContact: data?.parentContact ?? "",
     photo: data?.photo ?? "",
     isActive: data?.isActive ?? true,
   };
-
-  /* ================= SUBMIT ================= */
 
   const handleSubmit = async (values: StudentFormType) => {
     try {
@@ -83,8 +58,6 @@ export default function StudentAddEditModal({
     }
   };
 
-  /* ================= RENDER ================= */
-
   return (
     <BaseModal
       isOpen={isOpen}
@@ -93,11 +66,11 @@ export default function StudentAddEditModal({
       size="lg"
     >
       <StudentForm
-        key={data ? "edit" : "add"}
+        key={data ? "edit" : "add"} 
         initialValues={initialValues}
         onSubmit={handleSubmit}
         disabled={loading || gradesLoading}
-        submitLabel={data ? "Update" : "Add"}
+        submitLabel={data ? "Update Student" : "Add Student"}
         grades={grades}
       />
     </BaseModal>

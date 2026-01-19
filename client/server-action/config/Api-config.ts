@@ -101,9 +101,8 @@ export function createApiConfig<
 
     return useMutation<TEntity, Error, TCreate>({
       mutationFn: async (payload) => {
-        const { data } = await apiClient.post<TEntity>(`/${entityName}`, payload, {
-          headers: { "Content-Type": "application/json" },
-        });
+        const { data } = await apiClient.post<TEntity>(`/${entityName}`,
+          payload);
         return data;
       },
       onSuccess: () => {
@@ -136,31 +135,35 @@ export function createApiConfig<
   const useUpdate = () => {
     const queryClient = useQueryClient();
 
-    return useMutation<TEntity, Error, TUpdate>({
-      mutationFn: async ({ id, ...payload }) => {
-        const { data } = await apiClient.patch<TEntity>(`/${entityName}/${id}`, payload, {
-          headers: { "Content-Type": "application/json" },
-        });
-        return data;
-      },
-      onSuccess: () => {
-        invalidateQueries(queryClient);
-        Swal.fire({
-          icon: "success",
-          title: `${entityNameFormatted} Updated Successfully`,
-          timer: 2000,
-        });
-      },
-      onError: () => {
-        Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: `Failed to update ${entityNameFormatted}`,
-        });
-      },
-      retry: false,
-    });
+    return useMutation<TEntity, Error, { id: number; data: FormData }>(
+      {
+        mutationFn: async ({ id, data }) => {
+          const { data: response } = await apiClient.patch<TEntity>(
+            `/${entityName}/${id}`,
+            data
+          );
+          return response;
+        },
+        onSuccess: () => {
+          invalidateQueries(queryClient);
+          Swal.fire({
+            icon: "success",
+            title: `${entityNameFormatted} Updated Successfully`,
+            timer: 2000,
+          });
+        },
+        onError: () => {
+          Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: `Failed to update ${entityNameFormatted}`,
+          });
+        },
+        retry: false,
+      }
+    );
   };
+
 
   /* =======================
      FULL UPDATE (PUT)
@@ -170,9 +173,7 @@ export function createApiConfig<
 
     return useMutation<TEntity, Error, TUpdate>({
       mutationFn: async ({ id, ...payload }) => {
-        const { data } = await apiClient.put<TEntity>(`/${entityName}/${id}`, payload, {
-          headers: { "Content-Type": "application/json" },
-        });
+        const { data } = await apiClient.put<TEntity>(`/${entityName}/${id}`, payload);
         return data;
       },
       onSuccess: () => {
