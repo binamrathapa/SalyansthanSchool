@@ -2,7 +2,7 @@ import { z } from "zod";
 
 /* ================= CONSTANTS ================= */
 
-const BLOOD_GROUPS = [
+export const BLOOD_GROUPS = [
   "A+",
   "A-",
   "B+",
@@ -13,7 +13,7 @@ const BLOOD_GROUPS = [
   "O-",
 ] as const;
 
-const GENDERS = ["Male", "Female", "Other"] as const;
+export const GENDERS = ["Male", "Female", "Other"] as const;
 
 const today = new Date();
 today.setHours(0, 0, 0, 0);
@@ -22,69 +22,47 @@ today.setHours(0, 0, 0, 0);
 
 export const studentSchema = z
   .object({
-    /* ================= PHOTO ================= */
     photo: z
       .string()
       .optional()
+      .transform((val) => (val === "" ? undefined : val))
       .refine(
         (val) =>
           !val ||
           val.startsWith("data:image/") ||
-          val.startsWith("/uploads/"),
+          val.startsWith("/uploads/") ||
+          val.startsWith("http"),
         "Photo must be a valid image"
       ),
 
-    /* ================= BASIC INFO ================= */
 
-    name: z
-      .string()
-      .trim()
-      .min(2, "Student name is required")
-      .max(100, "Student name is too long"),
+    /* ================= NAMES ================= */
+    firstName: z.string().trim().min(2, "First name is required").max(50),
+    middleName: z.string().trim().max(50).optional(),
+    lastName: z.string().trim().min(2, "Last name is required").max(50),
 
-    // These are required *in the form*, even if the API doesn’t send them
-      gradeId: z.coerce
-      .number()
-      .int()
-      .positive("Grade is required"),
-
-    sectionId: z.coerce
-      .number()
-      .int()
-      .positive("Section is required"),
+    /* ================= ROLL ================= */
     rollNo: z
-      .string()
-      .trim()
-      .regex(/^\d+$/, "Roll number must be numeric")
-      .min(1, "Roll number is required")
-      .max(5, "Roll number is too long"),
+      .number()
+      .optional(),
+
+    /* ================= BASIC INFO ================= */
+    gradeId: z.coerce.number().int().positive("Grade is required"),
+    sectionId: z.coerce.number().int().positive("Section is required"),
+
 
     /* ================= PARENT INFO ================= */
-
-    parent: z
-      .string()
-      .trim()
-      .min(2, "Parent name is required")
-      .max(100, "Parent name is too long"),
-
+    parent: z.string().trim().min(2, "Parent name is required").max(100),
     parentContact: z
       .string()
       .trim()
-      .regex(/^\d+$/, "Parent contact must be numeric")
-      .min(7, "Parent contact is too short")
-      .max(15, "Parent contact is too long")
-      .refine((val) => !/^0{5,}/.test(val), "Invalid phone number"),
+      .regex(/^9[7-8]\d{8}$/, "Parent contact must be a valid Nepali mobile number"),
 
     /* ================= HEALTH ================= */
-
-    bloodGroup: z
-      .enum(BLOOD_GROUPS)
-      .refine((val) => Boolean(val), {
-        message: "Blood group is required",
-      }),
+    bloodGroup: z.enum(BLOOD_GROUPS),
+    gender: z.enum(GENDERS),
 
     /* ================= DATES ================= */
-
     dob: z
       .string()
       .min(1, "Date of birth is required")
@@ -97,42 +75,24 @@ export const studentSchema = z
             today.getFullYear() -
             birthDate.getFullYear() -
             (today <
-            new Date(
-              today.getFullYear(),
-              birthDate.getMonth(),
-              birthDate.getDate()
-            )
+              new Date(today.getFullYear(), birthDate.getMonth(), birthDate.getDate())
               ? 1
               : 0);
           return age >= 1;
         },
         "Student must be at least 1 year old"
       ),
-
     admissionDate: z
       .string()
       .min(1, "Admission date is required")
       .refine((val) => !isNaN(Date.parse(val)), "Invalid date")
-      .refine(
-        (val) => new Date(val) <= today,
-        "Admission date cannot be in the future"
-      ),
+      .refine((val) => new Date(val) <= today, "Admission date cannot be in the future"),
 
     /* ================= ADDRESS ================= */
+    address: z.string().trim().min(3, "Address is required").max(255),
 
-    address: z
-      .string()
-      .trim()
-      .min(3, "Address is required")
-      .max(255, "Address is too long"),
-
-    /* ================= GENDER ================= */
-
-    gender: z
-      .enum(GENDERS)
-      .refine((val) => Boolean(val), {
-        message: "Gender is required",
-      }),
+    /* ================= STATUS ================= */
+    isActive: z.boolean().optional(),
   })
   .refine(
     (data) => {
@@ -147,4 +107,6 @@ export const studentSchema = z
 
 /* ================= TYPE ================= */
 
-export type StudentFormType = z.infer<typeof studentSchema>;
+export type StudentFormType = z.infer<typeof studentSchema> & {
+  rollNo?: number;
+};
