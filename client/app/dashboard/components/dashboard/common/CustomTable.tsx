@@ -31,6 +31,7 @@ export interface Column<T> {
   className?: string;
   cellClassName?: string;
   exportable?: boolean;
+  visible?: boolean;
   render?: (row: T, index: number) => React.ReactNode;
 }
 
@@ -132,6 +133,10 @@ const CustomTable = <T extends Record<string, any>>({
     onSelectionChange?.(selectedData);
   }, [selectedRows]);
 
+  const visibleColumns = useMemo(
+    ()=> columns.filter((col)=> col.visible !== false),
+    [columns]
+  );
   /* ---------------- EXPORT ---------------- */
   const exportColumns = columns
     .filter((c) => c.exportable !== false)
@@ -198,11 +203,11 @@ const CustomTable = <T extends Record<string, any>>({
         {caption && <TableCaption>{caption}</TableCaption>}
         <TableHeader>
           <TableRow>
-            <TableHead className="w-12">
+            <TableHead >
               <Checkbox checked={allSelected} onCheckedChange={toggleAll} />
             </TableHead>
-            {columns.map((col) => (
-              <TableHead key={String(col.key)}>{col.label}</TableHead>
+            {visibleColumns.map((col) => (
+              <TableHead key={String(col.key)} className={col.className}>{col.label} </TableHead>
             ))}
           </TableRow>
         </TableHeader>
@@ -217,8 +222,8 @@ const CustomTable = <T extends Record<string, any>>({
                 />
               </TableCell>
 
-              {columns.map((col) => (
-                <TableCell key={String(col.key)}>
+              {visibleColumns.map((col) => (
+                <TableCell key={String(col.key)} className={col.cellClassName}>
                   {col.key === "sn"
                     ? startIndex + idx + 1
                     : col.render
