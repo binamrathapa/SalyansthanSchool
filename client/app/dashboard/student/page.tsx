@@ -203,7 +203,7 @@ const StudentList = () => {
         addButtonLabel="Add Student"
         onAddClick={handleAdd}
         showDelete
-        searchableKeys={["fullName", "guardianName", "gradeName"]}
+        searchableKeys={["fullName", "guardianName", "dateOfBirth"]}
         filterOptions={statusFilterOptions}
       />
 
