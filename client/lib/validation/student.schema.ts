@@ -48,7 +48,10 @@ export const studentSchema = z
 
     /* ================= BASIC INFO ================= */
     gradeId: z.coerce.number().int().positive("Grade is required"),
+    gradeName: z.string().trim().min(2, "Grade is required").max(50),
     sectionId: z.coerce.number().int().positive("Section is required"),
+    sectionName: z.string().trim().min(2, "Section is required").max(50),
+
 
 
     /* ================= PARENT INFO ================= */

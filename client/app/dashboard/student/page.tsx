@@ -15,7 +15,6 @@ import {
   usePatchStudent,
   useCreateStudent
 } from "@/server-action/api/student.api";
-import { UpdateStudentPayload, CreateStudentPayload } from "@/app/dashboard/types/student";
 
 // ----------------- HELPERS -----------------
 
@@ -25,7 +24,9 @@ const mapStudentToForm = (student: Student): StudentFormType => ({
   middleName: student.middleName || "",
   lastName: student.lastName,
   gradeId: student.gradeId ?? undefined,
+  gradeName: student.gradeName || "",
   sectionId: student.sectionId ?? undefined,
+  sectionName: student.sectionName || "",
   rollNo: student.rollNo,
   parent: student.guardianName || "",
   parentContact: student.guardianContact || "",

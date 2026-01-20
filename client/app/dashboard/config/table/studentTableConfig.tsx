@@ -57,24 +57,38 @@ export const studentColumns = (
     { key: "address", label: "Address", visible: false, exportable: true },
     { key: "guardianContact", label: "Guardian Contact", visible: false, exportable: true },
 
-    {
-      key: "actions",
-      label: "Actions",
-      visible: true,
-      exportable: false,
-      render: (row) => (
-        <div className="flex justify-start gap-2 whitespace-nowrap">
-          <Button size="sm" variant="outline">
-            <Eye className="w-4 h-4" />
-          </Button>
-          <Button size="sm" variant="outline">
-            <Edit className="w-4 h-4" />
-          </Button>
-          <Button size="sm" variant="destructive">
-            <Trash className="w-4 h-4" />
-          </Button>
-        </div>
+   {
+  key: "actions",
+  label: "Actions",
+  visible: true,
+  exportable: false,
+  render: (row) => (
+    <div className="flex justify-start gap-2 whitespace-nowrap">
+      <Button
+        size="sm"
+        variant="outline"
+        onClick={() => onView(row)}
+      >
+        <Eye className="w-4 h-4" />
+      </Button>
 
-      ),
-    },
+      <Button
+        size="sm"
+        variant="outline"
+        onClick={() => onEdit(row)}
+      >
+        <Edit className="w-4 h-4" />
+      </Button>
+
+      <Button
+        size="sm"
+        variant="destructive"
+        onClick={() => onDelete(row)}
+      >
+        <Trash className="w-4 h-4" />
+      </Button>
+    </div>
+  ),
+}
+
   ];
