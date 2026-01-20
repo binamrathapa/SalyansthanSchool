@@ -27,7 +27,9 @@ const DEFAULT_VALUES: StudentFormType = {
   middleName: "",
   lastName: "",
   gradeId: undefined as any,
+  gradeName: "",
   sectionId: undefined as any,
+  sectionName: "",
   parent: "",
   parentContact: "",
   dob: "",
@@ -62,13 +64,13 @@ export default function StudentForm({
     defaultValues: { ...DEFAULT_VALUES, ...initialValues },
   });
 
-  
+
   const photo = watch("photo");
-  const selectedGradeId = watch("gradeId");
+  const selectedGradeId = watch("gradeId") ? Number(watch("gradeId")) : undefined;
   const rollNo = watch("rollNo");
 
-useEffect(() => {
-}, [rollNo]);
+  useEffect(() => {
+  }, [rollNo]);
 
   // Compute sections for selected grade
   const computedSections =
@@ -76,10 +78,13 @@ useEffect(() => {
 
   // Reset sectionId when grade changes
   useEffect(() => {
-    if (computedSections.length > 0) {
+    if (mode === "view") return;
+    const currentSectionId = watch("sectionId");
+    if (!currentSectionId && computedSections.length > 0) {
       setValue("sectionId", computedSections[0].id);
     }
-  }, [selectedGradeId, computedSections, setValue]);
+  }, [selectedGradeId, computedSections, setValue, mode, watch]);
+
 
   const submitHandler = async (values: StudentFormType) => {
     if (!isView && onSubmit) {
@@ -166,6 +171,7 @@ useEffect(() => {
 
       {/* ROLL NO */}
       {mode !== "add" && initialValues?.rollNo !== undefined && (
+
         <div>
           <label className="text-sm font-medium">Roll No</label>
           <Input
@@ -178,6 +184,31 @@ useEffect(() => {
 
       {/* DYNAMIC SELECTS */}
       {["gender", "bloodGroup", "gradeId", "sectionId"].map((name) => {
+        const label =
+          name === "gender"
+            ? "Gender"
+            : name === "bloodGroup"
+              ? "Blood Group"
+              : name === "gradeId"
+                ? "Grade"
+                : "Section";
+
+        if (isView && (name === "gradeId" || name === "sectionId")) {
+          const displayValue =
+            name === "gradeId"
+              ? initialValues?.gradeName || "-"
+              : initialValues?.sectionName || "-";
+
+          return (
+            <div key={name} className="flex flex-col">
+              <label className="text-sm font-medium mb-1">{label}</label>
+              <div className="h-9 px-3 py-1 border rounded-md flex items-center text-gray-700">
+                {displayValue}
+              </div>
+            </div>
+          );
+        }
+
         // Normalize options to always have { label, value }
         const options: { label: string; value: string }[] =
           name === "gender"
@@ -188,14 +219,7 @@ useEffect(() => {
                 ? grades.map((g) => ({ label: g.name, value: String(g.id) }))
                 : computedSections.map((s) => ({ label: s.name, value: String(s.id) }));
 
-        const label =
-          name === "gender"
-            ? "Gender"
-            : name === "bloodGroup"
-              ? "Blood Group"
-              : name === "gradeId"
-                ? "Grade"
-                : "Section";
+
 
         return (
           <div key={name}>
@@ -234,6 +258,8 @@ useEffect(() => {
           </div>
         );
       })}
+
+
 
 
       {/* OTHER FIELDS */}
