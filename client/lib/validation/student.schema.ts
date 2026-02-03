@@ -95,7 +95,12 @@ export const studentSchema = z
       .string()
       .min(1, "Admission date is required")
       .refine((val) => !isNaN(Date.parse(val)), "Invalid date")
-      .refine((val) => new Date(val) <= today, "Admission date cannot be in the future"),
+      .refine((val) => {
+        const inputDate = new Date(val + "T00:00:00");
+        const todayDate = new Date(new Date().toISOString().split("T")[0] + "T00:00:00");
+        return inputDate <= todayDate;
+      }, "Admission date cannot be in the future"),
+
 
     /* ================= ADDRESS ================= */
     address: z.string().trim().min(3, "Address is required").max(255),
