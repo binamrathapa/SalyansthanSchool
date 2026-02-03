@@ -133,6 +133,7 @@ const StudentList = () => {
   };
 
   const handleAdd = () => {
+    console.log("add click")
     setEditingStudent(null);
     setOpenAddEdit(true);
   };
@@ -170,6 +171,7 @@ const StudentList = () => {
 
     try {
       if (isEdit && editingStudent) {
+        console.log("patch click")
         const formData = await buildPatchStudentFormData(values, editingStudent);
         await patchMutation.mutateAsync({
           id: editingStudent.id,
