@@ -72,6 +72,11 @@ export default function StudentForm({
   useEffect(() => {
   }, [rollNo]);
 
+  useEffect(() => {
+  console.log("FORM ERRORS:", errors);
+}, [errors]);
+
+
   // Compute sections for selected grade
   const computedSections =
     grades.find((g) => g.id === Number(selectedGradeId))?.sections || [];
@@ -99,6 +104,7 @@ export default function StudentForm({
 
   return (
     <form onSubmit={handleSubmit(submitHandler)} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      
       {/* PHOTO UPLOAD */}
       <div className="md:col-span-2 flex flex-col items-center gap-2">
         <label className="text-sm font-medium">Photo</label>

@@ -27,13 +27,12 @@ export default function StudentAddEditModal({
   const grades: Grade[] = gradesResponse ?? [];
 
 
-
-  const initialValues: StudentFormType = {
+const initialValues: Partial<StudentFormType> = {
     firstName: data?.firstName ?? "",
     middleName: data?.middleName ?? "",
     lastName: data?.lastName ?? "",
-    gradeId: data?.gradeId ?? (grades[0]?.id ?? 0),
-    sectionId: data?.sectionId ?? (grades[0]?.sections?.[0]?.id ?? 0),
+    gradeId: data?.gradeId ?? (grades[0]?.id),
+    sectionId: data?.sectionId ?? (grades[0]?.sections?.[0]?.id),
     rollNo: data?.rollNo ?? 0,
     gender: data?.gender ?? "Male",
     bloodGroup: data?.bloodGroup ?? "A+",
@@ -50,7 +49,6 @@ export default function StudentAddEditModal({
     try {
       setLoading(true);
       await onSave(values);
-      onClose();
     } catch (error: any) {
       showError(error?.message || "Something went wrong.");
     } finally {
