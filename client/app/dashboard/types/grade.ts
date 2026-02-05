@@ -1,23 +1,31 @@
+// SECTION TYPE
+export interface Section {
+  id: number;
+  name: string;
+}
+
+// GRADE (GET RESPONSE)
 export interface Grade {
   id: number;
   name: string;
-
-  sections: {
-    id: number;
-    name: string;
-  }[];
-
+  sections: Section[];
   isActive: boolean;
   createdAt: string;
 }
 
-export type CreateGradePayload = {
+// CREATE GRADE
+export interface CreateGradePayload {
   name: string;
   isActive: boolean;
-};
+  sectionId: number;
+  createdAt?: string;
+}
 
-export type UpdateGradePayload = {
+// UPDATE GRADE
+export interface UpdateGradePayload {
   id: number;
-  name: string;
-  isActive: boolean;
-};
+  name?: string;
+  isActive?: boolean;
+  sectionId?: number;
+  createdAt?: string;
+}
