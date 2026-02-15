@@ -8,5 +8,8 @@ namespace SalyanthanSchool.Core.Interfaces
         Task<StudentDiscountResponseDto?> GetByIdAsync(int id);
         Task<StudentDiscountResponseDto> CreateAsync(StudentDiscountRequestDto dto);
         Task<bool> DeleteAsync(int id);
+
+        // Added: Toggle active status without deleting (Best Practice)
+        Task<bool> ToggleActiveStatusAsync(int id);
     }
 }

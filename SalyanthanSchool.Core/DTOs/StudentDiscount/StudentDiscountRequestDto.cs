@@ -4,7 +4,11 @@
     {
         public int StudentId { get; set; }
         public int FeeHeadId { get; set; }
-        public decimal DiscountValue { get; set; } // Can be % or flat based on logic
-        public bool IsPercentage { get; set; }     // To tell service how to calculate
+        public int AcademicYearId { get; set; }
+        public decimal DiscountValue { get; set; }
+        public bool IsPercentage { get; set; }
+        public decimal MaxDiscountAmount { get; set; }
+        public DateTime ValidFrom { get; set; }
+        public DateTime ValidTo { get; set; }
     }
 }
