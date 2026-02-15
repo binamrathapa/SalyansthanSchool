@@ -7,7 +7,7 @@ namespace SalyanthanSchool.WebAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    //[Authorize]
     public class AcademicYearController : ControllerBase
     {
         private readonly IAcademicYearService _service;
