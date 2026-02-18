@@ -43,11 +43,10 @@ export const DB = {
   EXAM: "exam",
   RESULT: "result",
 
-  // Fees & Finance
-  FEES: "fees",
-  FEES_TYPE: "fees-type",
-  PAYMENT: "payment",
-  INVOICE: "invoice",
+  // Account
+  FEE_CATEGORY: "FeeCategory",
+  FEE_HEAD: "FeeHead",
+  
 
   // Permissions
   PERMISSION: "permission",
