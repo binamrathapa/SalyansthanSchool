@@ -62,6 +62,7 @@ const GradePage = () => {
 
   // API hooks
   const { data: gradesData, isLoading } = useGetAllGrades();
+
   const grades: Grade[] = Array.isArray(gradesData) ? gradesData : [];
 
   const { data: sectionsData, isLoading: isLoadingSections } = useGetAllSections();
