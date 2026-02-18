@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using SalyanthanSchool.Core.DTOs.Account.FeeCategory;
+using SalyanthanSchool.Core.DTOs.Common;
 using SalyanthanSchool.Core.DTOs.FeeCategory;
 using SalyanthanSchool.Core.DTOs.FeeCategory.SalyanthanSchool.Core.DTOs.Account.FeeCategory;
 using SalyanthanSchool.Core.Interfaces;
@@ -20,11 +22,18 @@ namespace SalyanthanSchool.WebAPI.Controllers
         [HttpGet]
         public async Task<IActionResult> Get([FromQuery] FeeCategoryQueryParameter query)
         {
-            if (query.PageNumber < 1 || query.PageSize < 1)
-                return BadRequest("PageNumber and PageSize must be greater than or equal to 1");
-
             var result = await _service.GetAllAsync(query);
-            return Ok(result);
+
+            return Ok(ApiResponse<IEnumerable<FeeCategoryResponseDto>>.Ok(
+                data: result.Items,
+                message: "Fee categories fetched successfully",
+                meta: new
+                {
+                    query.PageNumber,
+                    query.PageSize,
+                    total = result.TotalCount,
+                }
+            ));
         }
 
         // GET: api/feecategory/{id}
@@ -32,7 +41,14 @@ namespace SalyanthanSchool.WebAPI.Controllers
         public async Task<IActionResult> GetById(int id)
         {
             var category = await _service.GetByIdAsync(id);
-            return category == null ? NotFound() : Ok(category);
+
+            if (category == null)
+                return NotFound(ApiResponse<FeeCategoryResponseDto>.Fail("Fee category not found"));
+
+            return Ok(ApiResponse<FeeCategoryResponseDto>.Ok(
+                category,
+                "Fee category fetched successfully"
+            ));
         }
 
         // POST: api/feecategory
@@ -42,12 +58,16 @@ namespace SalyanthanSchool.WebAPI.Controllers
             try
             {
                 var created = await _service.CreateAsync(dto);
-                return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+
+                return CreatedAtAction(
+                    nameof(GetById),
+                    new { id = created.Id },
+                    ApiResponse<FeeCategoryResponseDto>.Ok(created, "Fee category created successfully")
+                );
             }
             catch (InvalidOperationException ex)
             {
-                // Conflict if name already exists or logic violation
-                return Conflict(ex.Message);
+                return BadRequest(ApiResponse<FeeCategoryResponseDto>.Fail(ex.Message));
             }
         }
 
@@ -58,11 +78,15 @@ namespace SalyanthanSchool.WebAPI.Controllers
             try
             {
                 var updated = await _service.UpdateAsync(id, dto);
-                return updated == null ? NotFound() : Ok(updated);
+
+                if (updated == null)
+                    return NotFound(ApiResponse<FeeCategoryResponseDto>.Fail("Fee category not found"));
+
+                return Ok(ApiResponse<FeeCategoryResponseDto>.Ok(updated, "Fee category updated successfully"));
             }
             catch (InvalidOperationException ex)
             {
-                return Conflict(ex.Message);
+                return BadRequest(ApiResponse<FeeCategoryResponseDto>.Fail(ex.Message));
             }
         }
 
@@ -71,7 +95,11 @@ namespace SalyanthanSchool.WebAPI.Controllers
         public async Task<IActionResult> Delete(int id)
         {
             var deleted = await _service.DeleteAsync(id);
-            return deleted ? NoContent() : NotFound();
+
+            if (!deleted)
+                return NotFound(ApiResponse<bool>.Fail("Fee category not found"));
+
+            return Ok(ApiResponse<bool>.Ok(true, "Fee category deleted successfully"));
         }
     }
 }

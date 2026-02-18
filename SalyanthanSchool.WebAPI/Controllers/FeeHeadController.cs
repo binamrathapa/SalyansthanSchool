@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SalyanthanSchool.Core.DTOs.FeeHead;
 using SalyanthanSchool.Core.Interfaces;
+using SalyanthanSchool.Core.DTOs.Common;
 
 namespace SalyanthanSchool.WebAPI.Controllers
 {
@@ -18,18 +19,29 @@ namespace SalyanthanSchool.WebAPI.Controllers
         [HttpGet]
         public async Task<IActionResult> Get([FromQuery] FeeHeadQueryParameter query)
         {
-            if (query.PageNumber < 1 || query.PageSize < 1)
-                return BadRequest("PageNumber and PageSize must be greater than or equal to 1");
-
             var result = await _service.GetAsync(query);
-            return Ok(result);
+
+            return Ok(ApiResponse<IEnumerable<FeeHeadResponseDto>>.Ok(
+                data: result.Items,
+                message: "Fee heads fetched successfully",
+                meta: new
+                {
+                    query.PageNumber,
+                    query.PageSize,
+                    total = result.TotalCount
+                }
+            ));
         }
 
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
             var head = await _service.GetByIdAsync(id);
-            return head == null ? NotFound() : Ok(head);
+
+            if (head == null)
+                return NotFound(ApiResponse<FeeHeadResponseDto>.Fail("Fee head not found"));
+
+            return Ok(ApiResponse<FeeHeadResponseDto>.Ok(head, "Fee head fetched successfully"));
         }
 
         [HttpPost]
@@ -38,11 +50,16 @@ namespace SalyanthanSchool.WebAPI.Controllers
             try
             {
                 var created = await _service.CreateAsync(dto);
-                return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+
+                return CreatedAtAction(
+                    nameof(GetById),
+                    new { id = created.Id },
+                    ApiResponse<FeeHeadResponseDto>.Ok(created, "Fee head created successfully")
+                );
             }
             catch (InvalidOperationException ex)
             {
-                return Conflict(ex.Message);
+                return BadRequest(ApiResponse<FeeHeadResponseDto>.Fail(ex.Message));
             }
         }
 
@@ -52,11 +69,15 @@ namespace SalyanthanSchool.WebAPI.Controllers
             try
             {
                 var updated = await _service.UpdateAsync(id, dto);
-                return updated == null ? NotFound() : Ok(updated);
+
+                if (updated == null)
+                    return NotFound(ApiResponse<FeeHeadResponseDto>.Fail("Fee head not found"));
+
+                return Ok(ApiResponse<FeeHeadResponseDto>.Ok(updated, "Fee head updated successfully"));
             }
             catch (InvalidOperationException ex)
             {
-                return Conflict(ex.Message);
+                return BadRequest(ApiResponse<FeeHeadResponseDto>.Fail(ex.Message));
             }
         }
 
@@ -64,7 +85,11 @@ namespace SalyanthanSchool.WebAPI.Controllers
         public async Task<IActionResult> Delete(int id)
         {
             var deleted = await _service.DeleteAsync(id);
-            return deleted ? NoContent() : NotFound();
+
+            if (!deleted)
+                return NotFound(ApiResponse<bool>.Fail("Fee head not found"));
+
+            return Ok(ApiResponse<bool>.Ok(true, "Fee head deleted successfully"));
         }
     }
 }
