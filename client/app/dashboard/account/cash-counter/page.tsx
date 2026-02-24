@@ -1,9 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Wallet, CreditCard, AlertCircle, Plus, Search,User } from "lucide-react";
+import { Wallet, CreditCard, AlertCircle, Plus, Search, User } from "lucide-react";
 import { SummaryCard } from "@/app/dashboard/account/cash-counter/components/SummaryCard";
-
+import CustomTable from "@/app/dashboard/components/dashboard/common/CustomTable";
+import {
+  feeCollectionColumns,
+  FeeRecord,
+} from "@/app/dashboard/config/table/feeTableConfig";
 
 const feeTabs = [
   { key: "remaining", label: "Remaining Fees" },
@@ -16,9 +20,22 @@ const feeTabs = [
   { key: "status", label: "Status" },
 ];
 
-
 export default function FeeCollectionPage() {
   const [activeTab, setActiveTab] = useState("remaining");
+
+  const data: FeeRecord[] = [1, 2, 3, 4, 5].map((i) => ({
+    sn: i,
+    particulars: "Monthly Fee",
+    amount: 12000,
+    scholarship: 0,
+    received: activeTab === "paid" ? 12000 : 2000,
+    due: activeTab === "paid" ? 0 : 10000,
+    status: activeTab === "paid" ? "Paid" : "Pending",
+  }));
+
+  const handleCollect = (row: FeeRecord) => {
+    console.log("Collect clicked", row);
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -29,8 +46,6 @@ export default function FeeCollectionPage() {
           <Plus className="h-4 w-4" /> Add Particulars
         </button>
       </div>
-
-     
 
       {/* Student + Summary */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -98,11 +113,12 @@ export default function FeeCollectionPage() {
         ))}
       </div>
 
-      {/* Table Header Actions */}
+      {/* Table Actions */}
       <div className="flex items-center justify-between">
         <button className="flex items-center gap-2 bg-blue-600 text-white px-3 py-2 rounded-xl text-sm">
           <Plus className="h-4 w-4" /> Add Particulars
         </button>
+
         <div className="relative">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
           <input
@@ -112,47 +128,11 @@ export default function FeeCollectionPage() {
         </div>
       </div>
 
-      {/* Table */}
-      <div className="rounded-2xl border overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="p-3 text-left">SN</th>
-              <th className="p-3 text-left">Particulars</th>
-              <th className="p-3 text-right">Amount</th>
-              <th className="p-3 text-right">Scholarship</th>
-              <th className="p-3 text-right">Received</th>
-              <th className="p-3 text-right">Due</th>
-              <th className="p-3 text-center">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {[1, 2, 3, 4, 5].map((i) => (
-              <tr key={i} className="border-t hover:bg-gray-50">
-                <td className="p-3">{i}</td>
-                <td className="p-3">Monthly Fee</td>
-                <td className="p-3 text-right">12,000</td>
-                <td className="p-3 text-right">0</td>
-                <td className="p-3 text-right">
-                  {activeTab === "paid" ? "12,000" : "2,000"}
-                </td>
-                <td className="p-3 text-right">
-                  {activeTab === "paid" ? "0" : "10,000"}
-                </td>
-                <td className="p-3 text-center">
-                  {activeTab === "paid" ? (
-                    <span className="text-green-600 font-medium">Paid</span>
-                  ) : (
-                    <button className="text-blue-600 hover:underline">
-                      Collect
-                    </button>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      {/* Reusable Table */}
+      <CustomTable
+        data={data}
+        columns={feeCollectionColumns(activeTab, handleCollect)}
+      />
     </div>
   );
 }

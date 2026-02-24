@@ -107,18 +107,18 @@ export const sidebarItems: SidebarItem[] = [
     { name: "Dashboard", path: "/dashboard/account" },
 
     // Billing / Cash Counter
+    { name: "Account Setup", path: "/dashboard/account/setup" },
     { name: "Cash Counter", path: "/dashboard/account/cash-counter" },
     { name: "Fee Collection", path: "/dashboard/account/fees" },
     // Income & Expense
-    { name: "Income", path: "/dashboard/accounts/income" },
-    { name: "Expenses", path: "/dashboard/accounts/expenses" },
+    // { name: "Income", path: "/dashboard/accounts/income" },
+    // { name: "Expenses", path: "/dashboard/accounts/expenses" },
 
     // Ledger & Setup
     { name: "Ledger", path: "/dashboard/account/ledger" },
-    { name: "Account Setup", path: "/dashboard/account/setup" },
 
     // Reports
-    { name: "Reports", path: "/dashboard/account/reports" },
+    // { name: "Reports", path: "/dashboard/account/reports" },
   ],
 },
   {
