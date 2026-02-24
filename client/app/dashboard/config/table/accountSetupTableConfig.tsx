@@ -1,7 +1,6 @@
 "use client";
 
 import { Column } from "@/app/dashboard/components/dashboard/common/CustomTable";
-import { Button } from "@/components/ui/button";
 import { Edit, Trash } from "lucide-react";
 import { FeeCategory, FeeHead } from "@/app/dashboard/types/account";
 
@@ -115,6 +114,62 @@ export const feeHeadColumns = (
           onClick={() => onDelete(row)}
         >
           <Trash className="w-4 h-4" />
+        </Button>
+      </div>
+    ),
+  },
+];
+import { FeeStructure } from "@/app/dashboard/types/fee-structure";
+import { Button } from "@/components/ui/button";
+
+export const feeStructureColumns = (
+  onEdit: (row: FeeStructure) => void,
+  onDelete: (row: FeeStructure) => void
+): Column<FeeStructure>[] => [
+  {
+    key: "academicYearName",
+    label: "Academic Year",
+    visible: true,
+    exportable: true,
+  },
+  {
+    key: "gradeName",
+    label: "Grade",
+    visible: true,
+    exportable: true,
+  },
+  {
+    key: "feeHeadName",
+    label: "Fee Head",
+    visible: true,
+    exportable: true,
+  },
+  {
+    key: "amount",
+    label: "Amount",
+    visible: true,
+    exportable: true,
+    render: (row) => `Rs. ${row.amount}`,
+  },
+  {
+    key: "isMonthly",
+    label: "Type",
+    visible: true,
+    exportable: true,
+    render: (row) => (row.isMonthly ? "Monthly" : "One-time"),
+  },
+  {
+    key: "actions",
+    label: "Actions",
+    visible: true,
+    exportable: false,
+    render: (row) => (
+      <div className="flex gap-2">
+        <Button size="sm" variant="outline" onClick={() => onEdit(row)}>
+          Edit
+        </Button>
+        <Button size="sm" variant="destructive" onClick={() => onDelete(row)}>
+          Delete
         </Button>
       </div>
     ),

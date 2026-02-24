@@ -29,3 +29,5 @@ export interface FeeHeadPayload {
 export interface UpdateFeeHeadPayload extends FeeHeadPayload {
   id: number;
 }
+
+
