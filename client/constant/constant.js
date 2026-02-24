@@ -38,6 +38,7 @@ export const DB = {
   SUBJECT: "subject",
 
   // Academic
+  ACADEMIC_YEAR: "AcademicYear",
   ROUTINE: "routine",
   ATTENDANCE: "attendance",
   EXAM: "exam",
@@ -46,6 +47,8 @@ export const DB = {
   // Account
   FEE_CATEGORY: "FeeCategory",
   FEE_HEAD: "FeeHead",
+  FEE_STRUCTURE: "FeeStructure",
+  FEE_PAYMENT: "FeePayment",
   
 
   // Permissions
