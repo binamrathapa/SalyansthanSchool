@@ -1,6 +1,7 @@
 export interface FeeStructure {
   id: number;
   academicYearId:number;
+  academicYearName:string;
   gradeId: number;      // Linking to a specific Grade
   gradeName?: string;
   feeHeadId: number;    // Linking to the Fee Head we made earlier 
