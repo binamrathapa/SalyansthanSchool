@@ -20,8 +20,9 @@ import {
   useUpdateGrade,
   useCreateGrade,
 } from "@/server-action/api/grade.api";
-import { useGetAllSections } from "@/server-action/api/section.api";  
+import { useGetAllSections } from "@/server-action/api/section.api";
 import { create } from "domain";
+import LoadingWrapper from "../components/dashboard/common/LoadingWrapper";
 
 /* ================= HELPERS ================= */
 
@@ -36,7 +37,7 @@ const mapGradeToForm = (grade: Grade): GradeFormType => ({
 const buildCreatePayload = (values: GradeFormType): CreateGradePayload => ({
   name: values.name,
   isActive: values.isActive ?? true,
-  sectionId: values.sections?.[0]?.id ?? 0, 
+  sectionId: values.sections?.[0]?.id ?? 0,
 });
 
 // UPDATE payload
@@ -66,18 +67,18 @@ const GradePage = () => {
   const grades: Grade[] = Array.isArray(gradesData) ? gradesData : [];
 
   const { data: sectionsData, isLoading: isLoadingSections } = useGetAllSections();
-  
-  const sections: Section[] = useMemo(()=>{
-    if(!Array.isArray(sectionsData)) return[];
-    return sectionsData.map((s:any)=>({
+
+  const sections: Section[] = useMemo(() => {
+    if (!Array.isArray(sectionsData)) return [];
+    return sectionsData.map((s: any) => ({
       id: s.id,
       name: s.sectionName,
       isActive: s.isActive,
       createdAt: s.createdAt,
     }));
-  },[sectionsData])
+  }, [sectionsData])
 
-  
+
   const createMutation = useCreateGrade();
   const updateGrade = useUpdateGrade();
   const deleteMutation = useDeleteGrade();
@@ -148,26 +149,29 @@ const GradePage = () => {
         <h1 className="text-2xl font-bold">Grades & Sections</h1>
       </div>
 
-      <CustomTable
-        caption="Grades & Sections"
-        columns={gradeColumns(handleDelete)}
-        data={grades}
-        isLoading={isLoading}
-        limit={5}
-        addButtonLabel="Add Grade"
-        onAddClick={handleAdd}
-        showDelete
-        searchableKeys={["name"]}
-        filterOptions={statusFilterOptions}
-      />
+      <LoadingWrapper isLoading={isLoading || isLoadingSections}>
 
-      <GradeAddEditModal
-        isOpen={openAddEdit}
-        onClose={() => setOpenAddEdit(false)}
-        data={editingGrade ? mapGradeToForm(editingGrade) : null}
-        sections={sections}
-        onSave={handleSave}
-      />
+        <CustomTable
+          caption="Grades & Sections"
+          columns={gradeColumns(handleDelete)}
+          data={grades}
+          isLoading={isLoading}
+          limit={5}
+          addButtonLabel="Add Grade"
+          onAddClick={handleAdd}
+          showDelete
+          searchableKeys={["name"]}
+          filterOptions={statusFilterOptions}
+        />
+
+        <GradeAddEditModal
+          isOpen={openAddEdit}
+          onClose={() => setOpenAddEdit(false)}
+          data={editingGrade ? mapGradeToForm(editingGrade) : null}
+          sections={sections}
+          onSave={handleSave}
+        />
+      </LoadingWrapper>
     </div>
   );
 };

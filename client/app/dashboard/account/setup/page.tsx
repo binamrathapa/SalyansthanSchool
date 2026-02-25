@@ -50,6 +50,7 @@ import {
   feeHeadColumns,
   feeStructureColumns,
 } from "@/app/dashboard/config/table/accountSetupTableConfig";
+import LoadingWrapper from "../../components/dashboard/common/LoadingWrapper";
 
 export default function AccountSetupPage() {
   const [activeTab, setActiveTab] = useState("year");
@@ -196,125 +197,133 @@ export default function AccountSetupPage() {
 
         {/* --- Academic Year Tab --- */}
         <TabsContent value="year" className="mt-6 space-y-4">
-          <AcademicYearForm
-            data={yearFormData}
-            onChange={handleYearChange}
-            onSubmit={handleYearSubmit}
-            isEditing={Boolean(editingYear)}
-            onCancel={() => { setEditingYear(null); setYearFormData(initialYearState); }}
-          />
-          <CustomTable
-            caption="Academic Years List"
-            data={academicYears}
-            columns={academicYearColumns(
-              (row) => { 
-                setEditingYear(row); 
-                setYearFormData({
-                  name: row.name,
-                  startDate: row.startDate.split('T')[0],
-                  endDate: row.endDate.split('T')[0],
-                  isActive: row.isActive
-                });
-              },
-              async (row) => {
-                const ok = await showConfirm({ title: "Delete Year?", text: `Delete ${row.name}?` });
-                if (ok) deleteYear.mutateAsync(row.id);
-              }
-            )}
-            isLoading={isLoadingYears}
-            searchableKeys={["name"]}
-          />
+          <LoadingWrapper isLoading={isLoadingYears}>
+            <AcademicYearForm
+              data={yearFormData}
+              onChange={handleYearChange}
+              onSubmit={handleYearSubmit}
+              isEditing={Boolean(editingYear)}
+              onCancel={() => { setEditingYear(null); setYearFormData(initialYearState); }}
+            />
+            <CustomTable
+              caption="Academic Years List"
+              data={academicYears}
+              columns={academicYearColumns(
+                (row) => {
+                  setEditingYear(row);
+                  setYearFormData({
+                    name: row.name,
+                    startDate: row.startDate.split('T')[0],
+                    endDate: row.endDate.split('T')[0],
+                    isActive: row.isActive
+                  });
+                },
+                async (row) => {
+                  const ok = await showConfirm({ title: "Delete Year?", text: `Delete ${row.name}?` });
+                  if (ok) deleteYear.mutateAsync(row.id);
+                }
+              )}
+              isLoading={isLoadingYears}
+              searchableKeys={["name"]}
+            />
+          </LoadingWrapper>
         </TabsContent>
 
         {/* --- Fee Category Tab --- */}
         <TabsContent value="category" className="mt-6 space-y-4">
-          <FeeCategoryForm
-            name={categoryName}
-            selected={selectedCategory}
-            loading={createCat.isPending || updateCat.isPending}
-            onNameChange={setCategoryName}
-            onSubmit={handleCategorySubmit}
-            isEditing={Boolean(selectedCategory)}
-            onCancel={() => { setSelectedCategory(null); setCategoryName(""); }}
-          />
-          <CustomTable
-            caption="Fee Categories List"
-            data={categories}
-            columns={feeCategoryColumns(
-              (row) => { setSelectedCategory(row); setCategoryName(row.name); },
-              async (row) => {
-                const ok = await showConfirm({ title: "Delete Category?", text: `Delete ${row.name}?` });
-                if (ok) deleteCat.mutateAsync(row.id);
-              }
-            )}
-            isLoading={isLoadingCats}
-            searchableKeys={["name"]}
-          />
+          <LoadingWrapper isLoading={isLoadingCats}>
+            <FeeCategoryForm
+              name={categoryName}
+              selected={selectedCategory}
+              loading={createCat.isPending || updateCat.isPending}
+              onNameChange={setCategoryName}
+              onSubmit={handleCategorySubmit}
+              isEditing={Boolean(selectedCategory)}
+              onCancel={() => { setSelectedCategory(null); setCategoryName(""); }}
+            />
+            <CustomTable
+              caption="Fee Categories List"
+              data={categories}
+              columns={feeCategoryColumns(
+                (row) => { setSelectedCategory(row); setCategoryName(row.name); },
+                async (row) => {
+                  const ok = await showConfirm({ title: "Delete Category?", text: `Delete ${row.name}?` });
+                  if (ok) deleteCat.mutateAsync(row.id);
+                }
+              )}
+              isLoading={isLoadingCats}
+              searchableKeys={["name"]}
+            />
+          </LoadingWrapper>
         </TabsContent>
 
         {/* --- Account Head Tab --- */}
         <TabsContent value="head" className="mt-6 space-y-4">
-          <AccountHeadForm
-            name={accountHeadName}
-            feeCategoryId={selectedFeeCategoryId}
-            categories={categories}
-            loading={createHead.isPending || updateHead.isPending}
-            onNameChange={setAccountHeadName}
-            onCategoryChange={setSelectedFeeCategoryId}
-            onSubmit={handleAccountHeadSubmit}
-            isEditing={Boolean(editingHead)}
-            onCancel={() => { setEditingHead(null); setAccountHeadName(""); setSelectedFeeCategoryId(""); }}
-          />
-          <CustomTable
-            caption="Account Heads List"
-            data={accountHeads}
-            columns={feeHeadColumns(
-              (row) => { setEditingHead(row); setAccountHeadName(row.name); setSelectedFeeCategoryId(String(row.feeCategoryId)); },
-              async (row) => {
-                const ok = await showConfirm({ title: "Delete Head?", text: `Delete ${row.name}?` });
-                if (ok) deleteHead.mutateAsync(row.id);
-              }
-            )}
-            isLoading={isLoadingHeads}
-            searchableKeys={["name"]}
-          />
+          <LoadingWrapper isLoading={isLoadingHeads}>
+            <AccountHeadForm
+              name={accountHeadName}
+              feeCategoryId={selectedFeeCategoryId}
+              categories={categories}
+              loading={createHead.isPending || updateHead.isPending}
+              onNameChange={setAccountHeadName}
+              onCategoryChange={setSelectedFeeCategoryId}
+              onSubmit={handleAccountHeadSubmit}
+              isEditing={Boolean(editingHead)}
+              onCancel={() => { setEditingHead(null); setAccountHeadName(""); setSelectedFeeCategoryId(""); }}
+            />
+            <CustomTable
+              caption="Account Heads List"
+              data={accountHeads}
+              columns={feeHeadColumns(
+                (row) => { setEditingHead(row); setAccountHeadName(row.name); setSelectedFeeCategoryId(String(row.feeCategoryId)); },
+                async (row) => {
+                  const ok = await showConfirm({ title: "Delete Head?", text: `Delete ${row.name}?` });
+                  if (ok) deleteHead.mutateAsync(row.id);
+                }
+              )}
+              isLoading={isLoadingHeads}
+              searchableKeys={["name"]}
+            />
+          </LoadingWrapper>
         </TabsContent>
 
         {/* --- Fee Structure Tab --- */}
         <TabsContent value="structure" className="mt-6 space-y-4">
-          <FeeStructureForm
-            key={editingStructure ? `edit-${editingStructure.id}` : "new-structure"}
-            initialValues={structureInitialValues}
-            academicYears={academicYears}
-            grades={grades}
-            feeHeads={accountHeads}
-            onSubmit={handleStructureSubmit}
-            submitLabel={editingStructure ? "Update Structure" : "Save Structure"}
-            onCancel={() => setEditingStructure(null)}
-          />
-          <CustomTable
-            caption="Fee Structures List"
-            data={structures}
-            columns={feeStructureColumns(
-              (row) => {
-                const year = academicYears.find(y => y.name === row.academicYearName);
-                const grade = grades.find(g => g.name === row.gradeName);
-                const head = accountHeads.find(h => h.name === row.feeHeadName);
-                setEditingStructure({
-                  ...row,
-                  academicYearId: row.academicYearId || year?.id,
-                  gradeId: row.gradeId || grade?.id,
-                  feeHeadId: row.feeHeadId || head?.id,
-                });
-              },
-              async (row) => {
-                const confirmed = await showConfirm({ title: "Delete?", text: `Delete this structure?` });
-                if (confirmed) await deleteStruct.mutateAsync(row.id);
-              }
-            )}
-            isLoading={isLoadingStructures}
-            searchableKeys={["gradeName", "feeHeadName"]}
-          />
+          <LoadingWrapper isLoading={isLoadingStructures}>
+            <FeeStructureForm
+              key={editingStructure ? `edit-${editingStructure.id}` : "new-structure"}
+              initialValues={structureInitialValues}
+              academicYears={academicYears}
+              grades={grades}
+              feeHeads={accountHeads}
+              onSubmit={handleStructureSubmit}
+              submitLabel={editingStructure ? "Update Structure" : "Save Structure"}
+              onCancel={() => setEditingStructure(null)}
+            />
+            <CustomTable
+              caption="Fee Structures List"
+              data={structures}
+              columns={feeStructureColumns(
+                (row) => {
+                  const year = academicYears.find(y => y.name === row.academicYearName);
+                  const grade = grades.find(g => g.name === row.gradeName);
+                  const head = accountHeads.find(h => h.name === row.feeHeadName);
+                  setEditingStructure({
+                    ...row,
+                    academicYearId: row.academicYearId || year?.id,
+                    gradeId: row.gradeId || grade?.id,
+                    feeHeadId: row.feeHeadId || head?.id,
+                  });
+                },
+                async (row) => {
+                  const confirmed = await showConfirm({ title: "Delete?", text: `Delete this structure?` });
+                  if (confirmed) await deleteStruct.mutateAsync(row.id);
+                }
+              )}
+              isLoading={isLoadingStructures}
+              searchableKeys={["gradeName", "feeHeadName"]}
+            />
+          </LoadingWrapper>
         </TabsContent>
       </Tabs>
     </div>
