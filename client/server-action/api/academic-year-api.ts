@@ -6,16 +6,12 @@ import {
   UpdateAcademicYearPayload,
 } from "@/app/dashboard/types/academic-year";
 
-/**
- * Academic Year API configuration
- * Handles: GET (All/Single), POST (Create), PUT (Update), PATCH (Partial), DELETE
- */
 const academicYearApi = createApiConfig<
   AcademicYear,
   AcademicYearPayload,
   UpdateAcademicYearPayload
 >(
-  DB.ACADEMIC_YEAR, // "AcademicYear" from constants
+  DB.ACADEMIC_YEAR, 
   "Academic Year"
 );
 
