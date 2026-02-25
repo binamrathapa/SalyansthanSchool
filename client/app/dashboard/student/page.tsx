@@ -15,6 +15,7 @@ import {
   usePatchStudent,
   useCreateStudent
 } from "@/server-action/api/student.api";
+import LoadingWrapper from "../components/dashboard/common/LoadingWrapper";
 
 // ----------------- HELPERS -----------------
 
@@ -196,34 +197,35 @@ const StudentList = () => {
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold">Student Details</h1>
       </div>
-
-      <CustomTable
-        caption="Student Details"
-        columns={studentColumns(handleView, handleEdit, handleDelete)}
-        data={students}
-        isLoading={isLoading}
-        limit={5}
-        addButtonLabel="Add Student"
-        onAddClick={handleAdd}
-        showDelete
-        searchableKeys={["fullName", "guardianName", "dateOfBirth"]}
-        filterOptions={statusFilterOptions}
-      />
-
-      {selectedStudent && (
-        <StudentViewModal
-          isOpen={openView}
-          onClose={() => setOpenView(false)}
-          data={mapStudentToForm(selectedStudent)}
+      <LoadingWrapper isLoading={isLoading}>
+        <CustomTable
+          caption="Student Details"
+          columns={studentColumns(handleView, handleEdit, handleDelete)}
+          data={students}
+          isLoading={isLoading}
+          limit={5}
+          addButtonLabel="Add Student"
+          onAddClick={handleAdd}
+          showDelete
+          searchableKeys={["fullName", "guardianName", "dateOfBirth"]}
+          filterOptions={statusFilterOptions}
         />
-      )}
 
-      <StudentAddEditModal
-        isOpen={openAddEdit}
-        onClose={() => setOpenAddEdit(false)}
-        data={editingStudent ? mapStudentToForm(editingStudent) : null}
-        onSave={handleSave}
-      />
+        {selectedStudent && (
+          <StudentViewModal
+            isOpen={openView}
+            onClose={() => setOpenView(false)}
+            data={mapStudentToForm(selectedStudent)}
+          />
+        )}
+
+        <StudentAddEditModal
+          isOpen={openAddEdit}
+          onClose={() => setOpenAddEdit(false)}
+          data={editingStudent ? mapStudentToForm(editingStudent) : null}
+          onSave={handleSave}
+        />
+      </LoadingWrapper>
     </div>
   );
 };
