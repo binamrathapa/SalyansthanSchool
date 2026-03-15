@@ -1,0 +1,197 @@
+{
+  "availableYears": [
+    2022,
+    2023,
+    2024,
+    2025,
+    2026
+  ],
+  "year": 2026,
+  "data": {
+    "todayCollection": {
+      "date": "2026-03-12",
+      "amount": 25000,
+      "status": "Closed"
+    },
+    "weeklyCollection": [
+      {
+        "label": "Mon",
+        "amount": 25000,
+        "dayIndex": 1
+      },
+      {
+        "label": "Tue",
+        "amount": 18000,
+        "dayIndex": 2
+      },
+      {
+        "label": "Wed",
+        "amount": 32000,
+        "dayIndex": 3
+      },
+      {
+        "label": "Thu",
+        "amount": 15000,
+        "dayIndex": 4
+      },
+      {
+        "label": "Fri",
+        "amount": 40000,
+        "dayIndex": 5
+      },
+      {
+        "label": "Sat",
+        "amount": 28000,
+        "dayIndex": 6
+      },
+      {
+        "label": "Sun",
+        "amount": 0,
+        "dayIndex": 0
+      }
+    ],
+    "monthlyCollection": [
+      {
+        "label": "Week 1",
+        "amount": 145000
+      },
+      {
+        "label": "Week 2",
+        "amount": 160000
+      },
+      {
+        "label": "Week 3",
+        "amount": 155000
+      },
+      {
+        "label": "Week 4",
+        "amount": 170000
+      }
+    ],
+    "yearlyCollection": [
+      {
+        "label": "Jan",
+        "amount": 120000,
+        "monthIndex": 0
+      },
+      {
+        "label": "Feb",
+        "amount": 150000,
+        "monthIndex": 1
+      },
+      {
+        "label": "Mar",
+        "amount": 170000,
+        "monthIndex": 2
+      },
+      {
+        "label": "Apr",
+        "amount": 160000,
+        "monthIndex": 3
+      },
+      {
+        "label": "May",
+        "amount": 185000,
+        "monthIndex": 4
+      },
+      {
+        "label": "Jun",
+        "amount": 175000,
+        "monthIndex": 5
+      },
+      {
+        "label": "Jul",
+        "amount": 180000,
+        "monthIndex": 6
+      },
+      {
+        "label": "Aug",
+        "amount": 190000,
+        "monthIndex": 7
+      },
+      {
+        "label": "Sep",
+        "amount": 200000,
+        "monthIndex": 8
+      },
+      {
+        "label": "Oct",
+        "amount": 210000,
+        "monthIndex": 9
+      },
+      {
+        "label": "Nov",
+        "amount": 220000,
+        "monthIndex": 10
+      },
+      {
+        "label": "Dec",
+        "amount": 230000,
+        "monthIndex": 11
+      }
+    ],
+    "defaulters": [
+      {
+        "id": "STU001",
+        "name": "Ram Sharma",
+        "class": "Grade 3",
+        "dueAmount": 5000,
+        "lastPayment": "2026-01-10",
+        "status": "Unpaid",
+        "contact": "9876543210"
+      },
+      {
+        "id": "STU002",
+        "name": "Sita Rai",
+        "class": "Grade 2",
+        "dueAmount": 4000,
+        "lastPayment": "2026-01-08",
+        "status": "Partial",
+        "contact": "9876543211"
+      }
+    ],
+    "latestestTrasaction": [
+      {
+        "receipt": "RCPT101",
+        "student": "Anil Maharjan",
+        "class": "Grade 3",
+        "amount": 5000,
+        "date": "2026-03-12",
+        "method": "Cash",
+        "status": "Success"
+      },
+      {
+        "receipt": "RCPT102",
+        "student": "Priya Singh",
+        "class": "Grade 1",
+        "amount": 4500,
+        "date": "2026-03-12",
+        "method": "Online",
+        "status": "Success"
+      }
+    ]
+  },
+  "previousYearsAggregate": [
+    {
+      "year": 2022,
+      "totalCollection": 1800000
+    },
+    {
+      "year": 2023,
+      "totalCollection": 1950000
+    },
+    {
+      "year": 2024,
+      "totalCollection": 2100000
+    },
+    {
+      "year": 2025,
+      "totalCollection": 2300000
+    }
+  ],
+  "classWiseFeeStatus": [
+  { "class": "Grade 1", "paidAmount": 45000, "unpaidAmount": 5000 },
+  { "class": "Grade 2", "paidAmount": 38000, "unpaidAmount": 4000 },
+  { "class": "Grade 3", "paidAmount": 52000, "unpaidAmount": 5000 }
+]
+}
