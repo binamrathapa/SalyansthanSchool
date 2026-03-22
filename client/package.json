@@ -39,6 +39,7 @@
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "react-hook-form": "^7.68.0",
+    "react-to-print": "^3.3.0",
     "react-toastify": "^11.0.5",
     "recharts": "^3.6.0",
     "sweetalert2": "^11.26.3",

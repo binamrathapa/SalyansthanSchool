@@ -1,0 +1,77 @@
+{
+  "student": {
+    "student_id": 101,
+    "admission_no": "ADM-2024-001",
+    "name": "Ram Sharma",
+    "class": "10",
+    "section": "A",
+    "roll_no": 12,
+    "status": "Active"
+  },
+  "academic_year": "2025-2026",
+  "current_month": "March",
+  "fee_structure": {
+    "tuition_fee": 1000,
+    "exam_fee": 500,
+    "transport_fee": 800,
+    "hostel_fee": 0,
+    "library_fee": 200,
+    "base_amount": 2500
+  },
+  "discount": {
+    "type": "Scholarship",
+    "amount": 200,
+    "remarks": "Merit based concession"
+  },
+  "previous_due": {
+    "total_due": 1500,
+    "last_due_month": "February"
+  },
+  "current_month_payment": {
+    "base_amount": 2500,
+    "discount": 200,
+    "previous_due": 1500,
+    "total_payable": 3800,
+    "paid_amount": 2000,
+    "remaining_amount": 1800,
+    "status": "PARTIAL"
+  },
+  "year_summary": {
+    "total_year_fee": 30000,
+    "total_discount": 2000,
+    "total_paid": 18000,
+    "total_due": 10000
+  },
+  "payment_history": [
+    {
+      "payment_id": 1,
+      "month": "January",
+      "amount": 2500,
+      "paid_amount": 2500,
+      "status": "PAID",
+      "date": "2025-01-05",
+      "receipt_no": "RCPT-1001",
+      "method": "Cash"
+    },
+    {
+      "payment_id": 2,
+      "month": "February",
+      "amount": 2500,
+      "paid_amount": 1000,
+      "status": "PARTIAL",
+      "date": "2025-02-10",
+      "receipt_no": "RCPT-1034",
+      "method": "Online"
+    },
+    {
+      "payment_id": 3,
+      "month": "March",
+      "amount": 3800,
+      "paid_amount": 2000,
+      "status": "PARTIAL",
+      "date": "2025-03-12",
+      "receipt_no": "RCPT-1080",
+      "method": "Bank Transfer"
+    }
+  ]
+}
