@@ -10,9 +10,9 @@ const money = (amount: number) => `Rs. ${amount.toLocaleString()}`;
 function numberToWords(num: number): string {
   const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
   const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
-  
+
   if (num === 0) return 'Zero';
-  
+
   const convert = (n: number): string => {
     if (n < 20) return ones[n];
     if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 ? ' ' + ones[n % 10] : '');
@@ -21,25 +21,42 @@ function numberToWords(num: number): string {
     if (n < 10000000) return convert(Math.floor(n / 100000)) + ' Lakh' + (n % 100000 ? ' ' + convert(n % 100000) : '');
     return convert(Math.floor(n / 10000000)) + ' Crore' + (n % 10000000 ? ' ' + convert(n % 10000000) : '');
   };
-  
+
   return convert(Math.floor(num));
 }
 
-const  ReceiptContent = ({ data }: PrintReceiptProps)=> {
+const ReceiptContent = ({ data }: PrintReceiptProps) => {
   const latestPayment = data.payment_history[0];
-  
+
 
   return (
-   <div className="w-1/2 p-2">
-      <div className="receipt-container border border-gray-300 h-full p-2">
+    <div className="w-1/2 p-2">
+      <div className="receipt-container border border-gray-300 h-full p-2 flex flex-col">
         {/* Header */}
-        <div className="text-center border-b-2 border-slate-800 pb-3 mb-3">
-          <h1 className="text-xl font-bold text-slate-900 leading-tight">ABC School</h1>
-          <p className="text-[11px] text-slate-600 leading-tight">123 Education Street, City, State - 123456</p>
-          <p className="text-[11px] text-slate-600 leading-tight">Phone: +91 1234567890 | Email: info@abcschool.edu</p>
-          <h2 className="text-sm font-bold text-slate-800 mt-2 uppercase tracking-wide bg-slate-100 py-1">Payment Receipt</h2>
+        <div className="text-center border-b-2 border-slate-800 pb-3 mb-3 relative">
+          {/* Logo */}
+          <img
+            src="/salyansthan-logo.png"
+            alt="School Logo"
+            className="absolute left-2 top-1 w-12 h-12 object-contain"
+          />
+          <p className="text-[11px] italic text-slate-600">“Dedicated to Excellence”</p>
+          <h1 className="text-lg font-bold text-slate-900 leading-tight uppercase">
+            SALYANSTHAN SECONDARY SCHOOL
+          </h1>
+          <p className="text-[11px] text-slate-600 leading-tight">
+            Kirtipur-4, Salyansthan, Kathmandu
+          </p>
+          <p className="text-[11px] text-slate-600 leading-tight">
+            Email: schoolsalyansthan@gmail.com
+          </p>
+          <p className="text-[11px] text-slate-600 leading-tight">
+            Phone: 01-5904264
+          </p>
+          <h2 className="text-sm font-bold text-slate-800 mt-2 uppercase tracking-wide bg-slate-100 py-1">
+            Payment Receipt
+          </h2>
         </div>
-
         {/* Receipt Info */}
         <div className="flex justify-between mb-3 text-[11px]">
           <div>
@@ -123,7 +140,7 @@ const  ReceiptContent = ({ data }: PrintReceiptProps)=> {
               <p><span className="text-slate-600">Previous Balance:</span> <span className="font-semibold">{money(data.current_month_payment.total_payable)}</span></p>
               <p><span className="text-slate-600">Amount Paid:</span> <span className="font-semibold text-green-700">{money(latestPayment?.paid_amount || data.current_month_payment.paid_amount)}</span></p>
               <p className="border-t border-slate-200 pt-0.5 mt-0.5">
-                <span className="text-slate-800 font-bold">Remaining:</span> 
+                <span className="text-slate-800 font-bold">Remaining:</span>
                 <span className="font-bold text-rose-600 ml-1">{money(data.current_month_payment.remaining_amount)}</span>
               </p>
             </div>
@@ -141,11 +158,11 @@ const  ReceiptContent = ({ data }: PrintReceiptProps)=> {
         </div>
 
         {/* Footer */}
-        <div className="border-t border-slate-300 pt-3 mt-3">
+        <div className="border-t border-slate-300 pt-20 mt-auto">
           <div className="flex justify-between items-end">
             <div>
-              <p className="text-[10px] text-slate-500">This is a computer-generated receipt.</p>
-              <p className="text-[10px] text-slate-500 mt-0.5">Thank you for your payment.</p>
+              <p className="text-[10px] text-slate-500">Payment received successfully.</p>
+              <p className="text-[10px] text-slate-500 mt-0.5">Please keep this receipt for future reference.</p>
             </div>
             <div className="text-right">
               <div className="h-10" />
