@@ -160,7 +160,7 @@ const BillContent = ({ data }: PrintBillProps) => {
         </div>
 
         {/* Footer */}
-        <div className="border-t border-slate-300 pt-20 mt-auto">
+        <div className="border-t border-slate-300 pt-6 mt-auto">
           <div className="flex justify-between items-end">
             <div>
               <p className="text-[10px] text-slate-500">
