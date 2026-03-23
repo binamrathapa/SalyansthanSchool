@@ -73,56 +73,7 @@ const StatusBadge = ({ status }: { status: string }) => {
 };
 
 
-//Table config 
-const paymentHistoryColumns: Column<PaymentHistory>[] = [
-  {
-    key: "sn",
-    label: "S.N.",
-    visible: true,
-    exportable: true,
-  },
-  {
-    key: "receipt_no",
-    label: "Receipt No",
-    visible: true,
-    exportable: true,
-    render: (row) => (
-      <span className="font-mono text-xs">{row.receipt_no}</span>
-    ),
-  },
-  {
-    key: "month",
-    label: "Month",
-    visible: true,
-    exportable: true,
-  },
-  {
-    key: "paid_amount",
-    label: "Amount",
-    visible: true,
-    exportable: true,
-    render: (row) => money(row.paid_amount),
-  },
-  {
-    key: "method",
-    label: "Method",
-    visible: true,
-    exportable: true,
-  },
-  {
-    key: "status",
-    label: "Status",
-    visible: true,
-    exportable: true,
-    render: (row) => <StatusBadge status={row.status} />,
-  },
-  {
-    key: "date",
-    label: "Date",
-    visible: true,
-    exportable: true,
-  },
-];
+
 
 const SummaryCard = ({
   title,
@@ -180,6 +131,71 @@ const money = (amount: number) => `Rs. ${amount.toLocaleString()}`;
 export default function App() {
 
 
+  //Table config 
+  const paymentHistoryColumns: Column<PaymentHistory>[] = [
+    {
+      key: "sn",
+      label: "S.N.",
+      visible: true,
+      exportable: true,
+    },
+    {
+      key: "receipt_no",
+      label: "Receipt No",
+      visible: true,
+      exportable: true,
+      render: (row) => (
+        <span className="font-mono text-xs">{row.receipt_no}</span>
+      ),
+    },
+    {
+      key: "month",
+      label: "Month",
+      visible: true,
+      exportable: true,
+    },
+    {
+      key: "paid_amount",
+      label: "Amount",
+      visible: true,
+      exportable: true,
+      render: (row) => money(row.paid_amount),
+    },
+    {
+      key: "method",
+      label: "Method",
+      visible: true,
+      exportable: true,
+    },
+    {
+      key: "print",
+      label: "",
+      visible: true,
+      exportable: false,
+      render: (row) => (
+        <button
+          onClick={() => handleRowPrint(row)}
+          className="p-1 hover:bg-slate-100 rounded cursor-pointer"
+        >
+          <Printer className="w-4 h-4 text-slate-600" />
+        </button>
+      )
+    },
+    {
+      key: "status",
+      label: "Status",
+      visible: true,
+      exportable: true,
+      render: (row) => <StatusBadge status={row.status} />,
+    },
+    {
+      key: "date",
+      label: "Date",
+      visible: true,
+      exportable: true,
+    },
+  ];
+
   const {
     data: studentsData,
     isLoading: studentsLoading,
@@ -209,6 +225,7 @@ export default function App() {
   const [remarks, setRemarks] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
   const [lastReceiptNo, setLastReceiptNo] = useState("");
+  const [selectedReceipt, setSelectedReceipt] = useState<PaymentHistory | null>(null);
 
   // Print refs
   const billRef = useRef<HTMLDivElement>(null);
@@ -228,6 +245,10 @@ export default function App() {
       : "Receipt",
   });
 
+  const handleRowPrint = (row: PaymentHistory) => {
+    setSelectedReceipt(row);
+      handlePrintReceipt();
+  }
   // ──────────────────────────────────────────────
   // FILTERS (using ApiStudent fields)
   // ──────────────────────────────────────────────
@@ -385,7 +406,7 @@ export default function App() {
     setRemarks("");
 
     showSuccess(`Payment of ${money(paymentAmount)} collected successfully`);
-    setTimeout(() => handlePrintReceipt(), 500);
+    setTimeout(() => handlePrintReceipt(), 100);
   };
 
   // Bill breakdown
@@ -441,7 +462,10 @@ export default function App() {
               <PrintBill data={feeData} />
             </div>
             <div ref={receiptRef}>
-              <PrintReceipt data={feeData} />
+              <PrintReceipt
+                data={feeData}
+                selectedPayment={selectedReceipt}
+              />
             </div>
           </div>
         )}
@@ -707,7 +731,7 @@ export default function App() {
                       <Button
                         variant="outline"
                         onClick={handlePrintBill}
-                        className="rounded-lg text-sm h-9 px-3"
+                        className="rounded-lg text-sm h-9 px-3 cursor-pointer"
                       >
                         <Printer className="h-4 w-4 mr-1.5" />
                         Print Bill
@@ -715,7 +739,7 @@ export default function App() {
                       <Button
                         variant="outline"
                         onClick={handlePrintReceipt}
-                        className="rounded-lg text-sm h-9 px-3"
+                        className="rounded-lg text-sm h-9 px-3 cursor-pointer"
                       >
                         <Receipt className="h-4 w-4 mr-1.5" />
                         Print Receipt
@@ -1007,6 +1031,16 @@ export default function App() {
                       data={feeData.payment_history}
                       columns={paymentHistoryColumns}
                       limit={5}
+                      searchableKeys={
+                        ["receipt_no"]
+                      }
+                      filterOptions={
+                        [
+                          { label: "Cash", value: "Cash", key: "method" },
+                          { label: "Bank Transfer", value: "Bank Transfer", key: "method" },
+                          { label: "Card", value: "Card", key: "method" },
+                          { label: "Online", value: "Online", key: "method" },]
+                      }
                     />
                   </div>
                 </div>
