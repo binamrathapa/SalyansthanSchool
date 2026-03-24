@@ -15,7 +15,7 @@ import {
   usePatchStudent,
   useCreateStudent
 } from "@/server-action/api/student.api";
-import LoadingWrapper from "../components/dashboard/common/LoadingWrapper";
+import LoadingWrapper from "../components/dashboard/common/GlobalLoaderWrapper";
 
 // ----------------- HELPERS -----------------
 
