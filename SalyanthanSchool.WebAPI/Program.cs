@@ -77,6 +77,7 @@ builder.Services.AddScoped<IFeeStructureService, FeeStructureService>();
 builder.Services.AddScoped<IStudentDiscountService, StudentDiscountService>();
 builder.Services.AddScoped<IPaymentModeService, PaymentModeService>();
 builder.Services.AddScoped<IInvoiceService, InvoiceService>();
+builder.Services.AddScoped<IStudentFeeService, StudentFeeService>();
 
 
 
