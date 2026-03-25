@@ -22,7 +22,7 @@ import {
 } from "@/server-action/api/grade.api";
 import { useGetAllSections } from "@/server-action/api/section.api";
 import { create } from "domain";
-import LoadingWrapper from "../components/dashboard/common/LoadingWrapper";
+import LoadingWrapper from "../components/dashboard/common/GlobalLoaderWrapper";
 
 /* ================= HELPERS ================= */
 
@@ -112,7 +112,7 @@ const GradePage = () => {
       deleteMutation.mutate(grade.id);
     }
   };
-
+ 
   const handleSave = async (values: GradeFormType) => {
     const isEdit = Boolean(editingGrade);
 
@@ -163,7 +163,7 @@ const GradePage = () => {
           searchableKeys={["name"]}
           filterOptions={statusFilterOptions}
         />
-
+                
         <GradeAddEditModal
           isOpen={openAddEdit}
           onClose={() => setOpenAddEdit(false)}

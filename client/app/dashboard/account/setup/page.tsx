@@ -50,7 +50,7 @@ import {
   feeHeadColumns,
   feeStructureColumns,
 } from "@/app/dashboard/config/table/accountSetupTableConfig";
-import LoadingWrapper from "../../components/dashboard/common/LoadingWrapper";
+import LoadingWrapper from "../../components/dashboard/common/GlobalLoaderWrapper";
 
 export default function AccountSetupPage() {
   const [activeTab, setActiveTab] = useState("year");
