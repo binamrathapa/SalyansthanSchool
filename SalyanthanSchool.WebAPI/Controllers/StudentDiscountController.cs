@@ -18,8 +18,9 @@ namespace SalyanthanSchool.WebAPI.Controllers
         [HttpGet]
         public async Task<IActionResult> Get([FromQuery] StudentDiscountQueryParameter query)
         {
+            // Basic pagination validation
             if (query.PageNumber < 1 || query.PageSize < 1)
-                return BadRequest("PageNumber and PageSize must be greater than or equal to 1");
+                return BadRequest("PageNumber and PageSize must be at least 1.");
 
             return Ok(await _service.GetAsync(query));
         }
@@ -39,7 +40,15 @@ namespace SalyanthanSchool.WebAPI.Controllers
                 var created = await _service.CreateAsync(dto);
                 return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
             }
-            catch (InvalidOperationException ex) { return Conflict(ex.Message); }
+            catch (InvalidOperationException ex)
+            {
+                // This will catch our overlapping discount or missing student/fee errors
+                return Conflict(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "An internal error occurred.");
+            }
         }
 
         [HttpDelete("{id:int}")]
@@ -47,6 +56,14 @@ namespace SalyanthanSchool.WebAPI.Controllers
         {
             var deleted = await _service.DeleteAsync(id);
             return deleted ? NoContent() : NotFound();
+        }
+
+        // Optional: New endpoint to deactivate a discount instead of deleting it
+        [HttpPatch("{id:int}/toggle-status")]
+        public async Task<IActionResult> ToggleStatus(int id)
+        {
+            var result = await _service.ToggleActiveStatusAsync(id);
+            return result ? Ok() : NotFound();
         }
     }
 }

@@ -6,5 +6,6 @@ namespace SalyanthanSchool.Core.DTOs.StudentDiscount
     {
         public int? StudentId { get; set; }
         public int? FeeHeadId { get; set; }
+        public int? AcademicYearId { get; set; }
     }
 }

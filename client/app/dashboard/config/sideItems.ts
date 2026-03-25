@@ -44,6 +44,38 @@ export const sidebarItems: SidebarItem[] = [
       { name: "Teacher Schedule", path: "/dashboard/teacher/schedule" },
     ],
   },
+  {
+    name: "Grades",
+    icon: School,
+    children: [
+      { name: "All Grades", path: "/dashboard/grades" },
+      { name: "Timetable", path: "/dashboard/grades/timetable" },
+      { name: "Grade Teacher", path: "/dashboard/grades/teacher" },
+    ],
+  },
+  {
+    name: "Accounts",
+    icon: ClipboardList,
+    children: [
+      { name: "Dashboard", path: "/dashboard/account" },
+
+      // Billing / Cash Counter
+      { name: "Account Setup", path: "/dashboard/account/setup" },
+      { name: "Cash Counter", path: "/dashboard/account/cash-counter" },
+      { name: "Fee Assignment", path: "/dashboard/account/fee-assignment" },      
+      { name: "Fee Collection", path: "/dashboard/account/fees" },
+      // Income & Expense
+      // { name: "Income", path: "/dashboard/accounts/income" },
+      // { name: "Expenses", path: "/dashboard/accounts/expenses" },
+
+      // Ledger & Setup
+      { name: "Ledger", path: "/dashboard/account/ledger" },
+
+      // Reports
+      // { name: "Reports", path: "/dashboard/account/reports" },
+    ],
+  },
+
 
   {
     name: "Academics",
@@ -53,15 +85,6 @@ export const sidebarItems: SidebarItem[] = [
       { name: "Assignments", path: "/dashboard/academics/assignments" },
       { name: "Examinations", path: "/dashboard/academics/exams" },
       { name: "Grades", path: "/dashboard/academics/grades" },
-    ],
-  },
-  {
-    name: "Classes",
-    icon: School,
-    children: [
-      { name: "All Classes", path: "/dashboard/classes" },
-      { name: "Timetable", path: "/dashboard/classes/timetable" },
-      { name: "Class Teacher", path: "/dashboard/classes/teacher" },
     ],
   },
   {
@@ -100,27 +123,6 @@ export const sidebarItems: SidebarItem[] = [
       { name: "Progress", path: "/dashboard/results/progress" },
     ],
   },
-  {
-  name: "Accounts",
-  icon: ClipboardList,
-  children: [
-    { name: "Dashboard", path: "/dashboard/account" },
-
-    // Billing / Cash Counter
-    { name: "Cash Counter", path: "/dashboard/account/cash-counter" },
-    { name: "Fee Collection", path: "/dashboard/account/fees" },
-    // Income & Expense
-    { name: "Income", path: "/dashboard/accounts/income" },
-    { name: "Expenses", path: "/dashboard/accounts/expenses" },
-
-    // Ledger & Setup
-    { name: "Ledger", path: "/dashboard/account/ledger" },
-    { name: "Account Setup", path: "/dashboard/account/setup" },
-
-    // Reports
-    { name: "Reports", path: "/dashboard/account/reports" },
-  ],
-},
   {
     name: "Notices",
     icon: Bell,

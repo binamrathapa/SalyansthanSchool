@@ -6,6 +6,10 @@
         public int StudentId { get; set; }
         public string StudentName { get; set; } = null!;
         public string FeeHeadName { get; set; } = null!;
-        public decimal DiscountAmount { get; set; } // The final calculated amount saved
+        public string AcademicYearName { get; set; } = null!;
+        public decimal DiscountAmount { get; set; }
+        public DateTime ValidFrom { get; set; }
+        public DateTime ValidTo { get; set; }
+        public bool IsActive { get; set; }
     }
 }

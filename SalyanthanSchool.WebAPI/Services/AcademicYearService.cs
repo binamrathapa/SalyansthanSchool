@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SalyanthanSchool.Core.DTOs.AcademicYear;
+using SalyanthanSchool.Core.DTOs.Common;
 using SalyanthanSchool.Core.Entities;
 using SalyanthanSchool.Core.Interfaces;
 using SalyanthanSchool.WebAPI.Data;
@@ -15,11 +16,38 @@ namespace SalyanthanSchool.WebAPI.Services
             _context = context;
         }
 
-        public async Task<IEnumerable<AcademicYearResponseDto>> GetAllAsync()
+        public async Task<PagedResult<AcademicYearResponseDto>> GetAllAsync(AcademicYearQueryParameter query)
         {
-            return await _context.AcademicYear
-                .Select(a => MapToResponse(a))
+            var collection = _context.AcademicYear.AsNoTracking();
+
+            // Apply IsActive filter if provided, just like your Grade reference
+            if (query.IsActive.HasValue)
+            {
+                collection = collection.Where(a => a.IsActive == query.IsActive.Value);
+            }
+
+            var totalCount = await collection.CountAsync();
+
+            var items = await collection
+                .OrderByDescending(a => a.StartDate)
+                .Skip((query.PageNumber - 1) * query.PageSize)
+                .Take(query.PageSize)
+                .Select(a => new AcademicYearResponseDto
+                {
+                    Id = a.Id,
+                    Name = a.Name,
+                    StartDate = DateOnly.FromDateTime(a.StartDate),
+                    EndDate = DateOnly.FromDateTime(a.EndDate),
+                    IsActive = a.IsActive
+                })
                 .ToListAsync();
+
+            return new PagedResult<AcademicYearResponseDto>(
+                items,
+                totalCount,
+                query.PageNumber,
+                query.PageSize
+            );
         }
 
         public async Task<AcademicYearResponseDto?> GetByIdAsync(int id)
@@ -35,7 +63,8 @@ namespace SalyanthanSchool.WebAPI.Services
                 Name = dto.Name,
                 StartDate = dto.StartDate.ToDateTime(TimeOnly.MinValue),
                 EndDate = dto.EndDate.ToDateTime(TimeOnly.MinValue),
-                IsActive = dto.IsActive
+                IsActive = dto.IsActive,
+                CreatedAt = DateTime.UtcNow
             };
 
             _context.AcademicYear.Add(academicYear);

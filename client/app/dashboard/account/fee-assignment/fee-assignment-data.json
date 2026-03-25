@@ -1,0 +1,117 @@
+{
+  "academicYears": [
+    { "id": 1, "name": "2025-2026" },
+    { "id": 2, "name": "2024-2025" }
+  ],
+  "classes": [
+    { "id": 1, "name": "Class 8" },
+    { "id": 2, "name": "Class 9" },
+    { "id": 3, "name": "Class 10" }
+  ],
+  "sections": [
+    { "id": 1, "name": "A" },
+    { "id": 2, "name": "B" }
+  ],
+  "students": [
+    {
+      "id": 101,
+      "name": "Ram Sharma",
+      "admission_no": "ADM-2024-001",
+      "class": "Class 10",
+      "section": "A",
+      "roll_no": 12
+    },
+    {
+      "id": 102,
+      "name": "Sita Rai",
+      "admission_no": "ADM-2024-002",
+      "class": "Class 10",
+      "section": "A",
+      "roll_no": 14
+    },
+    {
+      "id": 103,
+      "name": "Anil Thapa",
+      "admission_no": "ADM-2024-003",
+      "class": "Class 9",
+      "section": "B",
+      "roll_no": 8
+    }
+  ],
+  "feeStructures": [
+    {
+      "id": 1,
+      "academicYear": "2025-2026",
+      "class": "Class 10",
+      "feeHead": "Tuition Fee",
+      "amount": 1000,
+      "type": "Monthly"
+    },
+    {
+      "id": 2,
+      "academicYear": "2025-2026",
+      "class": "Class 10",
+      "feeHead": "Exam Fee",
+      "amount": 500,
+      "type": "One Time"
+    },
+    {
+      "id": 3,
+      "academicYear": "2025-2026",
+      "class": "Class 10",
+      "feeHead": "Transport Fee",
+      "amount": 800,
+      "type": "Monthly"
+    },
+    {
+      "id": 4,
+      "academicYear": "2025-2026",
+      "class": "Class 9",
+      "feeHead": "Tuition Fee",
+      "amount": 900,
+      "type": "Monthly"
+    }
+  ],
+  "months": [
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+    "January",
+    "February",
+    "March"
+  ],
+  "recentAssignments": [
+    {
+      "id": 1,
+      "targetType": "Student",
+      "targetName": "Ram Sharma",
+      "class": "Class 10",
+      "section": "A",
+      "feeHead": "Exam Fee",
+      "amount": 500,
+      "month": "March",
+      "academicYear": "2025-2026",
+      "assignedOn": "2025-03-01",
+      "type": "One Time"
+    },
+    {
+      "id": 2,
+      "targetType": "Class",
+      "targetName": "Class 10",
+      "class": "Class 10",
+      "section": "A",
+      "feeHead": "Tuition Fee",
+      "amount": 1000,
+      "month": "March",
+      "academicYear": "2025-2026",
+      "assignedOn": "2025-03-01",
+      "type": "Monthly"
+    }
+  ]
+}

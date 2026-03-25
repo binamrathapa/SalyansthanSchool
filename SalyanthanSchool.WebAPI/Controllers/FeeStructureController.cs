@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SalyanthanSchool.Core.DTOs.FeeStructure;
 using SalyanthanSchool.Core.Interfaces;
-using SalyanthanSchool.WebAPI.Services;
+using SalyanthanSchool.Core.DTOs.Common;
 
 namespace SalyanthanSchool.WebAPI.Controllers
 {
@@ -19,17 +19,29 @@ namespace SalyanthanSchool.WebAPI.Controllers
         [HttpGet]
         public async Task<IActionResult> Get([FromQuery] FeeStructureQueryParameter query)
         {
-            if (query.PageNumber < 1 || query.PageSize < 1)
-                return BadRequest("PageNumber and PageSize must be >= 1");
+            var result = await _service.GetAsync(query);
 
-            return Ok(await _service.GetAsync(query));
+            return Ok(ApiResponse<IEnumerable<FeeStructureResponseDto>>.Ok(
+                data: result.Items,
+                message: "Fee structures fetched successfully",
+                meta: new
+                {
+                    query.PageNumber,
+                    query.PageSize,
+                    total = result.TotalCount
+                }
+            ));
         }
 
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
             var result = await _service.GetByIdAsync(id);
-            return result == null ? NotFound() : Ok(result);
+
+            if (result == null)
+                return NotFound(ApiResponse<FeeStructureResponseDto>.Fail("Fee structure not found"));
+
+            return Ok(ApiResponse<FeeStructureResponseDto>.Ok(result, "Fee structure fetched successfully"));
         }
 
         [HttpPost]
@@ -38,23 +50,38 @@ namespace SalyanthanSchool.WebAPI.Controllers
             try
             {
                 var created = await _service.CreateAsync(dto);
-                return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+                return CreatedAtAction(
+                    nameof(GetById),
+                    new { id = created.Id },
+                    ApiResponse<FeeStructureResponseDto>.Ok(created, "Fee structure created successfully")
+                );
             }
-            catch (InvalidOperationException ex) { return Conflict(ex.Message); }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ApiResponse<FeeStructureResponseDto>.Fail(ex.Message));
+            }
         }
 
         [HttpPut("{id:int}")]
         public async Task<IActionResult> Update(int id, [FromBody] FeeStructureRequestDto dto)
         {
             var updated = await _service.UpdateAsync(id, dto);
-            return updated == null ? NotFound() : Ok(updated);
+
+            if (updated == null)
+                return NotFound(ApiResponse<FeeStructureResponseDto>.Fail("Fee structure not found"));
+
+            return Ok(ApiResponse<FeeStructureResponseDto>.Ok(updated, "Fee structure updated successfully"));
         }
 
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
             var deleted = await _service.DeleteAsync(id);
-            return deleted ? NoContent() : NotFound();
+
+            if (!deleted)
+                return NotFound(ApiResponse<bool>.Fail("Fee structure not found"));
+
+            return Ok(ApiResponse<bool>.Ok(true, "Fee structure deleted successfully"));
         }
     }
 }

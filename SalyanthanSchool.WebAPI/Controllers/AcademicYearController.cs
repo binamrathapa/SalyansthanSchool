@@ -2,12 +2,13 @@
 using Microsoft.AspNetCore.Mvc;
 using SalyanthanSchool.Core.DTOs.AcademicYear;
 using SalyanthanSchool.Core.Interfaces;
+using SalyanthanSchool.Core.DTOs.Common;
 
 namespace SalyanthanSchool.WebAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    //[Authorize]
     public class AcademicYearController : ControllerBase
     {
         private readonly IAcademicYearService _service;
@@ -17,41 +18,91 @@ namespace SalyanthanSchool.WebAPI.Controllers
             _service = service;
         }
 
+        // GET: api/AcademicYear
         [HttpGet]
-        public async Task<IActionResult> GetAll() => Ok(await _service.GetAllAsync());
-
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+        public async Task<IActionResult> GetAll([FromQuery] AcademicYearQueryParameter query)
         {
-            var res = await _service.GetByIdAsync(id);
-            return res == null ? NotFound() : Ok(res);
+            var result = await _service.GetAllAsync(query);
+
+            return Ok(ApiResponse<IEnumerable<AcademicYearResponseDto>>.Ok(
+                data: result.Items,
+                message: "Academic years fetched successfully",
+                meta: new
+                {
+                    query.PageNumber,
+                    query.PageSize,
+                    total = result.TotalCount,
+                    query.IsActive
+                }
+            ));
         }
 
+        // GET: api/AcademicYear/5
+        [HttpGet("{id:int}")]
+        public async Task<IActionResult> GetById(int id)
+        {
+            var result = await _service.GetByIdAsync(id);
+
+            if (result == null)
+                return NotFound(ApiResponse<AcademicYearResponseDto>.Fail("Academic year not found"));
+
+            return Ok(ApiResponse<AcademicYearResponseDto>.Ok(result, "Academic year fetched successfully"));
+        }
+
+        // POST: api/AcademicYear
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] AcademicYearRequestDto dto)
         {
-            var res = await _service.CreateAsync(dto);
-            return CreatedAtAction(nameof(GetById), new { id = res.Id }, res);
+            try
+            {
+                var created = await _service.CreateAsync(dto);
+
+                return CreatedAtAction(
+                    nameof(GetById),
+                    new { id = created.Id },
+                    ApiResponse<AcademicYearResponseDto>.Ok(created, "Academic year created successfully")
+                );
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ApiResponse<AcademicYearResponseDto>.Fail(ex.Message));
+            }
         }
 
-        [HttpPut("{id}")]
+        // PUT: api/AcademicYear/5
+        [HttpPut("{id:int}")]
         public async Task<IActionResult> Update(int id, [FromBody] AcademicYearRequestDto dto)
         {
-            var res = await _service.UpdateAsync(id, dto);
-            return res == null ? NotFound() : Ok(res);
+            var updated = await _service.UpdateAsync(id, dto);
+
+            if (updated == null)
+                return NotFound(ApiResponse<AcademicYearResponseDto>.Fail("Academic year not found"));
+
+            return Ok(ApiResponse<AcademicYearResponseDto>.Ok(updated, "Academic year updated successfully"));
         }
 
-        [HttpPatch("{id}")]
+        // PATCH: api/AcademicYear/5
+        [HttpPatch("{id:int}")]
         public async Task<IActionResult> Patch(int id, [FromBody] AcademicYearPatchDto dto)
         {
-            var res = await _service.PatchAsync(id, dto);
-            return res == null ? NotFound() : Ok(res);
+            var patched = await _service.PatchAsync(id, dto);
+
+            if (patched == null)
+                return NotFound(ApiResponse<AcademicYearResponseDto>.Fail("Academic year not found"));
+
+            return Ok(ApiResponse<AcademicYearResponseDto>.Ok(patched, "Academic year updated successfully"));
         }
 
-        [HttpDelete("{id}")]
+        // DELETE: api/AcademicYear/5
+        [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
-            return await _service.DeleteAsync(id) ? NoContent() : NotFound();
+            var deleted = await _service.DeleteAsync(id);
+
+            if (!deleted)
+                return NotFound(ApiResponse<bool>.Fail("Academic year not found"));
+
+            return Ok(ApiResponse<bool>.Ok(true, "Academic year deleted successfully"));
         }
     }
 }

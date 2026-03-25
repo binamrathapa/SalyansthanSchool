@@ -1,10 +1,11 @@
 ﻿using SalyanthanSchool.Core.DTOs.AcademicYear;
+using SalyanthanSchool.Core.DTOs.Common;
 
 namespace SalyanthanSchool.Core.Interfaces
 {
     public interface IAcademicYearService
     {
-        Task<IEnumerable<AcademicYearResponseDto>> GetAllAsync();
+        Task<PagedResult<AcademicYearResponseDto>> GetAllAsync(AcademicYearQueryParameter query);
         Task<AcademicYearResponseDto?> GetByIdAsync(int id);
         Task<AcademicYearResponseDto> CreateAsync(AcademicYearRequestDto dto);
         Task<AcademicYearResponseDto?> UpdateAsync(int id, AcademicYearRequestDto dto);

@@ -31,6 +31,7 @@ export interface Column<T> {
   className?: string;
   cellClassName?: string;
   exportable?: boolean;
+  visible?: boolean;
   render?: (row: T, index: number) => React.ReactNode;
 }
 
@@ -137,6 +138,9 @@ const CustomTable = <T extends Record<string, any>>({
     .filter((c) => c.exportable !== false)
     .map((c) => ({ key: c.key as keyof T, label: c.label }));
 
+  const visibleColumns = columns.filter((c) => c.visible !== false);
+
+
   const handleExport = () =>
     exportWithPreview(selectedData, exportColumns, caption || "Export");
 
@@ -201,7 +205,7 @@ const CustomTable = <T extends Record<string, any>>({
             <TableHead className="w-12">
               <Checkbox checked={allSelected} onCheckedChange={toggleAll} />
             </TableHead>
-            {columns.map((col) => (
+            {visibleColumns.map((col) => (
               <TableHead key={String(col.key)}>{col.label}</TableHead>
             ))}
           </TableRow>
@@ -217,15 +221,15 @@ const CustomTable = <T extends Record<string, any>>({
                 />
               </TableCell>
 
-              {columns.map((col) => (
-                <TableCell key={String(col.key)}>
-                  {col.key === "sn"
-                    ? startIndex + idx + 1
-                    : col.render
+              {visibleColumns.map((col) => (
+                <TableCell key={String(col.key)} className={col.cellClassName}>
+                  {col.render
                     ? col.render(row, startIndex + idx)
-                    : renderCell
-                    ? renderCell(row, col.key as keyof T)
-                    : row[col.key]}
+                    : col.key === "sn"
+                      ? startIndex + idx + 1
+                      : col.key in row
+                        ? row[col.key as keyof T]
+                        : null}
                 </TableCell>
               ))}
             </TableRow>
@@ -260,4 +264,4 @@ const CustomTable = <T extends Record<string, any>>({
   );
 };
 
-export default CustomTable;
+export default CustomTable; 
