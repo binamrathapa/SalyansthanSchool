@@ -3,6 +3,7 @@ using SalyanthanSchool.Core.DTOs.FeeStructure;
 using SalyanthanSchool.Core.Entities;
 using SalyanthanSchool.Core.Interfaces;
 using SalyanthanSchool.WebAPI.Data;
+using SalyanthanSchool.Core.DTOs.Common;
 
 namespace SalyanthanSchool.WebAPI.Services
 {
@@ -15,7 +16,7 @@ namespace SalyanthanSchool.WebAPI.Services
             _context = context;
         }
 
-        public async Task<IEnumerable<FeeStructureResponseDto>> GetAsync(FeeStructureQueryParameter query)
+        public async Task<PagedResult<FeeStructureResponseDto>> GetAsync(FeeStructureQueryParameter query)
         {
             var collection = _context.FeeStructure
                 .Include(x => x.AcademicYear)
@@ -23,13 +24,18 @@ namespace SalyanthanSchool.WebAPI.Services
                 .Include(x => x.FeeHead)
                 .AsNoTracking();
 
+            // Filters
             if (query.AcademicYearId.HasValue)
                 collection = collection.Where(x => x.AcademicYearId == query.AcademicYearId);
 
             if (query.GradeId.HasValue)
                 collection = collection.Where(x => x.GradeId == query.GradeId);
 
-            return await collection
+            // Get count for the meta property in the controller
+            var totalCount = await collection.CountAsync();
+
+            // Paging and Selection
+            var items = await collection
                 .Skip((query.PageNumber - 1) * query.PageSize)
                 .Take(query.PageSize)
                 .Select(x => new FeeStructureResponseDto
@@ -42,12 +48,21 @@ namespace SalyanthanSchool.WebAPI.Services
                     IsMonthly = x.IsMonthly,
                     CreatedAt = x.CreatedAt
                 }).ToListAsync();
+
+            return new PagedResult<FeeStructureResponseDto>(
+                items,
+                totalCount,
+                query.PageNumber,
+                query.PageSize
+            );
         }
 
         public async Task<FeeStructureResponseDto?> GetByIdAsync(int id)
         {
             return await _context.FeeStructure
-                .Include(x => x.AcademicYear).Include(x => x.Grade).Include(x => x.FeeHead)
+                .Include(x => x.AcademicYear)
+                .Include(x => x.Grade)
+                .Include(x => x.FeeHead)
                 .Select(x => new FeeStructureResponseDto
                 {
                     Id = x.Id,
@@ -62,13 +77,13 @@ namespace SalyanthanSchool.WebAPI.Services
 
         public async Task<FeeStructureResponseDto> CreateAsync(FeeStructureRequestDto dto)
         {
-            // Check if this specific head is already defined for this grade and year
             var exists = await _context.FeeStructure.AnyAsync(x =>
                 x.AcademicYearId == dto.AcademicYearId &&
                 x.GradeId == dto.GradeId &&
                 x.FeeHeadId == dto.FeeHeadId);
 
-            if (exists) throw new InvalidOperationException("Fee structure for this head already exists for this grade/year.");
+            if (exists)
+                throw new InvalidOperationException("Fee structure for this head already exists for this grade/year.");
 
             var entity = new FeeStructure
             {
@@ -76,11 +91,13 @@ namespace SalyanthanSchool.WebAPI.Services
                 GradeId = dto.GradeId,
                 FeeHeadId = dto.FeeHeadId,
                 Amount = dto.Amount,
-                IsMonthly = dto.IsMonthly
+                IsMonthly = dto.IsMonthly,
+                CreatedAt = DateTime.UtcNow // Standardized with Grade pattern
             };
 
             _context.FeeStructure.Add(entity);
             await _context.SaveChangesAsync();
+
             return (await GetByIdAsync(entity.Id))!;
         }
 
@@ -100,6 +117,7 @@ namespace SalyanthanSchool.WebAPI.Services
         {
             var entity = await _context.FeeStructure.FindAsync(id);
             if (entity == null) return false;
+
             _context.FeeStructure.Remove(entity);
             await _context.SaveChangesAsync();
             return true;

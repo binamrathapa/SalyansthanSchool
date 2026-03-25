@@ -15,11 +15,19 @@ namespace SalyanthanSchool.Core.Validators.StudentDiscount
                 .NotEmpty().WithMessage("FeeHeadId is required.")
                 .GreaterThan(0).WithMessage("FeeHeadId must be a valid ID.");
 
-            RuleFor(x => x.DiscountValue)
-                .GreaterThan(0).WithMessage("Discount must be greater than 0");
+            RuleFor(x => x.AcademicYearId).GreaterThan(0);
 
             RuleFor(x => x.DiscountValue)
-                .LessThanOrEqualTo(100).WithMessage("Discount cannot exceed 100.");
+                .GreaterThan(0)
+                .Must((dto, val) => !dto.IsPercentage || val <= 100)
+                .WithMessage("Percentage discount cannot exceed 100%.");
+
+            RuleFor(x => x.ValidFrom)
+                .NotEmpty().WithMessage("Start date is required.");
+
+            RuleFor(x => x.ValidTo)
+                .NotEmpty().WithMessage("End date is required.")
+                .GreaterThan(x => x.ValidFrom).WithMessage("End date must be after start date.");
         }
     }
 }

@@ -42,11 +42,20 @@ public class Student
     [Column("guardian_contact")]
     public string? GuardianContact { get; set; }
 
+    [Column("roll_no")]
+    public int RollNo { get;  set; }
+
     [Column("grade_id")]
     public int GradeId { get; set; }
 
     [ForeignKey("GradeId")]
     public virtual Grade Grade { get; set; } = null!;
+
+    [Column("section_id")]
+    public int? SectionId { get; set; } 
+
+    [ForeignKey("SectionId")]
+    public virtual Section? Section { get; set; }
 
     [Column("photo")]
     public string? Photo { get; set; }
