@@ -1,12 +1,10 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SalyanthanSchool.Core.Entities
 {
     [Table("Student_Discount")]
     public class StudentDiscount
     {
-        [Key]
         [Column("id")]
         public int Id { get; set; }
 
@@ -34,6 +32,14 @@ namespace SalyanthanSchool.Core.Entities
         [Column("is_active")]
         public bool IsActive { get; set; }
 
+        // ⭐ Columns we added
+        [Column("discount_type")]
+        public string DiscountType { get; set; } = "General";
+
+        [Column("remarks")]
+        public string? Remarks { get; set; }
+
+        // Navigation Properties
         [ForeignKey("StudentId")]
         public virtual Student Student { get; set; } = null!;
 
