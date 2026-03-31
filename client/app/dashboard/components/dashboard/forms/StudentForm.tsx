@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Upload, X, AlertCircle } from "lucide-react";
+import { capitalize } from "@/server-action/utils/capitalize";
 
 interface StudentFormProps {
   initialValues?: Partial<StudentFormType>;
@@ -158,7 +159,7 @@ export default function StudentForm({
       {["firstName", "middleName", "lastName"].map((name) => (
         <div key={name}>
           <label className="text-sm font-medium">
-            {studentFieldConfig.find((f) => f.name === name)?.label || name}
+            {capitalize(studentFieldConfig.find((f) => f.name === name)?.label || name)}
           </label>
           <Input
             {...register(name as keyof StudentFormType)}
