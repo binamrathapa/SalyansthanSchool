@@ -74,6 +74,8 @@ namespace SalyanthanSchool.WebAPI.Services
             return new AuthResponseDto
             {
                 IsSuccess = true,
+                Username = user.Username,
+                Role = user.Role,
                 Token = token,
                 ExpiresAt = DateTime.UtcNow.AddHours(3),
                 Message = "Login successful"
