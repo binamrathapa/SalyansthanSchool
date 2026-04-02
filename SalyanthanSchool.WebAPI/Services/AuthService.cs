@@ -37,7 +37,8 @@ namespace SalyanthanSchool.WebAPI.Services
                 FirstName = dto.FirstName,
                 LastName = dto.LastName,
                 Email = dto.Email,
-                Status = true
+                Status = true,
+                CreatedAt = DateTime.UtcNow
             };
 
             _context.SystemUser.Add(user);

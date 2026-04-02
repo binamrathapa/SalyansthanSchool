@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using SalyanthanSchool.Core.DTOs.Auth;
 using SalyanthanSchool.Core.Interfaces;
+using SalyanthanSchool.Core.DTOs.Common;
 
 [AllowAnonymous]
 [ApiController]
@@ -19,14 +20,22 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Login(LoginRequestDto dto)
     {
         var result = await _authService.LoginAsync(dto);
-        return result.IsSuccess ? Ok(result) : Unauthorized(result);
+        if (!result.IsSuccess)
+        {
+            return Unauthorized(ApiResponse<AuthResponseDto>.Fail(result.Message));
+        }
+        return Ok(ApiResponse<AuthResponseDto>.Ok(result, "Login successful"));
     }
 
     [HttpPost("register")]
     public async Task<IActionResult> Register(RegisterRequestDto dto)
     {
         var result = await _authService.RegisterAsync(dto);
-        return result.IsSuccess ? Ok(result) : BadRequest(result);
+        if (!result.IsSuccess)
+        {
+            return BadRequest(ApiResponse<AuthResponseDto>.Fail(result.Message));
+        }
+        return Ok(ApiResponse<AuthResponseDto>.Ok(result, "Registeration successful"));
     }
 
     [Authorize]
@@ -34,6 +43,6 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Logout()
     {
         var result = await _authService.LogoutAsync();
-        return Ok(result);
+        return Ok(ApiResponse<AuthResponseDto>.Ok(result, "Logout successful"));
     }
 }
