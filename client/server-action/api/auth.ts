@@ -1,36 +1,49 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { createApiConfig } from "../config/Api-config";
 import { apiClient } from "../utils/ApiGateway";
 import Swal from "sweetalert2";
 // import { encryptData } from "../../utils/Secure";
-import { DB, userRole } from "../../constant/constant";
+import { DB, USER_ROLE } from "../../constant/constant";
 import { useUpdateUser } from "./user";
-import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthProvider";
+
+// Helper function to decode JWT token
+function decodeJWT(token: string) {
+  try {
+    const payload = token.split('.')[1];
+    const decoded = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
+    return decoded;
+  } catch (error) {
+    console.error('Failed to decode JWT:', error);
+    return null;
+  }
+}
 
 export const useRegister = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationKey: ["register"],
-    mutationFn: async (userData) => {
+    mutationFn: async (userData: any) => {
       const response = await apiClient.post("/auth/register", userData, {
         headers: { "Content-Type": "application/json" },
       });
       return response.data;
     },
 
-    onSuccess: async (data) => {
+    onSuccess: async (data: any) => {
       try {
-        const user = data?.data?.user;
-        const tokens = data?.data?.tokens;
+        const user = data?.username;
+        const token = data?.token;
 
-        if (!user || !tokens?.accessToken) {
+        if (!user || !token) {
           throw new Error("Invalid register response");
         }
 
         // Save to localStorage
-        localStorage.setItem("_UPLFMMATRIX", tokens.accessToken);
-        localStorage.setItem("refreshToken", tokens.refreshToken);
+        localStorage.setItem("_UPLFMMATRIX", token);
+        // localStorage.setItem("refreshToken", tokens.refreshToken);
         localStorage.setItem("user", JSON.stringify(user));
 
         await Swal.fire({
@@ -42,10 +55,10 @@ export const useRegister = () => {
         });
 
         queryClient.setQueryData(["auth"], {
-          token: tokens.accessToken,
+          token,
           user,
         });
-      } catch (error) {
+      } catch (error: any) {
         console.error("Register success handler error:", error);
         Swal.fire({
           icon: "error",
@@ -55,7 +68,7 @@ export const useRegister = () => {
       }
     },
 
-    onError: (error) => {
+    onError: (error: any) => {
       console.error("Register Error:", error);
       console.log("Full Error:", error);
       console.log("Error Response:", error?.response);
@@ -71,22 +84,43 @@ export const useRegister = () => {
 
 export const useLogin = () => {
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
+  const router = useRouter();
+  const { setAuth } = useAuth();
 
   return useMutation({
     mutationKey: ["login"],
-    mutationFn: async (userData) => {
+    mutationFn: async (userData: any) => {
       const response = await apiClient.post("/auth/login", userData, {
         headers: { "Content-Type": "application/json" },
       });
       return response.data;
     },
 
-    onSuccess: async (data) => {
+    onSuccess: async (data: any) => {
       try {
-        const role = data?.data?.user?.role;
+        const token = data?.data?.token;
+        const username = data?.data?.username;
+        const role = data?.data?.role;
+        if (!token) {
+          throw new Error("No token received");
+        }
 
-        if (![userRole.ADMIN, userRole.VENDOR, userRole.USER].includes(role)) {
+        // const claims = decodeJWT(token);
+        // if (!claims) {
+        //   throw new Error("Invalid token");
+        // }
+
+        if(!username || !role){
+          throw new Error("Invalid user data");
+        }
+
+        const user = {
+          name: username,
+          role: role,
+        };
+
+
+        if (![USER_ROLE.ADMIN, USER_ROLE.TEACHER, USER_ROLE.STUDENT, USER_ROLE.ACCOUNTANT].includes(role)) {
           return Swal.fire({
             icon: "error",
             title: "Access Denied",
@@ -102,16 +136,15 @@ export const useLogin = () => {
           showConfirmButton: false,
         });
 
-        // ✅ Store tokens if needed
-        localStorage.setItem("_UPLFMMATRIX", data?.data?.tokens?.accessToken);
-        localStorage.setItem("user", JSON.stringify(data?.data?.user));
+        // ✅ Store tokens and sync with AuthContext
+        setAuth(user as any, token);
 
         queryClient.setQueryData(["auth"], {
-          token: data?.data?.tokens?.accessToken,
-          user: data?.data?.user,
+          token,
+          user,
         });
-        navigate("/categories");
-      } catch (error) {
+        router.push("/dashboard/student");
+      } catch (error: any) {
         Swal.fire({
           icon: "error",
           title: "Login Error",
@@ -120,11 +153,11 @@ export const useLogin = () => {
       }
     },
 
-    onError: (error) => {
+    onError: (error: any) => {
       console.error("Login Error:", error);
 
-      const status = error;
-      const backendMsg = error;
+      const status = error?.response?.status;
+      const backendMsg = error?.response?.data?.message;
 
       let msg = "Something went wrong. Please try again.";
 
@@ -147,7 +180,7 @@ export const useLogin = () => {
 
 export const useLogout = () => {
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const logout = async (redirectTo = "/login") => {
     try {
@@ -155,7 +188,7 @@ export const useLogout = () => {
       localStorage.removeItem("user");
 
       queryClient.setQueryData(["auth"], null);
-      queryClient.removeQueries(["auth"]);
+      queryClient.removeQueries({ queryKey: ["auth"] });
 
       await Swal.fire({
         icon: "success",
@@ -164,10 +197,8 @@ export const useLogout = () => {
         showConfirmButton: false,
       });
 
-      navigate(redirectTo, {
-        replace: true,
-      });
-    } catch (error) {
+      router.replace(redirectTo);
+    } catch (error: any) {
       Swal.fire({
         icon: "error",
         title: "Logout Error",
@@ -181,10 +212,10 @@ export const useLogout = () => {
 
 export const useChangePassword = () => {
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
+  const router = useRouter();
 
   return useMutation({
-    mutationFn: async ({ currentPassword, newPassword }) => {
+    mutationFn: async ({ currentPassword, newPassword }: any) => {
       const response = await apiClient.post("/auth/change-password", {
         currentPassword,
         newPassword,
@@ -200,17 +231,17 @@ export const useChangePassword = () => {
         showConfirmButton: false,
       });
 
-    
+
       localStorage.removeItem("_UPLFMMATRIX");
       localStorage.removeItem("refreshToken");
       localStorage.removeItem("user");
 
       queryClient.setQueryData(["auth"], null);
-      queryClient.removeQueries(["auth"]);
+      queryClient.removeQueries({ queryKey: ["auth"] });
 
-      navigate("/login", { replace: true });
+      router.replace("/login");
     },
-    onError: (error) => {
+    onError: (error: any) => {
       Swal.fire({
         icon: "error",
         title: "Failed to Change Password",
@@ -228,28 +259,28 @@ const userApi = createApiConfig(DB.SIGNUP, "user", [
 ]);
 
 export const useCreateUser = userApi.useCreate;
-const forgetPasswordApi = createApiConfig(DB.FORGOTPASSWORD, "forgot-password");
+// const forgetPasswordApi = createApiConfig(DB.FORGOTPASSWORD, "forgot-password");
 
-export const useForgotPassword = forgetPasswordApi.useCreate;
+// export const useForgotPassword = forgetPasswordApi.useCreate;
 
 // verify otp
-export const useVerifyOtp = async ({ otp }) => {
-  const response = await apiClient.post(`/${DB.VERIFYOTP}/${otp}`);
-  return response;
-};
+// export const useVerifyOtp = async ({ otp }: { otp: string }) => {
+//   const response = await apiClient.post(`/${DB.VERIFYOTP}/${otp}`);
+//   return response;
+// };
 
-// reset password
-export const useResetPassword = async ({ token, password }) => {
-  const response = await apiClient.post(
-    `/${DB.RESETPASSWORD}`,
-    {
-      newPassword: password,
-    },
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
-  return response;
-};
+// // reset password
+// export const useResetPassword = async ({ token, password }: { token: string; password: string }) => {
+//   const response = await apiClient.post(
+//     `/${DB.RESETPASSWORD}`,
+//     {
+//       newPassword: password,
+//     },
+//     {
+//       headers: {
+//         Authorization: `Bearer ${token}`,
+//       },
+//     }
+//   );
+//   return response;
+// };

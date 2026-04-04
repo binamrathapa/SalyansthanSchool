@@ -3,6 +3,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 const AUTH_QUERY_KEY = "auth";
 
 export const initializeAuth = () => {
+  if (typeof window === "undefined") return null;
+  
   const token = localStorage.getItem("_UPLFMMATRIX");
   const user = localStorage.getItem("user");
   const fakeToken = localStorage.getItem("_GBLFMATRIX");
