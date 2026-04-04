@@ -181,11 +181,14 @@ export const useLogin = () => {
 export const useLogout = () => {
   const queryClient = useQueryClient();
   const router = useRouter();
+  const { logout: clearAuthContext } = useAuth();
 
   const logout = async (redirectTo = "/login") => {
     try {
       localStorage.removeItem("_UPLFMMATRIX");
       localStorage.removeItem("user");
+
+      clearAuthContext(); // Update the AuthContext state so the app knows we are logged out right away
 
       queryClient.setQueryData(["auth"], null);
       queryClient.removeQueries({ queryKey: ["auth"] });
