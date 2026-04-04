@@ -49,11 +49,6 @@ export const DB = {
   FEE_HEAD: "FeeHead",
   FEE_STRUCTURE: "FeeStructure",
   FEE_PAYMENT: "FeePayment",
-  
-
-  // Permissions
-  PERMISSION: "permission",
-  ROLE: "role",
 };
 
 // ================= USER ROLES (UI / AUTH USE) =================
