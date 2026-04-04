@@ -2,6 +2,8 @@
 
 import React from 'react';
 import { Menu, Bell, User } from 'lucide-react';
+import { useAuth } from '@/context/AuthProvider';
+
 
 interface DashboardHeaderProps {
   isSidebarOpen: boolean;
@@ -10,13 +12,16 @@ interface DashboardHeaderProps {
   pageDescription?: string;
 }
 
-export default function DashboardHeader({ 
-  isSidebarOpen, 
+export default function DashboardHeader({
+  isSidebarOpen,
   setIsSidebarOpen,
   pageTitle = "Dashboard",
   pageDescription = "Welcome to Salyansthan School Management"
 }: DashboardHeaderProps) {
-
+  const { user } = useAuth();
+  
+  const userName = (user as any)?.name;
+  const userRole = user?.role;
   return (
     <header className="bg-white shadow-sm border-b" style={{ borderColor: 'var(--sidebar-border)' }}>
       <div className="flex items-center justify-between px-6 py-4">
@@ -62,11 +67,11 @@ export default function DashboardHeader({
           {/* User Profile */}
           <div className="flex items-center gap-3">
             <div className="text-right">
-              <p className="text-sm font-medium" style={{ color: 'var(--text-default)' }}>
-                John Doe
+              <p className="text-sm font-medium capitalize" style={{ color: 'var(--text-default)' }}>
+                {userName}
               </p>
-              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                Administrator
+              <p className="text-xs capitalize" style={{ color: 'var(--text-muted)' }}>
+                {userRole?.toLowerCase().replace('_', ' ')}
               </p>
             </div>
 
