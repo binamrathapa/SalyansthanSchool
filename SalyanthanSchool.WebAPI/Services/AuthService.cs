@@ -33,7 +33,7 @@ namespace SalyanthanSchool.WebAPI.Services
             {
                 Username = dto.Username,
                 Password = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-                Role = dto.Role,
+                Role = dto.Role.ToLower(),
                 FirstName = dto.FirstName,
                 LastName = dto.LastName,
                 Email = dto.Email,
@@ -75,7 +75,7 @@ namespace SalyanthanSchool.WebAPI.Services
             {
                 IsSuccess = true,
                 Username = user.Username,
-                Role = user.Role,
+                Role = user.Role.ToLower(),
                 Token = token,
                 ExpiresAt = DateTime.UtcNow.AddHours(3),
                 Message = "Login successful"
