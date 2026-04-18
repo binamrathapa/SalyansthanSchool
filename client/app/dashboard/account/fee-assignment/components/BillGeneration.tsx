@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { CalendarDays, Filter, Receipt } from "lucide-react";
+import { CalendarDays, CloudCog, Filter } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import {
   Select,

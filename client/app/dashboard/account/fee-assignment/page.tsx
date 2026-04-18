@@ -49,7 +49,10 @@ export default function FeeAssignmentPage() {
     return {
       academicYears: academicYearsData || [],
       classes: gradesData || [],
-      sections: sectionsData || [],
+      sections: (sectionsData || []).map((s: any) => ({
+        id: s.id,
+        name: s.sectionName || s.name,
+      })),
       students: (studentsData || []).map((s: any) => ({
         id: s.id,
         name: s.fullName || `${s.firstName} ${s.lastName}`,
