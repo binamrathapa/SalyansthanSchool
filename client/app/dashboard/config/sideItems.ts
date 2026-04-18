@@ -31,9 +31,9 @@ export const sidebarItems: SidebarItem[] = [
     icon: Users,
     children: [
       { name: "All Students", path: "/dashboard/student" },
-      { name: "Admissions", path: "/dashboard/students/admissions" },
-      { name: "Student Records", path: "/dashboard/students/records" },
-      { name: "Promotions", path: "/dashboard/students/promotions" },
+      // { name: "Admissions", path: "/dashboard/students/admissions" },
+      // { name: "Student Records", path: "/dashboard/students/records" },
+      // { name: "Promotions", path: "/dashboard/students/promotions" },
     ],
   },
   {
@@ -49,8 +49,8 @@ export const sidebarItems: SidebarItem[] = [
     icon: School,
     children: [
       { name: "All Grades", path: "/dashboard/grades" },
-      { name: "Timetable", path: "/dashboard/grades/timetable" },
-      { name: "Grade Teacher", path: "/dashboard/grades/teacher" },
+      // { name: "Timetable", path: "/dashboard/grades/timetable" },
+      // { name: "Grade Teacher", path: "/dashboard/grades/teacher" },
     ],
   },
   {
@@ -62,7 +62,7 @@ export const sidebarItems: SidebarItem[] = [
       // Billing / Cash Counter
       { name: "Account Setup", path: "/dashboard/account/setup" },
       { name: "Cash Counter", path: "/dashboard/account/cash-counter" },
-      { name: "Fee Assignment", path: "/dashboard/account/fee-assignment" },      
+      { name: "Fee Assignment", path: "/dashboard/account/fee-assignment" },
       // { name: "Fee Collection", path: "/dashboard/account/fees" },
       // Income & Expense
       // { name: "Income", path: "/dashboard/accounts/income" },
@@ -77,52 +77,52 @@ export const sidebarItems: SidebarItem[] = [
   },
 
 
-  {
-    name: "Academics",
-    icon: BookOpen,
-    children: [
-      { name: "Subjects", path: "/dashboard/academics/subjects" },
-      { name: "Assignments", path: "/dashboard/academics/assignments" },
-      { name: "Examinations", path: "/dashboard/academics/exams" },
-      { name: "Grades", path: "/dashboard/academics/grades" },
-    ],
-  },
-  {
-    name: "Attendance",
-    icon: ClipboardList,
-    children: [
-      { name: "Student Attendance", path: "/dashboard/attendance/student" },
-      { name: "Staff Attendance", path: "/dashboard/attendance/staff" },
-      { name: "Reports", path: "/dashboard/attendance/reports" },
-    ],
-  },
-  {
-    name: "Library",
-    icon: Library,
-    children: [
-      { name: "Books", path: "/dashboard/library/books" },
-      { name: "Issue/Return", path: "/dashboard/library/issue" },
-      { name: "Members", path: "/dashboard/library/members" },
-    ],
-  },
-  {
-    name: "Calendar",
-    icon: Calendar,
-    children: [
-      { name: "School Events", path: "/dashboard/calendar/events" },
-      { name: "Holidays", path: "/dashboard/calendar/holidays" },
-      { name: "Exams", path: "/dashboard/calendar/exams" },
-    ],
-  },
-  {
-    name: "Results",
-    icon: Award,
-    children: [
-      { name: "Report Cards", path: "/dashboard/results/report-cards" },
-      { name: "Merit List", path: "/dashboard/results/merit-list" },
-      { name: "Progress", path: "/dashboard/results/progress" },
-    ],
-  },
+  // {
+  //   name: "Academics",
+  //   icon: BookOpen,
+  //   children: [
+  //     { name: "Subjects", path: "/dashboard/academics/subjects" },
+  //     { name: "Assignments", path: "/dashboard/academics/assignments" },
+  //     { name: "Examinations", path: "/dashboard/academics/exams" },
+  //     { name: "Grades", path: "/dashboard/academics/grades" },
+  //   ],
+  // },
+  // {
+  //   name: "Attendance",
+  //   icon: ClipboardList,
+  //   children: [
+  //     { name: "Student Attendance", path: "/dashboard/attendance/student" },
+  //     { name: "Staff Attendance", path: "/dashboard/attendance/staff" },
+  //     { name: "Reports", path: "/dashboard/attendance/reports" },
+  //   ],
+  // },
+  // {
+  //   name: "Library",
+  //   icon: Library,
+  //   children: [
+  //     { name: "Books", path: "/dashboard/library/books" },
+  //     { name: "Issue/Return", path: "/dashboard/library/issue" },
+  //     { name: "Members", path: "/dashboard/library/members" },
+  //   ],
+  // },
+  // {
+  //   name: "Calendar",
+  //   icon: Calendar,
+  //   children: [
+  //     { name: "School Events", path: "/dashboard/calendar/events" },
+  //     { name: "Holidays", path: "/dashboard/calendar/holidays" },
+  //     { name: "Exams", path: "/dashboard/calendar/exams" },
+  //   ],
+  // },
+  // {
+  //   name: "Results",
+  //   icon: Award,
+  //   children: [
+  //     { name: "Report Cards", path: "/dashboard/results/report-cards" },
+  //     { name: "Merit List", path: "/dashboard/results/merit-list" },
+  //     { name: "Progress", path: "/dashboard/results/progress" },
+  //   ],
+  // },
   {
     name: "Notices",
     icon: Bell,
