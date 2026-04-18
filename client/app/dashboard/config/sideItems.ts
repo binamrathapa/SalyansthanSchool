@@ -63,13 +63,13 @@ export const sidebarItems: SidebarItem[] = [
       { name: "Account Setup", path: "/dashboard/account/setup" },
       { name: "Cash Counter", path: "/dashboard/account/cash-counter" },
       { name: "Fee Assignment", path: "/dashboard/account/fee-assignment" },      
-      { name: "Fee Collection", path: "/dashboard/account/fees" },
+      // { name: "Fee Collection", path: "/dashboard/account/fees" },
       // Income & Expense
       // { name: "Income", path: "/dashboard/accounts/income" },
       // { name: "Expenses", path: "/dashboard/accounts/expenses" },
 
       // Ledger & Setup
-      { name: "Ledger", path: "/dashboard/account/ledger" },
+      // { name: "Ledger", path: "/dashboard/account/ledger" },
 
       // Reports
       // { name: "Reports", path: "/dashboard/account/reports" },

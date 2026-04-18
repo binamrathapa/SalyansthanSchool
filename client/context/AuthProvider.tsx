@@ -26,7 +26,7 @@ export const AuthProvider = ({ children }: any) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  
+
 
   useEffect(() => {
     const token = localStorage.getItem("_UPLFMMATRIX");
@@ -40,7 +40,7 @@ export const AuthProvider = ({ children }: any) => {
     setLoading(false);
   }, []);
 
-  console.log("token in auth", token)
+  // console.log("token in auth", token)
 
 
   const setAuth = (user: User, token: string) => {

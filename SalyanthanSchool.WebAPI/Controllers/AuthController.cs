@@ -1,8 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SalyanthanSchool.Core.DTOs.Auth;
-using SalyanthanSchool.Core.Interfaces;
 using SalyanthanSchool.Core.DTOs.Common;
+using SalyanthanSchool.Core.Interfaces;
+using System.Security.Claims;
 
 [AllowAnonymous]
 [ApiController]
@@ -25,6 +26,24 @@ public class AuthController : ControllerBase
             return Unauthorized(ApiResponse<AuthResponseDto>.Fail(result.Message));
         }
         return Ok(ApiResponse<AuthResponseDto>.Ok(result, "Login successful"));
+    }
+
+    [Authorize]
+    [HttpPost("change-password")]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequestDto dto)
+    {
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userIdClaim == null) return Unauthorized();
+
+        var userId = int.Parse(userIdClaim);
+        var result = await _authService.ChangePasswordAsync(userId, dto);
+
+        if (!result.IsSuccess)
+        {
+            return BadRequest(ApiResponse<AuthResponseDto>.Fail(result.Message));
+        }
+
+        return Ok(ApiResponse<AuthResponseDto>.Ok(result, result.Message));
     }
 
     [HttpPost("register")]

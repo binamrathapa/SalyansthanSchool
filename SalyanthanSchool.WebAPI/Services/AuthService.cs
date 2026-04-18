@@ -82,6 +82,37 @@ namespace SalyanthanSchool.WebAPI.Services
             };
         }
 
+        public async Task<AuthResponseDto> ChangePasswordAsync(int userId,ChangePasswordRequestDto dto)
+        {
+            var user = await _context.SystemUser.FindAsync(userId);
+
+            if (user == null)
+                return new AuthResponseDto
+                {
+                    IsSuccess = false,
+                    Message = "User not found"
+                };
+
+            if(!BCrypt.Net.BCrypt.Verify(dto.CurrentPassword, user.Password))
+            {
+                return new AuthResponseDto
+                {
+                    IsSuccess = true,
+                    Message = "Current password is incorrect",
+                };
+            }
+
+            user.Password = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
+            user.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            return new AuthResponseDto
+            {
+                IsSuccess = true,
+                Message = "Password changed successfully. Please login again."
+            };
+        }
         public Task<AuthResponseDto> LogoutAsync()
         {
             return Task.FromResult(new AuthResponseDto

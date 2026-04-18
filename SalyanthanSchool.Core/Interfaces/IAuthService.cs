@@ -6,6 +6,7 @@ namespace SalyanthanSchool.Core.Interfaces
     {
         Task<AuthResponseDto> LoginAsync(LoginRequestDto dto);
         Task<AuthResponseDto> RegisterAsync(RegisterRequestDto dto);
+        Task<AuthResponseDto> ChangePasswordAsync(int userId, ChangePasswordRequestDto dto);
         Task<AuthResponseDto> LogoutAsync();
     }
 }

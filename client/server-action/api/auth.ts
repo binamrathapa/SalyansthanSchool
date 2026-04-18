@@ -218,10 +218,11 @@ export const useChangePassword = () => {
   const router = useRouter();
 
   return useMutation({
-    mutationFn: async ({ currentPassword, newPassword }: any) => {
+    mutationFn: async ({ currentPassword, newPassword, confirmPassword }: any) => {
       const response = await apiClient.post("/auth/change-password", {
         currentPassword,
         newPassword,
+        confirmPassword,
       });
       return response.data;
     },
@@ -234,9 +235,8 @@ export const useChangePassword = () => {
         showConfirmButton: false,
       });
 
-
       localStorage.removeItem("_UPLFMMATRIX");
-      localStorage.removeItem("refreshToken");
+      // localStorage.removeItem("refreshToken");
       localStorage.removeItem("user");
 
       queryClient.setQueryData(["auth"], null);

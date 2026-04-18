@@ -70,7 +70,7 @@ export default function AccountSetupPage() {
   };
 
   const handleYearSubmit = async () => {
-    if (!yearFormData.name || !yearFormData.startDate || !yearFormData.endDate) return;
+    if (!yearFormData.name || !yearFormData.startDate || !yearFormData.endDate || !yearFormData.isActive) return;
     try {
       if (editingYear) {
         await updateYear.mutateAsync({ id: editingYear.id, ...yearFormData });

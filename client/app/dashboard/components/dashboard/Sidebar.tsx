@@ -6,15 +6,11 @@ import { useRouter } from "next/navigation";
 import {
   ChevronDown,
   ChevronRight,
-  LogOut,
   School,
   PanelLeft,
 } from "lucide-react";
 import { sidebarItems, SidebarItem } from "@/app/dashboard/config/sideItems";
 import { usePathname } from "next/navigation";
-import { useLogout } from "@/server-action/api/auth";
-import Swal from "sweetalert2";
-
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -31,23 +27,6 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
 
   const isActive = (path?: string) => path && pathname.startsWith(path);
 
-  const { logout } = useLogout();
-
-  const handleLogout = () => {
-    Swal.fire({
-      title: "Are you sure?",
-      text: "Do you want to log out of your account?",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#d33",
-      cancelButtonColor: "#3085d6",
-      confirmButtonText: "Yes, log out!"
-    }).then((result) => {
-      if (result.isConfirmed) {
-        logout();
-      }
-    });
-  };
 
   return (
   <div
@@ -172,15 +151,15 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
     </nav>
 
     {/* Logout */}
-    <div className="p-4 border-t border-[var(--sidebar-border)]">
-      <button
+    <div className="p-8 border-t border-[var(--sidebar-border) bg-[var(--brand-50)] ]">
+      {/* <button
         onClick={handleLogout}
         className={`flex items-center w-full p-3 rounded-lg transition-all duration-200 hover:bg-[var(--logout-hover-bg)] hover:text-[var(--logout-hover-text)] ${isCollapsed ? "justify-center" : "gap-3"
           }`}
       >
         <LogOut className="h-5 w-5" />
         {!isCollapsed && <span className="font-medium">Log Out</span>}
-      </button>
+      </button> */}
     </div>
   </div>
 );
