@@ -5,11 +5,6 @@ import {
   User,
   Users,
   CalendarDays,
-  PlusCircle,
-  FileSpreadsheet,
-  Info,
-  TrendingUp,
-  Clock
 } from "lucide-react";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
