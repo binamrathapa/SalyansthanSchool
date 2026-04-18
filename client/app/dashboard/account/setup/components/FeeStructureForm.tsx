@@ -51,12 +51,12 @@ export default function FeeStructureForm({
     }, [initialValues, reset]);
 
     return (
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 bg-white p-6 rounded-lg border border-white">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
                 {/* Academic Year Select */}
                 <div className="flex flex-col gap-2">
-                    <label className="text-sm font-medium text-white">Academic Year</label>
+                    <label className="text-sm font-semibold text-slate-700">Academic Year</label>
                     <Controller
                         name="academicYearId"
                         control={control}
@@ -67,7 +67,7 @@ export default function FeeStructureForm({
                                 value={field.value?.toString()}
                                 onValueChange={(val) => field.onChange(Number(val))}
                             >
-                                <SelectTrigger className="bg-white text-slate-900">
+                                <SelectTrigger className="bg-white border-slate-200 text-slate-900 focus:ring-green-500">
                                     <SelectValue placeholder="Select Year" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -89,7 +89,7 @@ export default function FeeStructureForm({
 
                 {/* Grade Select */}
                 <div className="flex flex-col gap-2">
-                    <label className="text-sm font-medium text-white">Grade</label>
+                    <label className="text-sm font-semibold text-slate-700">Grade</label>
                     <Controller
                         name="gradeId"
                         control={control}
@@ -100,7 +100,7 @@ export default function FeeStructureForm({
                                 value={field.value?.toString()}
                                 onValueChange={(val) => field.onChange(Number(val))}
                             >
-                                <SelectTrigger className="bg-white text-slate-900">
+                                <SelectTrigger className="bg-white border-slate-200 text-slate-900 focus:ring-green-500">
                                     <SelectValue placeholder="Select Grade" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -122,7 +122,7 @@ export default function FeeStructureForm({
 
                 {/* Fee Head Select */}
                 <div className="flex flex-col gap-2">
-                    <label className="text-sm font-medium text-white">Fee Head</label>
+                    <label className="text-sm font-semibold text-slate-700">Fee Head</label>
                     <Controller
                         name="feeHeadId"
                         control={control}
@@ -133,7 +133,7 @@ export default function FeeStructureForm({
                                 value={field.value?.toString()}
                                 onValueChange={(val) => field.onChange(Number(val))}
                             >
-                                <SelectTrigger className="bg-white text-slate-900">
+                                <SelectTrigger className="bg-white border-slate-200 text-slate-900 focus:ring-green-500">
                                     <SelectValue placeholder="Select Fee Head" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -155,11 +155,11 @@ export default function FeeStructureForm({
 
                 {/* Amount */}
                 <div className="flex flex-col gap-2">
-                    <label className="text-sm font-medium text-white">Amount</label>
+                    <label className="text-sm font-semibold text-slate-700">Amount</label>
                     <Input
                         type="number"
                         step="0.01"
-                        className="bg-transparent text-slate-900 border-slate-700 focus-visible:ring-[#4ade80]"
+                        className="bg-white text-slate-900 border-slate-200 focus-visible:ring-green-500"
                         {...register("amount", {
                             required: "Amount is required",
                             min: { value: 1, message: "Amount must be greater than 0" },
@@ -189,14 +189,14 @@ export default function FeeStructureForm({
                             />
                         )}
                     />
-                    <label htmlFor="isMonthly" className="text-sm font-medium text-white cursor-pointer">
+                    <label htmlFor="isMonthly" className="text-sm font-semibold text-slate-700 cursor-pointer">
                         Is Monthly Fee?
                     </label>
                 </div>
             </div>
 
             {/* Submit Button */}
-            <div className="flex justify-end pt-4 border-t border-slate-800">
+            <div className="flex justify-end pt-4 border-t border-slate-100">
                 <Button
                     type="submit"
                     disabled={isSubmitting || disabled}

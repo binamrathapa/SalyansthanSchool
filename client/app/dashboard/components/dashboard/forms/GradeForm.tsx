@@ -53,7 +53,7 @@ export default function GradeForm({
           <Input
             className="
       bg-transparent
-      text-white
+      text-slate-900
       border-slate-700
       focus-visible:ring-2
       focus-visible:ring-[#4ade80]
