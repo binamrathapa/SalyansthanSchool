@@ -1,0 +1,72 @@
+{
+  "metrics": [
+    {
+      "id": "students",
+      "title": "Total Students",
+      "value": "452",
+      "description": "Active students this session",
+      "trend": { "value": 12, "isPositive": true }
+    },
+    {
+      "id": "teachers",
+      "title": "Total Teachers",
+      "value": "22",
+      "description": "Across 10 departments",
+      "trend": { "value": 5, "isPositive": true }
+    },
+    {
+      "id": "classes",
+      "title": "Total Classes",
+      "value": "15",
+      "description": "Grades 1 to 10 + Pre-primary"
+    },
+    {
+      "id": "attendance",
+      "title": "Avg. Attendance",
+      "value": "94%",
+      "description": "Last 30 days average",
+      "trend": { "value": 2, "isPositive": false }
+    }
+  ],
+  "studentEnrollment": [
+    { "name": "Grade 1", "students": 45 },
+    { "name": "Grade 2", "students": 52 },
+    { "name": "Grade 3", "students": 48 },
+    { "name": "Grade 4", "students": 61 },
+    { "name": "Grade 5", "students": 55 },
+    { "name": "Grade 6", "students": 42 },
+    { "name": "Grade 7", "students": 38 },
+    { "name": "Grade 8", "students": 40 },
+    { "name": "Grade 9", "students": 35 },
+    { "name": "Grade 10", "students": 32 }
+  ],
+  "genderRatio": [
+    { "name": "Male", "value": 245 },
+    { "name": "Female", "value": 203 }
+  ],
+  "facultyStats": [
+    { "label": "Senior Teachers", "value": 8 },
+    { "label": "Subject Specialists", "value": 12 },
+    { "label": "Average Experience", "value": "8.5 Yrs" },
+    { "label": "Active Today", "value": "20/22" }
+  ],
+  "departmentStaffing": [
+    { "subject": "Mathematics", "count": 4 },
+    { "subject": "Science", "count": 4 },
+    { "subject": "English", "count": 3 },
+    { "subject": "Social Studies", "count": 3 },
+    { "subject": "Computer", "count": 2 }
+  ],
+  "financialQuickLook": {
+    "dailyCollection": { "amount": 25000, "trend": "12% hike" },
+    "pendingDues": { "amount": 145200, "count": 24 },
+    "weeklyTrend": [40, 60, 45, 90, 65, 80, 70]
+  },
+  "importantDates": [
+    { "title": "Annual Sports Meet", "date": "March 25, 2026" },
+    { "title": "Final Term Examination", "date": "April 10, 2026" }
+  ],
+  "latestNotices": [
+    { "title": "Holiday Announcement", "content": "Holi festival leave starts from tomorrow." }
+  ]
+}
