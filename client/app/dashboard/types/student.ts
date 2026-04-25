@@ -99,4 +99,24 @@ export type PatchStudentPayload = {
   isActive?: boolean;
   photoFile?: File;
 };
+// QUERY PARAMETERS
+export type StudentQueryParameters = {
+  pageNumber?: number;
+  pageSize?: number;
+  search?: string;
+  sortBy?: string;
+  sortDir?: "asc" | "desc";
+  isActive?: boolean;
+  gradeId?: number;
+  sectionId?: number;
+};
 
+// PAGINATED RESPONSE
+export type StudentPaginatedResponse = {
+  data: Student[];
+  meta: {
+    pageNumber: number;
+    pageSize: number;
+    total: number;
+  };
+};

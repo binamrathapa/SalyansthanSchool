@@ -10,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import SearchFilterBar from "@/components/ui/SearchFilterBar ";
+import SearchFilterBar from "@/components/ui/SearchFilterBar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { exportWithPreview } from "@/app/dashboard/utils/exportWithPreview";
@@ -52,6 +52,16 @@ interface CustomTableProps<T> {
   searchableKeys?: (keyof T)[];
   filterOptions?: { label: string; value: string; key: keyof T }[];
   isLoading?: boolean;
+
+  // Server-side props
+  serverSide?: boolean;
+  totalItems?: number;
+  currentPage?: number;
+  onPageChange?: (page: number) => void;
+  onSearchChange?: (search: string) => void;
+  onFilterChange?: (filter: string) => void;
+  searchValue?: string;
+  filterValue?: string;
 }
 
 const CustomTable = <T extends Record<string, any>>({
@@ -67,14 +77,34 @@ const CustomTable = <T extends Record<string, any>>({
   onAddClick,
   searchableKeys = [],
   filterOptions = [],
+  isLoading = false,
+  serverSide = false,
+  totalItems,
+  currentPage,
+  onPageChange,
+  onSearchChange,
+  onFilterChange,
+  searchValue,
+  filterValue,
 }: CustomTableProps<T>) => {
-  const [page, setPage] = useState(1);
+  const [internalPage, setInternalPage] = useState(1);
   const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
-  const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState("");
+  const [internalSearch, setInternalSearch] = useState("");
+  const [internalFilter, setInternalFilter] = useState("");
+
+  const page = serverSide && currentPage !== undefined ? currentPage : internalPage;
+  const search = serverSide ? (searchValue ?? "") : internalSearch;
+  const filter = serverSide ? (filterValue ?? "") : internalFilter;
+
+  // If serverSide, search and filter state should probably be lifted to parent.
+  // But for backward compatibility, we can keep internal state and just use it as "initial" or "local".
+  // Let's refine this: if serverSide is true, we use props for state.
+
 
   /* ---------------- FILTER + SEARCH ---------------- */
   const filteredData = useMemo(() => {
+    if (serverSide) return data; // Data is already filtered by server
+
     return data.filter((row) => {
       const matchesSearch =
         !search ||
@@ -89,17 +119,22 @@ const CustomTable = <T extends Record<string, any>>({
 
       return matchesSearch && matchesFilter;
     });
-  }, [data, search, filter, searchableKeys, filterOptions]);
+  }, [data, search, filter, searchableKeys, filterOptions, serverSide]);
 
   /* ---------------- PAGINATION ---------------- */
-  const totalPages = Math.ceil(filteredData.length / limit);
+  const totalPages = serverSide && totalItems !== undefined
+    ? Math.ceil(totalItems / limit)
+    : Math.ceil(filteredData.length / limit);
+
   const startIndex = (page - 1) * limit;
-  const pageData = filteredData.slice(startIndex, startIndex + limit);
+  const pageData = serverSide ? data : filteredData.slice(startIndex, startIndex + limit);
 
   useEffect(() => {
-    setPage(1);
-    setSelectedRows(new Set());
-  }, [search, filter]);
+    if (!serverSide) {
+      setInternalPage(1);
+      setSelectedRows(new Set());
+    }
+  }, [search, filter, serverSide]);
 
   /* ---------------- SELECTION ---------------- */
   const toggleRow = (index: number) => {
@@ -177,8 +212,14 @@ const CustomTable = <T extends Record<string, any>>({
       <SearchFilterBar
         search={search}
         filter={filter}
-        onSearchChange={setSearch}
-        onFilterChange={setFilter}
+        onSearchChange={(val: any) => {
+          if (serverSide) onSearchChange?.(val);
+          else setInternalSearch(val);
+        }}
+        onFilterChange={(val: any) => {
+          if (serverSide) onFilterChange?.(val);
+          else setInternalFilter(val);
+        }}
         filterOptions={filterOptions.map(({ label, value }) => ({
           label,
           value,
@@ -242,20 +283,29 @@ const CustomTable = <T extends Record<string, any>>({
         <Pagination className="mt-4 justify-end">
           <PaginationContent>
             <PaginationPrevious
-              onClick={() => setPage((p) => Math.max(p - 1, 1))}
+              onClick={() => {
+                if (serverSide) onPageChange?.(Math.max(page - 1, 1));
+                else setInternalPage((p) => Math.max(p - 1, 1));
+              }}
             />
             {[...Array(totalPages)].map((_, i) => (
               <PaginationItem key={i}>
                 <PaginationLink
                   isActive={page === i + 1}
-                  onClick={() => setPage(i + 1)}
+                  onClick={() => {
+                    if (serverSide) onPageChange?.(i + 1);
+                    else setInternalPage(i + 1);
+                  }}
                 >
                   {i + 1}
                 </PaginationLink>
               </PaginationItem>
             ))}
             <PaginationNext
-              onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
+              onClick={() => {
+                if (serverSide) onPageChange?.(Math.min(page + 1, totalPages));
+                else setInternalPage((p) => Math.min(p + 1, totalPages));
+              }}
             />
           </PaginationContent>
         </Pagination>

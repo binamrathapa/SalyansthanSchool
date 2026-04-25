@@ -1,20 +1,20 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import CustomTable from "@/app/dashboard/components/dashboard/common/CustomTable";
 import { studentColumns } from "@/app/dashboard/config/table/studentTableConfig";
-import { Student } from "@/app/dashboard/types/student";
+import { Student, StudentQueryParameters } from "@/app/dashboard/types/student";
 import StudentAddEditModal from "@/app/dashboard/student/StudentAddEditModal";
 import StudentViewModal from "@/app/dashboard/student/StudentViewModal";
 import { showConfirm } from "@/lib/sweet-alert";
 import { StudentFormType } from "@/lib/validation/student.schema";
-import { generateFilterOptions } from "@/app/dashboard/utils/generateFilterOptions";
 import {
-  useGetAllStudents,
   useDeleteStudent,
   usePatchStudent,
-  useCreateStudent
+  useCreateStudent,
+  useGetAllStudentsPaginated
 } from "@/server-action/api/student.api";
+import { useGetAllGrades } from "@/server-action/api/grade.api";
 import LoadingWrapper from "../components/dashboard/common/GlobalLoaderWrapper";
 
 // ----------------- HELPERS -----------------
@@ -45,30 +45,31 @@ const mapStudentToForm = (student: Student): StudentFormType => ({
 });
 
 
-//Patch
-const buildPatchStudentFormData = async (
+// Build FormData for UPDATE (sending all fields for PUT)
+const buildUpdateStudentFormData = async (
   values: StudentFormType,
   student: Student
 ): Promise<FormData> => {
   const formData = new FormData();
-  formData.append("id", String(student.id));
-  if (values.firstName !== student.firstName) formData.append("firstName", values.firstName);
-  if ((values.middleName || "") !== (student.middleName || "")) formData.append("middleName", values.middleName || "");
-  if (values.lastName !== student.lastName) formData.append("lastName", values.lastName);
-  if (values.gender !== student.gender) formData.append("gender", values.gender);
-  if (values.bloodGroup !== student.bloodGroup) formData.append("bloodGroup", values.bloodGroup || "");
-  if (values.dob !== student.dateOfBirth) formData.append("dateOfBirth", values.dob || "");
-  if (values.address !== student.address) formData.append("address", values.address || "");
-  if (values.parent !== student.guardianName) formData.append("guardianName", values.parent || "");
-  if (values.parentContact !== student.guardianContact) formData.append("guardianContact", values.parentContact || "");
-  if (values.gradeId !== student.gradeId) formData.append("gradeId", String(values.gradeId));
-  if (values.sectionId !== student.sectionId) formData.append("sectionId", String(values.sectionId));
-  if (values.isActive !== student.isActive) formData.append("isActive", String(values.isActive));
+  formData.append("Id", String(student.id));
+  formData.append("FirstName", values.firstName);
+  formData.append("MiddleName", values.middleName || "");
+  formData.append("LastName", values.lastName);
+  formData.append("Gender", values.gender);
+  formData.append("BloodGroup", values.bloodGroup || "");
+  formData.append("DateOfBirth", values.dob || "");
+  formData.append("AdmissionDate", values.admissionDate || "");
+  formData.append("Address", values.address || "");
+  formData.append("GuardianName", values.parent || "");
+  formData.append("GuardianContact", values.parentContact || "");
+  formData.append("GradeId", String(values.gradeId));
+  formData.append("SectionId", String(values.sectionId));
+  formData.append("IsActive", String(values.isActive));
 
   if (values.photo && !values.photo.startsWith("http")) {
     const res = await fetch(values.photo);
     const blob = await res.blob();
-    formData.append("photoFile", blob, "student.jpg");
+    formData.append("PhotoFile", blob, "student.jpg");
   }
 
   return formData;
@@ -114,17 +115,45 @@ const StudentList = () => {
   const [openView, setOpenView] = useState(false);
   const [openAddEdit, setOpenAddEdit] = useState(false);
 
-  const { data: studentsData, isLoading } = useGetAllStudents();
-  const students: Student[] = Array.isArray(studentsData) ? studentsData : [];
+  // Server-side state
+  const [queryParams, setQueryParams] = useState<StudentQueryParameters>({
+    pageNumber: 1,
+    pageSize: 10,
+    search: "",
+    sortBy: "id",
+    sortDir: "desc",
+    gradeId: undefined,
+  });
+
+  // Local search state for debouncing
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const { data: studentsResponse, isLoading } = useGetAllStudentsPaginated(queryParams);
+  const students = studentsResponse?.data || [];
+  const totalItems = studentsResponse?.meta?.total || 0;
+
+  const { data: gradesData } = useGetAllGrades();
 
   const createMutation = useCreateStudent();
   const patchMutation = usePatchStudent();
   const deleteMutation = useDeleteStudent();
 
-  const statusFilterOptions = useMemo(
-    () => generateFilterOptions(students, "gradeName"),
-    [students]
-  );
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setQueryParams(prev => ({ ...prev, search: searchTerm, pageNumber: 1 }));
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  const gradeFilterOptions = useMemo(() => {
+    if (!gradesData) return [];
+    return gradesData.map((grade) => ({
+      label: grade.name,
+      value: String(grade.id),
+      key: "gradeId" as any,
+    }));
+  }, [gradesData]);
 
   // ---------------- HANDLERS -----------------
 
@@ -134,7 +163,6 @@ const StudentList = () => {
   };
 
   const handleAdd = () => {
-    console.log("add click")
     setEditingStudent(null);
     setOpenAddEdit(true);
   };
@@ -157,7 +185,6 @@ const StudentList = () => {
   };
 
   const handleSave = async (values: StudentFormType) => {
-
     const isEdit = Boolean(editingStudent);
 
     const confirmed = await showConfirm({
@@ -172,8 +199,7 @@ const StudentList = () => {
 
     try {
       if (isEdit && editingStudent) {
-        console.log("patch click")
-        const formData = await buildPatchStudentFormData(values, editingStudent);
+        const formData = await buildUpdateStudentFormData(values, editingStudent);
         await patchMutation.mutateAsync({
           id: editingStudent.id,
           data: formData,
@@ -189,6 +215,14 @@ const StudentList = () => {
     }
   };
 
+  const handlePageChange = (page: number) => {
+    setQueryParams(prev => ({ ...prev, pageNumber: page }));
+  };
+
+  const handleFilterChange = (val: string) => {
+    const gradeId = val === "__all__" ? undefined : Number(val);
+    setQueryParams(prev => ({ ...prev, gradeId, pageNumber: 1 }));
+  };
 
   // ----------------- RENDER -----------------
 
@@ -203,12 +237,19 @@ const StudentList = () => {
           columns={studentColumns(handleView, handleEdit, handleDelete)}
           data={students}
           isLoading={isLoading}
-          limit={5}
+          limit={queryParams.pageSize}
           addButtonLabel="Add Student"
           onAddClick={handleAdd}
           showDelete
-          searchableKeys={["fullName", "guardianName", "dateOfBirth"]}
-          filterOptions={statusFilterOptions}
+          serverSide={true}
+          totalItems={totalItems}
+          currentPage={queryParams.pageNumber}
+          onPageChange={handlePageChange}
+          searchValue={searchTerm}
+          onSearchChange={setSearchTerm}
+          filterValue={queryParams.gradeId ? String(queryParams.gradeId) : ""}
+          onFilterChange={handleFilterChange}
+          filterOptions={gradeFilterOptions}
         />
 
         {selectedStudent && (
