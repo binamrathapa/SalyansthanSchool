@@ -237,7 +237,7 @@ namespace SalyanthanSchool.WebAPI.Services
             return new PreviousDueDto
             {
                 TotalDue = previousDueInvoices
-                    .Sum(i => i.RemainingAmount),
+                    .Sum(i => i.TotalAmount - i.DiscountAmount + i.PreviousDue - i.PaidAmount),
 
                 // ✅ Return month number directly
                 LastDueMonth = previousDueInvoices
@@ -277,7 +277,10 @@ namespace SalyanthanSchool.WebAPI.Services
                                 - currentInvoice.DiscountAmount
                                 + currentInvoice.PreviousDue,
                 PaidAmount      = currentInvoice.PaidAmount,
-                RemainingAmount = currentInvoice.RemainingAmount,
+                RemainingAmount = currentInvoice.TotalAmount 
+                                - currentInvoice.DiscountAmount 
+                                + currentInvoice.PreviousDue 
+                                - currentInvoice.PaidAmount,
                 Status          = GetStatusName(currentInvoice.Status)
             };
         }
@@ -294,7 +297,8 @@ namespace SalyanthanSchool.WebAPI.Services
                 TotalYearFee  = allInvoices.Sum(i => i.TotalAmount),
                 TotalDiscount = allInvoices.Sum(i => i.DiscountAmount),
                 TotalPaid     = allInvoices.Sum(i => i.PaidAmount),
-                TotalDue      = allInvoices.Sum(i => i.RemainingAmount)
+                TotalDue      = allInvoices.Sum(i => 
+                                    i.TotalAmount - i.DiscountAmount + i.PreviousDue - i.PaidAmount)
             };
         }
 

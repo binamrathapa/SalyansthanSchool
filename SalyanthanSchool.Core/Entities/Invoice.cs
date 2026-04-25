@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SalyanthanSchool.Core.Entities
@@ -37,7 +37,6 @@ namespace SalyanthanSchool.Core.Entities
         [Column("due_date")]
         public DateTime DueDate { get; set; }
 
-        // Uses enum directly - no FK needed
         [Column("status")]
         public InvoiceStatus Status { get; set; }
             = InvoiceStatus.Unpaid;
@@ -45,7 +44,7 @@ namespace SalyanthanSchool.Core.Entities
         [Column("created_at")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        // ⭐ New columns
+        // ⭐ New Columns
         [Column("discount_amount")]
         public decimal DiscountAmount { get; set; } = 0;
 
@@ -63,6 +62,10 @@ namespace SalyanthanSchool.Core.Entities
 
         [Column("updated_at")]
         public DateTime? UpdatedAt { get; set; }
+
+        [Timestamp]
+        [Column("row_version")]
+        public byte[]? RowVersion { get; set; }
 
         // Navigation
         [ForeignKey("StudentId")]
@@ -134,7 +137,7 @@ namespace SalyanthanSchool.Core.Entities
         [Column("created_at")]
         public DateTime? CreatedAt { get; set; }
 
-        // New column
+        // ⭐ New Column
         [Column("receipt_no")]
         public string? ReceiptNo { get; set; }
 
