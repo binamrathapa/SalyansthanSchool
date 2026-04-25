@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 using Microsoft.AspNetCore.Http;
 using SalyanthanSchool.Core.DTOs.Student;
 
@@ -57,8 +57,9 @@ namespace SalyanthanSchool.Core.Validators.Student
         }
 
         // --- Helper method for validating uploaded image ---
-        private bool BeValidImage(IFormFile file)
+        private bool BeValidImage(IFormFile? file)
         {
+            if (file == null) return true; // Optional file
             var allowedTypes = new[]
             {
                 "image/jpeg",
