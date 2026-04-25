@@ -14,6 +14,7 @@ interface SearchFilterBarProps {
   filter: string;
   onFilterChange: (value: string) => void;
   filterOptions?: { label: string; value: string }[];
+  placeholder?: string;
 }
 
 const ALL_VALUE = "__all__";
@@ -24,13 +25,14 @@ const SearchFilterBar = ({
   filter,
   onFilterChange,
   filterOptions = [],
+  placeholder = "Search...",
 }: SearchFilterBarProps) => {
   return (
     <div className="w-full flex justify-end mb-4 gap-3">
       {/* Search */}
       <input
         type="text"
-        placeholder="Search..."
+        placeholder={placeholder}
         value={search}
         onChange={(e) => onSearchChange(e.target.value)}
         className="
