@@ -49,6 +49,7 @@ export const sidebarItems: SidebarItem[] = [
     icon: School,
     children: [
       { name: "All Grades", path: "/dashboard/grades" },
+      { name: "Sections", path: "/dashboard/grades/sections" },
       // { name: "Timetable", path: "/dashboard/grades/timetable" },
       // { name: "Grade Teacher", path: "/dashboard/grades/teacher" },
     ],
