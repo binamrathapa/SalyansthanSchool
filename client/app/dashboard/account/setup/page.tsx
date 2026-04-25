@@ -317,9 +317,9 @@ export default function AccountSetupPage() {
                     const head = accountHeads.find(h => h.name === row.feeHeadName);
                     setEditingStructure({
                       ...row,
-                      academicYearId: row.academicYearId || year?.id,
-                      gradeId: row.gradeId || grade?.id,
-                      feeHeadId: row.feeHeadId || head?.id,
+                      academicYearId: row.academicYearId || year?.id || 0,
+                      gradeId: row.gradeId || grade?.id || 0,
+                      feeHeadId: row.feeHeadId || head?.id || 0,
                     });
                   },
                   async (row) => {

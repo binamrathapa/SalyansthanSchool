@@ -46,7 +46,7 @@ export function createApiConfig<
   const useGetAll = (queryParams?: QueryParams, options?: any) => {
     const stableKey = queryParams ? JSON.stringify(queryParams) : "all";
 
-    return useQuery({
+    return useQuery<TEntity[], Error>({
       queryKey: [entityName, stableKey],
       queryFn: async () => {
         const response = await apiClient.get(`/${entityName}`, { params: queryParams });

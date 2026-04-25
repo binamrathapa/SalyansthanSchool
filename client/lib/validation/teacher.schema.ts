@@ -11,6 +11,7 @@ export const teacherSchema = z.object({
   address: z.string().optional(),
   panNumber: z.string().min(5, "PAN Number is required"),
   nidNumber: z.string().optional(),
+  citizenshipNumber: z.string().optional(),
   qualification: z.string().min(2, "Qualification is required"),
   joiningDate: z.string().min(1, "Joining date is required"),
   photo: z.string().optional(),

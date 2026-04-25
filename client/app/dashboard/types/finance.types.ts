@@ -48,10 +48,10 @@ export interface Transaction {
   status: string;
 }
 
-export interface ClassWiseFeeStatus{
-  class:string;
+export interface ClassWiseFeeStatus {
+  class: string;
   paidAmount: number;
-  unpaidAmount:number;
+  unpaidAmount: number;
 }
 
 export interface FinanceApiData {

@@ -190,8 +190,20 @@
     }
   ],
   "classWiseFeeStatus": [
-  { "class": "Grade 1", "paidAmount": 45000, "unpaidAmount": 5000 },
-  { "class": "Grade 2", "paidAmount": 38000, "unpaidAmount": 4000 },
-  { "class": "Grade 3", "paidAmount": 52000, "unpaidAmount": 5000 }
-]
+    {
+      "class": "Grade 1",
+      "paidAmount": 45000,
+      "unpaidAmount": 5000
+    },
+    {
+      "class": "Grade 2",
+      "paidAmount": 38000,
+      "unpaidAmount": 4000
+    },
+    {
+      "class": "Grade 3",
+      "paidAmount": 52000,
+      "unpaidAmount": 5000
+    }
+  ]
 }

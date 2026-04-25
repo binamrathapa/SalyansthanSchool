@@ -61,12 +61,5 @@
     "dailyCollection": { "amount": 25000, "trend": "12% hike" },
     "pendingDues": { "amount": 145200, "count": 24 },
     "weeklyTrend": [40, 60, 45, 90, 65, 80, 70]
-  },
-  "importantDates": [
-    { "title": "Annual Sports Meet", "date": "March 25, 2026" },
-    { "title": "Final Term Examination", "date": "April 10, 2026" }
-  ],
-  "latestNotices": [
-    { "title": "Holiday Announcement", "content": "Holi festival leave starts from tomorrow." }
-  ]
+  }
 }
