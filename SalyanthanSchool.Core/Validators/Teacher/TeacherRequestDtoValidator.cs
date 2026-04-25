@@ -15,11 +15,6 @@ namespace SalyanthanSchool.Core.Validators.Teacher
 
         public TeacherRequestDtoValidator()
         {
-            // EmployeeCode
-            RuleFor(x => x.EmployeeCode)
-                .NotEmpty().WithMessage("Employee Code is required.")
-                .MaximumLength(50); // Assuming Varchar max length
-
             // First Name
             RuleFor(x => x.FirstName)
                 .NotEmpty().WithMessage("First Name is required.")

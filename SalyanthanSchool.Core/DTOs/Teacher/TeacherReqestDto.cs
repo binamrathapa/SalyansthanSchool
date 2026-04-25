@@ -4,7 +4,6 @@ namespace SalyanthanSchool.Core.DTOs.Teacher
 {
     public class TeacherRequestDto
     {
-        public string EmployeeCode { get; set; } = null!;
         public string FirstName { get; set; } = null!;
         public string? MiddleName { get; set; }
         public string LastName { get; set; } = null!;

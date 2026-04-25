@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SalyanthanSchool.Core.Entities
 {
@@ -9,6 +9,7 @@ namespace SalyanthanSchool.Core.Entities
         public int Id { get; set; }
 
         [Column("employee_code")]
+        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
         public string EmployeeCode { get; set; } = null!;
 
         [Column("first_name")]
