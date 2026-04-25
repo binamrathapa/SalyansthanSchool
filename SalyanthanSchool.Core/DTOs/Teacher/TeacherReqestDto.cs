@@ -1,4 +1,5 @@
-﻿using System;
+using Microsoft.AspNetCore.Http;
+using System;
 
 namespace SalyanthanSchool.Core.DTOs.Teacher
 {
@@ -13,9 +14,12 @@ namespace SalyanthanSchool.Core.DTOs.Teacher
         public string MobileNo { get; set; } = null!;
         public string? Address { get; set; }
         public string PanNumber { get; set; } = null!;
+        public string? NidNumber { get; set; }
         public string Qualification { get; set; } = null!;
+
         public DateOnly JoiningDate { get; set; }
-        public string? Photo { get; set; }
+        public IFormFile? Photo { get; set; }
         public bool IsActive { get; set; } = true;
     }
 }
+

@@ -20,9 +20,19 @@ namespace SalyanthanSchool.WebAPI.Controllers
         public async Task<IActionResult> Get([FromQuery] TeacherQueryParameter query)
         {
             var result = await _service.GetAsync(query);
-            // Result is already a PagedResult, we wrap it in ApiResponse
-            return Ok(ApiResponse<PagedResult<TeacherResponseDto>>.Ok(result));
+            // Return response in standard API format (matching Student API)
+            return Ok(ApiResponse<IEnumerable<TeacherResponseDto>>.Ok(
+                data: result.Items,
+                message: "Teachers fetched successfully",
+                meta: new
+                {
+                    pageNumber = result.PageNumber,
+                    pageSize = result.PageSize,
+                    total = result.TotalCount
+                }
+            ));
         }
+
 
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
@@ -35,7 +45,8 @@ namespace SalyanthanSchool.WebAPI.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] TeacherRequestDto dto)
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> Create([FromForm] TeacherRequestDto dto)
         {
             try
             {
@@ -50,7 +61,8 @@ namespace SalyanthanSchool.WebAPI.Controllers
         }
 
         [HttpPut("{id:int}")]
-        public async Task<IActionResult> Update(int id, [FromBody] TeacherRequestDto dto)
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> Update(int id, [FromForm] TeacherRequestDto dto)
         {
             try
             {
@@ -65,6 +77,7 @@ namespace SalyanthanSchool.WebAPI.Controllers
                 return Conflict(ApiResponse<TeacherResponseDto>.Fail(ex.Message));
             }
         }
+
 
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)

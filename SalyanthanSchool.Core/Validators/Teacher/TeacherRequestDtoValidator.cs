@@ -1,4 +1,5 @@
-﻿using FluentValidation;
+using FluentValidation;
+using Microsoft.AspNetCore.Http;
 using SalyanthanSchool.Core.DTOs.Teacher;
 
 namespace SalyanthanSchool.Core.Validators.Teacher
@@ -61,10 +62,14 @@ namespace SalyanthanSchool.Core.Validators.Teacher
             RuleFor(x => x.Address)
                 .MaximumLength(255);
 
-            // PAN Number (Assuming it's unique but validation format depends on the region)
+            // PAN Number
             RuleFor(x => x.PanNumber)
                 .NotEmpty().WithMessage("PAN Number is required.")
-                .MaximumLength(50); // Placeholder length
+                .MaximumLength(50);
+
+            // NID Number
+            RuleFor(x => x.NidNumber)
+                .MaximumLength(50);
 
             // Qualification
             RuleFor(x => x.Qualification)
@@ -76,15 +81,34 @@ namespace SalyanthanSchool.Core.Validators.Teacher
                 .Must(jd => jd <= DateOnly.FromDateTime(DateTime.Today))
                 .WithMessage("Joining Date cannot be in the future.");
 
-            // Photo (URL/Path) - Simple URL check
+            // Photo (File upload)
             RuleFor(x => x.Photo)
-                .Must(url => Uri.TryCreate(url, UriKind.Absolute, out _))
-                .When(x => !string.IsNullOrEmpty(x.Photo))
-                .WithMessage("Photo must be a valid URL or path.");
+                .Must(BeValidImage)
+
+                .When(x => x.Photo != null)
+                .WithMessage("Photo must be JPG, JPEG, or PNG and less than 5MB.");
+
 
             // IsActive
             RuleFor(x => x.IsActive)
                 .NotNull();
         }
+
+        // --- Helper method for validating uploaded image ---
+        private bool BeValidImage(IFormFile? file)
+        {
+            if (file == null) return true;
+
+            var allowedTypes = new[]
+            {
+                "image/jpeg",
+                "image/png",
+                "image/jpg"
+            };
+
+            return allowedTypes.Contains(file.ContentType)
+                   && file.Length > 0
+                   && file.Length <= 5 * 1024 * 1024; // 5MB
+        }
     }
-}
+}

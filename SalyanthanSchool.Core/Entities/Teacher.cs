@@ -39,7 +39,11 @@ namespace SalyanthanSchool.Core.Entities
         [Column("pan_number")]
         public string PanNumber { get; set; } = null!;
 
+        [Column("nid_number")]
+        public string? NidNumber { get; set; }
+
         [Column("qualification")]
+
         public string Qualification { get; set; } = null!;
 
         [Column("joining_date")]

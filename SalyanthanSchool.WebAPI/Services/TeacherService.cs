@@ -1,20 +1,26 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using SalyanthanSchool.Core.DTOs.Common;
 using SalyanthanSchool.Core.DTOs.Teacher;
 using SalyanthanSchool.Core.Entities;
 using SalyanthanSchool.Core.Interfaces;
 using SalyanthanSchool.WebAPI.Data;
+using System.IO;
 
 namespace SalyanthanSchool.Infrastructure.Services
 {
     public class TeacherService : ITeacherService
     {
         private readonly SalyanthanSchoolWebAPIContext _context;
+        private readonly IWebHostEnvironment _env;
 
-        public TeacherService(SalyanthanSchoolWebAPIContext context)
+        public TeacherService(SalyanthanSchoolWebAPIContext context, IWebHostEnvironment env)
         {
             _context = context;
+            _env = env;
         }
+
 
         // Helper to map Entity to DTO - MADE STATIC TO AVOID EF CORE PROJECTION ERROR
         private static TeacherResponseDto MapToResponse(Teacher teacher)
@@ -31,6 +37,8 @@ namespace SalyanthanSchool.Infrastructure.Services
                 Email = teacher.Email,
                 MobileNo = teacher.MobileNo,
                 Address = teacher.Address,
+                PanNumber = teacher.PanNumber,
+                NidNumber = teacher.NidNumber,
                 Qualification = teacher.Qualification,
                 JoiningDate = teacher.JoiningDate,
                 Photo = teacher.Photo,
@@ -134,6 +142,13 @@ namespace SalyanthanSchool.Infrastructure.Services
             var panExists = await _context.Teachers.AnyAsync(t => t.PanNumber == dto.PanNumber);
             if (panExists) throw new InvalidOperationException("PAN Number already exists.");
 
+            if (!string.IsNullOrEmpty(dto.NidNumber))
+            {
+                var nidExists = await _context.Teachers.AnyAsync(t => t.NidNumber == dto.NidNumber);
+                if (nidExists) throw new InvalidOperationException("NID Number already exists.");
+            }
+
+            var photoPath = await SavePhotoAsync(dto.Photo);
 
             var teacher = new Teacher
             {
@@ -146,9 +161,10 @@ namespace SalyanthanSchool.Infrastructure.Services
                 MobileNo = dto.MobileNo,
                 Address = dto.Address,
                 PanNumber = dto.PanNumber,
+                NidNumber = dto.NidNumber,
                 Qualification = dto.Qualification,
                 JoiningDate = dto.JoiningDate,
-                Photo = dto.Photo,
+                Photo = photoPath,
                 IsActive = dto.IsActive
                 // CreatedAt is automatically set by the entity constructor
             };
@@ -176,6 +192,12 @@ namespace SalyanthanSchool.Infrastructure.Services
             var panExists = await _context.Teachers.AnyAsync(t => t.PanNumber == dto.PanNumber && t.Id != id);
             if (panExists) throw new InvalidOperationException("PAN Number already exists.");
 
+            if (!string.IsNullOrEmpty(dto.NidNumber))
+            {
+                var nidExists = await _context.Teachers.AnyAsync(t => t.NidNumber == dto.NidNumber && t.Id != id);
+                if (nidExists) throw new InvalidOperationException("NID Number already exists.");
+            }
+
 
             // Update properties
             teacher.FirstName = dto.FirstName;
@@ -187,11 +209,17 @@ namespace SalyanthanSchool.Infrastructure.Services
             teacher.MobileNo = dto.MobileNo;
             teacher.Address = dto.Address;
             teacher.PanNumber = dto.PanNumber;
+            teacher.NidNumber = dto.NidNumber;
             teacher.Qualification = dto.Qualification;
             teacher.JoiningDate = dto.JoiningDate;
-            teacher.Photo = dto.Photo;
             teacher.IsActive = dto.IsActive;
             teacher.UpdatedAt = DateTime.UtcNow;
+
+            if (dto.Photo != null)
+            {
+                DeleteExistingPhoto(teacher.Photo);
+                teacher.Photo = await SavePhotoAsync(dto.Photo);
+            }
 
             await _context.SaveChangesAsync();
 
@@ -206,9 +234,38 @@ namespace SalyanthanSchool.Infrastructure.Services
             var teacher = await _context.Teachers.FindAsync(id);
             if (teacher == null) return false;
 
+            DeleteExistingPhoto(teacher.Photo);
+
             _context.Teachers.Remove(teacher);
             await _context.SaveChangesAsync();
             return true;
         }
+
+        // --- Helper Methods ---
+
+        private async Task<string?> SavePhotoAsync(IFormFile? file)
+        {
+            if (file == null || file.Length == 0) return null;
+
+            var uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", "teachers");
+            if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
+
+            var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+            var filePath = Path.Combine(uploadsFolder, fileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            return $"/uploads/teachers/{fileName}";
+        }
+
+        private void DeleteExistingPhoto(string? photoPath)
+        {
+            if (string.IsNullOrEmpty(photoPath)) return;
+            var fullPath = Path.Combine(_env.WebRootPath, photoPath.TrimStart('/'));
+            if (File.Exists(fullPath)) File.Delete(fullPath);
+        }
     }
-}
+}
