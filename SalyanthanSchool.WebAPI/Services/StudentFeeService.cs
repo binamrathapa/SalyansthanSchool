@@ -21,8 +21,9 @@ namespace SalyanthanSchool.WebAPI.Services
         }
 
         public async Task<StudentFeeResponseDto> GetFeeReportAsync(
-            int studentId,
-            int? month = null)
+            int  studentId,
+            int? month          = null,
+            int? academicYearId = null)
         {
             // ── Get Current Nepali Date ────────────────────
             var today = DateTime.Now;
@@ -41,13 +42,24 @@ namespace SalyanthanSchool.WebAPI.Services
                 throw new KeyNotFoundException(
                     $"Student with ID {studentId} not found");
 
-            // ── Step 2: Get Active Academic Year ───────────
-            var academicYear = await _context.AcademicYear
-                .FirstOrDefaultAsync(a => a.IsActive == true);
+            // ── Step 2: Get Academic Year ───────────
+            AcademicYear? academicYear = null;
+            if (academicYearId.HasValue)
+            {
+                academicYear = await _context.AcademicYear
+                    .FirstOrDefaultAsync(a => a.Id == academicYearId.Value);
+            }
+            else
+            {
+                academicYear = await _context.AcademicYear
+                    .FirstOrDefaultAsync(a => a.IsActive == true);
+            }
 
             if (academicYear == null)
                 throw new KeyNotFoundException(
-                    "No active academic year found");
+                    academicYearId.HasValue 
+                        ? $"Academic year with ID {academicYearId} not found"
+                        : "No active academic year found");
 
             // ── Step 3: Get Fee Structure ──────────────────
             var feeStructures = await _context.FeeStructure
@@ -143,9 +155,10 @@ namespace SalyanthanSchool.WebAPI.Services
         // ── All Students ───────────────────────────────────
         public async Task<List<StudentFeeResponseDto>>
             GetAllFeeReportsAsync(
-                int? month      = null,
-                int  pageNumber = 1,
-                int  pageSize   = 30)
+                int? month          = null,
+                int? academicYearId = null,
+                int  pageNumber     = 1,
+                int  pageSize       = 30)
         {
             var students = await _context.Student
                 .Where(s => s.IsActive == true)
@@ -161,7 +174,7 @@ namespace SalyanthanSchool.WebAPI.Services
                 try
                 {
                     var report = await GetFeeReportAsync(
-                        student.Id, month);
+                        student.Id, month, academicYearId);
                     reports.Add(report);
                 }
                 catch (Exception ex)

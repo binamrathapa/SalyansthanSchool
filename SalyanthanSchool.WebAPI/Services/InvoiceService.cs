@@ -574,6 +574,10 @@ namespace SalyanthanSchool.WebAPI.Services
                 collection = collection.Where(
                     x => x.BillingMonth == query.BillingMonth.Value);
 
+            if (query.AcademicYearId.HasValue)
+                collection = collection.Where(
+                    x => x.AcademicYearId == query.AcademicYearId.Value);
+
             if (query.GradeId.HasValue)
                 collection = collection.Where(
                     x => x.Student.GradeId == query.GradeId.Value);
@@ -616,6 +620,10 @@ namespace SalyanthanSchool.WebAPI.Services
             if (query.BillingMonth.HasValue)
                 collection = collection.Where(
                     x => x.BillingMonth == query.BillingMonth.Value);
+
+            if (query.AcademicYearId.HasValue)
+                collection = collection.Where(
+                    x => x.AcademicYearId == query.AcademicYearId.Value);
 
             if (query.GradeId.HasValue)
                 collection = collection.Where(

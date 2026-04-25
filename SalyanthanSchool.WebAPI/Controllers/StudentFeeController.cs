@@ -31,7 +31,8 @@ namespace SalyanthanSchool.WebAPI.Controllers
         [HttpGet("report/{studentId:int}")]
         public async Task<IActionResult> GetFeeReport(
             int studentId,
-            [FromQuery] int? month = null)
+            [FromQuery] int? month          = null,
+            [FromQuery] int? academicYearId = null)
         {
             if (month.HasValue &&
                 (month.Value < 1 || month.Value > 12))
@@ -44,7 +45,8 @@ namespace SalyanthanSchool.WebAPI.Controllers
             try
             {
                 var result = await _studentFeeService
-                    .GetFeeReportAsync(studentId, month);
+                    .GetFeeReportAsync(
+                        studentId, month, academicYearId);
 
                 // ✅ Wrap single result in List → becomes []
                 var dataList = new List<StudentFeeResponseDto> 
@@ -87,9 +89,10 @@ namespace SalyanthanSchool.WebAPI.Controllers
         // GET: api/StudentFee/reports?month=3&pageNumber=1&pageSize=30
         [HttpGet("reports")]
         public async Task<IActionResult> GetAllFeeReports(
-            [FromQuery] int? month      = null,
-            [FromQuery] int  pageNumber = 1,
-            [FromQuery] int  pageSize   = 30)
+            [FromQuery] int? month          = null,
+            [FromQuery] int? academicYearId = null,
+            [FromQuery] int  pageNumber     = 1,
+            [FromQuery] int  pageSize       = 30)
         {
             if (month.HasValue &&
                 (month.Value < 1 || month.Value > 12))
@@ -109,7 +112,7 @@ namespace SalyanthanSchool.WebAPI.Controllers
                 // ✅ Already returns List → becomes []
                 var reports = await _studentFeeService
                     .GetAllFeeReportsAsync(
-                        month, pageNumber, pageSize);
+                        month, academicYearId, pageNumber, pageSize);
 
                 return Ok(
                     ApiResponse<List<StudentFeeResponseDto>>.Ok(
