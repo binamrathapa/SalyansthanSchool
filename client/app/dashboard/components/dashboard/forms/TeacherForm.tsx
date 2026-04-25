@@ -21,6 +21,8 @@ import {
 } from "@/components/ui/select";
 
 import { Upload, X, AlertCircle } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 interface TeacherFormProps {
   initialValues?: Partial<TeacherFormType>;
@@ -33,20 +35,21 @@ interface TeacherFormProps {
 /* DEFAULT VALUES (important for ADD) */
 const DEFAULT_VALUES: TeacherFormType = {
   photo: "",
-  name: "",
-  subject: "",
-  qualification: "",
-  designation: "",
-  experience: "",
-  dob: "",
-  joiningDate: "",
+  firstName: "",
+  middleName: "",
+  lastName: "",
+  gender: "Male",
+  dateOfBirth: "",
+  email: "",
+  mobileNo: "",
   address: "",
-  contact: "",
   panNumber: "",
   nidNumber: "",
-  citizenshipNumber: "",
-  gender: "Male",
+  qualification: "",
+  joiningDate: "",
+  isActive: true,
 };
+
 
 export default function TeacherForm({
   initialValues,
@@ -209,6 +212,23 @@ export default function TeacherForm({
           );
         }
       )}
+
+      {/* IS ACTIVE */}
+      <div className="flex items-center space-x-2 mt-4">
+        <Controller
+          control={control}
+          name="isActive"
+          render={({ field }) => (
+            <Switch
+              id="isActive"
+              checked={field.value}
+              onCheckedChange={field.onChange}
+              disabled={isView}
+            />
+          )}
+        />
+        <Label htmlFor="isActive">Active Status</Label>
+      </div>
 
       {/* ACTIONS */}
       {!isView && (

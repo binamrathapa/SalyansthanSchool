@@ -164,6 +164,41 @@ export function createApiConfig<
     );
   };
 
+  /* =======================
+     PUT UPDATE (FOR FORM DATA)
+  ======================== */
+  const useUpdatePut = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation<TEntity, Error, { id: number; data: FormData }>(
+      {
+        mutationFn: async ({ id, data }) => {
+          const { data: response } = await apiClient.put<TEntity>(
+            `/${entityName}/${id}`,
+            data
+          );
+          return response;
+        },
+        onSuccess: () => {
+          invalidateQueries(queryClient);
+          Swal.fire({
+            icon: "success",
+            title: `${entityNameFormatted} Updated Successfully`,
+            timer: 2000,
+          });
+        },
+        onError: () => {
+          Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: `Failed to update ${entityNameFormatted}`,
+          });
+        },
+        retry: false,
+      }
+    );
+  };
+
 
   /* =======================
      FULL UPDATE (PUT)
@@ -262,6 +297,7 @@ export function createApiConfig<
     useGetByIdWithQueryParams,
     useCreate,
     useUpdate,
+    useUpdatePut,
     useFullUpdate,
     useDelete,
     useBulkDelete,

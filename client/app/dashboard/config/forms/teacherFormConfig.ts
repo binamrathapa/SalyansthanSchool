@@ -1,49 +1,45 @@
 export interface TeacherFieldConfig {
   name:
-    | "name"
-    | "subject"
-    | "qualification"
-    | "designation"
-    | "experience"
-    | "dob"
-    | "joiningDate"
-    | "address"
-    | "contact"
-    | "panNumber"
-    | "nidNumber"
-    | "citizenshipNumber"
-    | "gender";
+  | "firstName"
+  | "middleName"
+  | "lastName"
+  | "qualification"
+  | "dateOfBirth"
+  | "joiningDate"
+  | "address"
+  | "mobileNo"
+  | "email"
+  | "panNumber"
+  | "nidNumber"
+  | "gender";
   label: string;
-  type?: "text" | "date" | "select";
+  type?: "text" | "date" | "select" | "email";
   restrictInput?: RegExp;
   options?: string[];
 }
 
 export const teacherFieldConfig: TeacherFieldConfig[] = [
   {
-    name: "name",
-    label: "Name",
+    name: "firstName",
+    label: "First Name",
     restrictInput: /[^a-zA-Z\s]/g,
   },
   {
-    name: "subject",
-    label: "Subject",
+    name: "middleName",
+    label: "Middle Name",
+    restrictInput: /[^a-zA-Z\s]/g,
+  },
+  {
+    name: "lastName",
+    label: "Last Name",
+    restrictInput: /[^a-zA-Z\s]/g,
   },
   {
     name: "qualification",
     label: "Qualification",
   },
   {
-    name: "designation",
-    label: "Designation",
-  },
-  {
-    name: "experience",
-    label: "Experience (Years)",
-    restrictInput: /\D/g,
-  },
-  {
-    name: "dob",
+    name: "dateOfBirth",
     label: "Date of Birth",
     type: "date",
   },
@@ -57,9 +53,14 @@ export const teacherFieldConfig: TeacherFieldConfig[] = [
     label: "Address",
   },
   {
-    name: "contact",
-    label: "Contact Number",
+    name: "mobileNo",
+    label: "Mobile Number",
     restrictInput: /\D/g,
+  },
+  {
+    name: "email",
+    label: "Email",
+    type: "email",
   },
   {
     name: "panNumber",
@@ -68,10 +69,6 @@ export const teacherFieldConfig: TeacherFieldConfig[] = [
   {
     name: "nidNumber",
     label: "NID Number",
-  },
-  {
-    name: "citizenshipNumber",
-    label: "Citizenship Number",
   },
   {
     name: "gender",

@@ -1,8 +1,8 @@
-import { Teacher } from "@/app/dashboard/config/table/teacherTableConfig";
+import { Teacher } from "@/app/dashboard/types/teacher";
 
 const images = ["/teachers/teacher1.jpg", "/teachers/teacher2.jpg"];
 
-export const teachers: Teacher[] = [
+export const teachers: any[] = [
   {
     photo: images[0],
     name: "Ramesh Shrestha",

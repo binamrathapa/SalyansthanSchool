@@ -22,21 +22,22 @@ export default function TeacherAddEditModal({
   const [loading, setLoading] = useState(false);
 
   const initialValues: TeacherFormType = {
-  photo: data?.photo ?? "",
-  name: data?.name ?? "",
-  subject: data?.subject ?? "",
-  qualification: data?.qualification ?? "",
-  designation: data?.designation ?? "",
-  experience: data?.experience ?? "",
-  dob: data?.dob ?? "",
-  joiningDate: data?.joiningDate ?? "",
-  address: data?.address ?? "",
-  contact: data?.contact ?? "",
-  panNumber: data?.panNumber ?? "",
-  nidNumber: data?.nidNumber ?? "",
-  citizenshipNumber: data?.citizenshipNumber ?? "",
-  gender: data?.gender ?? "Male",
-};
+    photo: data?.photo ?? "",
+    firstName: data?.firstName ?? "",
+    middleName: data?.middleName ?? "",
+    lastName: data?.lastName ?? "",
+    gender: data?.gender ?? "Male",
+    dateOfBirth: data?.dateOfBirth ?? "",
+    email: data?.email ?? "",
+    mobileNo: data?.mobileNo ?? "",
+    address: data?.address ?? "",
+    panNumber: data?.panNumber ?? "",
+    nidNumber: data?.nidNumber ?? "",
+    qualification: data?.qualification ?? "",
+    joiningDate: data?.joiningDate ?? "",
+    isActive: data?.isActive ?? true,
+  };
+
 
 
 

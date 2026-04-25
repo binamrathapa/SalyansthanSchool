@@ -3,25 +3,11 @@
 import { Column } from "@/app/dashboard/components/dashboard/common/CustomTable";
 import { Button } from "@/components/ui/button";
 import { Eye, Edit, Trash } from "lucide-react";
-
-export interface Teacher {
-  photo?: string;
-  name: string;
-  subject: string;
-  qualification: string;
-  designation: string;
-  experience: string;
-  dob: string;
-  joiningDate: string;
-  address: string;
-  contact: string;
-  panNumber: string;
-  nidNumber?: string;
-  citizenshipNumber: string;
-  gender: "Male" | "Female" | "Other";
-}
+import { Teacher } from "../../types/teacher";
+import { getPhotoUrl } from "@/server-action/utils/api";
 
 export type ModalFieldType = "text" | "image" | "date" | "phone";
+
 
 export interface ModalField<T> {
   label: string;
@@ -43,13 +29,31 @@ export const teacherColumns = (
     className: "w-16",
     exportable:false,
   },
-  { key: "photo", label: "Photo", className: "w-[80px]", exportable: false },
-  { key: "name", label: "Name", exportable: true },
-  { key: "subject", label: "Subject", exportable: true },
+  {
+    key: "photo",
+    label: "Photo",
+    className: "w-[80px]",
+    exportable: false,
+    render: (row) =>
+      row.photo ? (
+        <img
+          src={getPhotoUrl(row.photo)}
+          alt={row.fullName}
+          className="w-10 h-10 rounded-full object-cover"
+        />
+      ) : (
+        <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-xs text-gray-500">
+          No
+        </div>
+      ),
+  },
+  { key: "employeeCode", label: "Code", exportable: true },
+  { key: "fullName", label: "Full Name", exportable: true },
+  { key: "email", label: "Email", exportable: true },
+  { key: "mobileNo", label: "Mobile No", exportable: true },
   { key: "qualification", label: "Qualification", exportable: true },
-  { key: "designation", label: "Designation", exportable: true },
-  { key: "contact", label: "Contact", exportable: true },
   { key: "gender", label: "Gender", exportable: true },
+
   {
     key: "actions",
     label: "Actions",
