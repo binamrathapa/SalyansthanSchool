@@ -1,4 +1,4 @@
-﻿using SalyanthanSchool.Core.Common;
+using SalyanthanSchool.Core.Common;
 
 namespace SalyanthanSchool.Core.DTOs.Invoice
 {
@@ -8,6 +8,7 @@ namespace SalyanthanSchool.Core.DTOs.Invoice
         public string? Status      { get; set; }
         public string? InvoiceNo   { get; set; }
         public int?    BillingMonth{ get; set; }
+        public int?    AcademicYearId{ get; set; }
         public int?    GradeId     { get; set; }
     }
 }

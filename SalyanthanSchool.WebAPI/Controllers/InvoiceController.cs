@@ -253,12 +253,13 @@ namespace SalyanthanSchool.WebAPI.Controllers
         [HttpGet("{studentId:int}/bill-pdf")]
         public async Task<IActionResult> DownloadBillPdf(
             int studentId,
-            [FromQuery] int? month = null)
+            [FromQuery] int? month          = null,
+            [FromQuery] int? academicYearId = null)
         {
             try
             {
                 var pdfBytes = await _pdfService
-                    .GenerateBillPdfAsync(studentId, month);
+                    .GenerateBillPdfAsync(studentId, month, academicYearId);
 
                 var fileName = $"FeeBill_{studentId}_{DateTime.Now:yyyyMMdd}.pdf";
 

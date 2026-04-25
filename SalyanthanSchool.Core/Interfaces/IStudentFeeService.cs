@@ -6,13 +6,15 @@ namespace SalyanthanSchool.Core.Interfaces
     {
         // Single student fee report
         Task<StudentFeeResponseDto> GetFeeReportAsync(
-            int studentId,
-            int? month = null);
+            int  studentId,
+            int? month          = null,
+            int? academicYearId = null);
 
         // All students fee reports
         Task<List<StudentFeeResponseDto>> GetAllFeeReportsAsync(
-            int? month      = null,
-            int  pageNumber = 1,
-            int  pageSize   = 30);
+            int? month          = null,
+            int? academicYearId = null,
+            int  pageNumber     = 1,
+            int  pageSize       = 30);
     }
 }

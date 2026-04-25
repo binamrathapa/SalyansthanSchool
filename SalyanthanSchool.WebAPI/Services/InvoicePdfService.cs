@@ -26,7 +26,10 @@ namespace SalyanthanSchool.WebAPI.Services
             QuestPDF.Settings.License = LicenseType.Community;
         }
 
-        public async Task<byte[]> GenerateBillPdfAsync(int studentId, int? month = null)
+        public async Task<byte[]> GenerateBillPdfAsync(
+            int  studentId,
+            int? month          = null,
+            int? academicYearId = null)
         {
             var student = await _context.Student
                 .Include(s => s.Grade)
@@ -35,12 +38,19 @@ namespace SalyanthanSchool.WebAPI.Services
 
             if (student == null) throw new KeyNotFoundException($"Student {studentId} not found");
 
-            // Get the latest invoice for the month (or absolute latest if month is null)
-            var allInvoices = await _context.Invoice
+            // Get invoices for the student
+            var query = _context.Invoice
                 .Include(i => i.AcademicYear)
                 .Include(i => i.InvoiceItems)
                     .ThenInclude(ii => ii.FeeHead)
-                .Where(i => i.StudentId == studentId)
+                .Where(i => i.StudentId == studentId);
+
+            if (academicYearId.HasValue)
+            {
+                query = query.Where(i => i.AcademicYearId == academicYearId.Value);
+            }
+
+            var allInvoices = await query
                 .OrderBy(i => i.BillingMonth)
                 .ToListAsync();
 
@@ -70,12 +80,12 @@ namespace SalyanthanSchool.WebAPI.Services
                 Month          = invoice.BillingMonth ?? 0,
                 MonthName      = GetMonthName(invoice.BillingMonth),
                 DueDate        = invoice.DueDate,
-                TotalAmount    = invoice.TotalAmount + invoice.DiscountAmount, // Show Gross in Sub Total
+                TotalAmount    = invoice.TotalAmount, // Gross Amount
                 PreviousDue    = invoice.PreviousDue,
                 Discount       = invoice.DiscountAmount,
-                PayableAmount  = invoice.TotalAmount + invoice.PreviousDue, // Net + Due
+                PayableAmount  = invoice.TotalAmount - invoice.DiscountAmount + invoice.PreviousDue,
                 PaidAmount     = invoice.PaidAmount,
-                RemainingAmount = invoice.RemainingAmount,
+                RemainingAmount = invoice.TotalAmount - invoice.DiscountAmount + invoice.PreviousDue - invoice.PaidAmount,
                 Items = invoice.InvoiceItems.Select(it => new PdfBillItem
                 {
                     Name        = it.FeeHead?.Name ?? "Fee",
@@ -84,9 +94,10 @@ namespace SalyanthanSchool.WebAPI.Services
                 }).ToList(),
                 YearSummary = new PdfYearSummary
                 {
-                    TotalYearFee  = allInvoices.Sum(i => i.TotalAmount + i.DiscountAmount),
+                    TotalYearFee  = allInvoices.Sum(i => i.TotalAmount),
                     TotalDiscount = allInvoices.Sum(i => i.DiscountAmount),
-                    TotalDue      = allInvoices.Sum(i => i.RemainingAmount)
+                    TotalDue      = allInvoices.Sum(i => 
+                                        i.TotalAmount - i.DiscountAmount + i.PreviousDue - i.PaidAmount)
                 }
             };
 

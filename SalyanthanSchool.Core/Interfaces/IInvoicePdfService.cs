@@ -7,7 +7,10 @@ namespace SalyanthanSchool.Core.Interfaces
         /// <summary>
         /// Generates a PDF bill for a student for a specific month.
         /// </summary>
-        Task<byte[]> GenerateBillPdfAsync(int studentId, int? month = null);
+        Task<byte[]> GenerateBillPdfAsync(
+            int  studentId,
+            int? month          = null,
+            int? academicYearId = null);
 
         /// <summary>
         /// Generates a PDF receipt for a specific payment.
