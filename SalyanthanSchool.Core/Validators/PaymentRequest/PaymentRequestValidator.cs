@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 using SalyanthanSchool.Core.DTOs.Invoice;
 
 namespace SalyanthanSchool.Core.Validators
@@ -19,8 +19,6 @@ namespace SalyanthanSchool.Core.Validators
             RuleFor(x => x.PaymentDate)
                 .LessThanOrEqualTo(DateTime.Now).WithMessage("Payment date cannot be in the future.");
 
-            RuleFor(x => x.TransactionId)
-                .MaximumLength(50).WithMessage("Transaction ID is too long.");
         }
     }
 }

@@ -214,10 +214,6 @@ namespace SalyanthanSchool.WebAPI.Services
         public async Task<PaymentResultDto> ProcessPaymentAsync(
             PaymentRequestDto dto)
         {
-            // ✅ Transaction for rollback
-            using var transaction = await _context.Database
-                .BeginTransactionAsync();
-
             try
             {
                 // ── Get Invoice ────────────────────────────
@@ -288,20 +284,13 @@ namespace SalyanthanSchool.WebAPI.Services
                     };
                 }
 
-                // ── Generate Unique IDs ────────────────────
-                string receiptNo = string.IsNullOrWhiteSpace(dto.ReceiptNo)
-                    ? GenerateReceiptNo(dto.InvoiceId)
-                    : dto.ReceiptNo;
+                // ── Auto-Generate Unique IDs ────────────────
+                string receiptNo     = GenerateReceiptNo(dto.InvoiceId);
+                string transactionId = $"TXN-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString().Substring(0, 8).ToUpper()}";
 
-                string transactionId = string.IsNullOrWhiteSpace(dto.TransactionId)
-                    ? $"TXN-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString().Substring(0, 8).ToUpper()}"
-                    : dto.TransactionId;
-
-                // ── Update Invoice ─────────────────────────
-                decimal totalPaidSoFar = invoice.Payments
-                    .Sum(p => p.AmountPaid) + dto.AmountPaid;
-
-                // ── Create Payment ─────────────────────────
+                // ── Create Initial Statement (Pending) ─────
+                // This record is saved BEFORE the transaction to ensure 
+                // it exists even if the rest of the process fails/crashes.
                 var payment = new StudentPayment
                 {
                     InvoiceId     = dto.InvoiceId,
@@ -312,78 +301,88 @@ namespace SalyanthanSchool.WebAPI.Services
                     TransactionId = transactionId,
                     ReceiptNo     = receiptNo,
                     Remarks       = dto.Remarks,
-                    CreatedAt     = DateTime.UtcNow
+                    CreatedAt     = DateTime.UtcNow,
+                    Status        = PaymentStatus.Pending
                 };
 
                 _context.StudentPayment.Add(payment);
+                await _context.SaveChangesAsync(); 
 
-                invoice.PaidAmount      = totalPaidSoFar;
-                invoice.RemainingAmount = invoice.TotalAmount
-                                        - invoice.DiscountAmount
-                                        + invoice.PreviousDue
-                                        - totalPaidSoFar;
-                invoice.UpdatedAt       = DateTime.UtcNow;
-
-                // ── Update Status ──────────────────────────
-                decimal totalPayable = invoice.TotalAmount 
-                                     - invoice.DiscountAmount 
-                                     + invoice.PreviousDue;
-
-                if (totalPaidSoFar >= totalPayable)
+                // ── Start Transaction for Invoice Updates ──
+                using var transaction = await _context.Database.BeginTransactionAsync();
+                try
                 {
-                    invoice.Status          = InvoiceStatus.Paid;
-                    invoice.RemainingAmount = 0;
+                    // ── Update Invoice ─────────────────────────
+                    decimal totalPaidSoFar = invoice.Payments
+                        .Where(p => p.Status == PaymentStatus.Completed)
+                        .Sum(p => p.AmountPaid) + dto.AmountPaid;
+
+                    invoice.PaidAmount      = totalPaidSoFar;
+                    invoice.RemainingAmount = invoice.TotalAmount
+                                            - invoice.DiscountAmount
+                                            + invoice.PreviousDue
+                                            - totalPaidSoFar;
+                    invoice.UpdatedAt       = DateTime.UtcNow;
+
+                    // ── Update Status ──────────────────────────
+                    decimal totalPayable = invoice.TotalAmount 
+                                         - invoice.DiscountAmount 
+                                         + invoice.PreviousDue;
+
+                    if (totalPaidSoFar >= totalPayable)
+                    {
+                        invoice.Status          = InvoiceStatus.Paid;
+                        invoice.RemainingAmount = 0;
+                    }
+                    else if (totalPaidSoFar > 0)
+                    {
+                        invoice.Status = InvoiceStatus.Partial;
+                    }
+
+                    // ✅ Mark as Completed
+                    payment.Status = PaymentStatus.Completed;
+
+                    await _context.SaveChangesAsync();
+                    await transaction.CommitAsync();
+
+                    return new PaymentResultDto
+                    {
+                        Success         = true,
+                        Message         = "Payment recorded successfully",
+                        NewStatus       = invoice.Status.ToString(),
+                        PaidAmount      = dto.AmountPaid,
+                        RemainingAmount = invoice.RemainingAmount,
+                        ReceiptNo       = receiptNo
+                    };
                 }
-                else if (totalPaidSoFar > 0)
+                catch (Exception ex)
                 {
-                    invoice.Status = InvoiceStatus.Partial;
+                    // ✅ Rollback Invoice Updates
+                    await transaction.RollbackAsync();
+
+                    // ✅ Update Statement to Failed (Preserve Audit)
+                    _logger.LogError(ex, "Payment processing failed for invoice {Id}", dto.InvoiceId);
+                    
+                    payment.Status = PaymentStatus.Failed;
+                    payment.ErrorMessage = ex.Message;
+                    await _context.SaveChangesAsync();
+
+                    return new PaymentResultDto
+                    {
+                        Success = false,
+                        Message = $"Payment failed: {ex.Message}. Attempt has been recorded."
+                    };
                 }
-
-                await _context.SaveChangesAsync();
-
-                // ✅ Commit
-                await transaction.CommitAsync();
-
-                return new PaymentResultDto
-                {
-                    Success         = true,
-                    Message         = "Payment recorded successfully",
-                    NewStatus       = invoice.Status.ToString(),
-                    PaidAmount      = dto.AmountPaid,
-                    RemainingAmount = invoice.RemainingAmount,
-                    ReceiptNo       = receiptNo
-                };
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                // ✅ Bug #6: Concurrency conflict detected
-                await transaction.RollbackAsync();
-
-                _logger.LogWarning(
-                    "Concurrency conflict on invoice {Id}. " +
-                    "Another payment was processed simultaneously.",
-                    dto.InvoiceId);
-
-                return new PaymentResultDto
-                {
-                    Success = false,
-                    Message = "This invoice was modified by another " +
-                              "user. Please refresh and try again."
-                };
             }
             catch (Exception ex)
             {
-                // ✅ Rollback on error
-                await transaction.RollbackAsync();
-
                 _logger.LogError(ex,
-                    "Payment failed for invoice {Id}. " +
-                    "Changes rolled back.", dto.InvoiceId);
+                    "Critical failure in ProcessPaymentAsync for invoice {Id}", dto.InvoiceId);
 
                 return new PaymentResultDto
                 {
                     Success = false,
-                    Message = $"Payment failed: {ex.Message}"
+                    Message = $"Critical payment error: {ex.Message}"
                 };
             }
         }
@@ -479,6 +478,14 @@ namespace SalyanthanSchool.WebAPI.Services
                     return false;
                 }
 
+                if (payment.Status == PaymentStatus.Refunded)
+                {
+                    _logger.LogWarning(
+                        "Payment {Id} is already refunded",
+                        paymentId);
+                    return false;
+                }
+
                 var invoice = await _context.Invoice
                     .Include(i => i.Payments)
                     .FirstOrDefaultAsync(
@@ -494,12 +501,13 @@ namespace SalyanthanSchool.WebAPI.Services
 
                 decimal reversedAmount = payment.AmountPaid;
 
-                // ✅ Remove payment
-                _context.StudentPayment.Remove(payment);
+                // ✅ Mark as Refunded (Audit Trail preserved)
+                payment.Status       = PaymentStatus.Refunded;
+                payment.ErrorMessage = $"Rolled back: {reason}";
 
-                // ✅ Recalculate invoice amounts
+                // ✅ Recalculate invoice amounts (Only Completed payments)
                 decimal remainingPayments = invoice.Payments
-                    .Where(p => p.Id != paymentId)
+                    .Where(p => p.Id != paymentId && p.Status == PaymentStatus.Completed)
                     .Sum(p => p.AmountPaid);
 
                 invoice.PaidAmount      = remainingPayments;
@@ -679,7 +687,7 @@ namespace SalyanthanSchool.WebAPI.Services
                 PreviousDue    = i.PreviousDue,
                 PaidAmount     = i.PaidAmount,
                 RemainingAmount= i.TotalAmount - i.DiscountAmount + i.PreviousDue - i.PaidAmount,
-                TotalPaid      = i.Payments.Sum(p => p.AmountPaid),
+                TotalPaid      = i.Payments.Where(p => p.Status == PaymentStatus.Completed).Sum(p => p.AmountPaid),
                 BalanceDue     = i.TotalAmount - i.DiscountAmount + i.PreviousDue - i.PaidAmount,
                 Status         = i.Status.ToString(),
                 DueDate        = i.DueDate,
@@ -703,7 +711,8 @@ namespace SalyanthanSchool.WebAPI.Services
                         PaymentDate   = p.PaymentDate,
                         PaymentMethod = p.PaymentMode?.Name,
                         ReceiptNo     = p.ReceiptNo,
-                        TransactionId = p.TransactionId
+                        TransactionId = p.TransactionId,
+                        Status        = p.Status.ToString()
                     }).ToList()
             };
         }

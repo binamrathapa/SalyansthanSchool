@@ -45,6 +45,7 @@ namespace SalyanthanSchool.Core.DTOs.Invoice
         public string?  PaymentMethod { get; set; }
         public string?  ReceiptNo     { get; set; }
         public string?  TransactionId { get; set; }
+        public string?  Status        { get; set; }
     }
 
     // ── Generate Result ────────────────────────────────────

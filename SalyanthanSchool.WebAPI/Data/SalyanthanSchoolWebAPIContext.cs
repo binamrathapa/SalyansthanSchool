@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using SalyanthanSchool.Core.Entities;
 
 namespace SalyanthanSchool.WebAPI.Data
@@ -113,6 +113,10 @@ namespace SalyanthanSchool.WebAPI.Data
                     .WithMany()
                     .HasForeignKey(sp => sp.PaymentModeId)
                     .OnDelete(DeleteBehavior.Restrict);
+
+                // Store PaymentStatus as INT
+                entity.Property(p => p.Status)
+                    .HasConversion<int>();
             });
 
             // ── StudentDiscount ────────────────────────────
