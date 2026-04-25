@@ -4,8 +4,8 @@ import React, { useMemo, useState } from "react";
 import CustomTable from "@/app/dashboard/components/dashboard/common/CustomTable";
 import {
   teacherColumns,
-  Teacher,
 } from "@/app/dashboard/config/table/teacherTableConfig";
+import { Teacher } from "@/app/dashboard/types/teacher";
 import TeacherAddEditModal from "@/app/dashboard/teacher/TeacherAddEditModal";
 import TeacherViewModal from "@/app/dashboard/teacher/TeacherViewModal";
 import { showAlert, showConfirm } from "@/lib/sweet-alert";
@@ -147,7 +147,7 @@ const TeacherList = () => {
 
     try {
       const formData = await buildTeacherFormData(values, editingTeacher?.id);
-      
+
       if (isEdit && editingTeacher) {
         await updateMutation.mutateAsync({
           id: editingTeacher.id,
