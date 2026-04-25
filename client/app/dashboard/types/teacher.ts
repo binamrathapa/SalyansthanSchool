@@ -17,6 +17,7 @@ export type Teacher = {
   isActive: boolean;
   createdAt: string;
   nidNumber?: string;
+  citizenshipNumber?: string;
 };
 
 // CREATE/UPDATE
