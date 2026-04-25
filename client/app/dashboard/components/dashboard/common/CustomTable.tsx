@@ -62,6 +62,8 @@ interface CustomTableProps<T> {
   onFilterChange?: (filter: string) => void;
   searchValue?: string;
   filterValue?: string;
+  showSearch?: boolean;
+  searchPlaceholder?: string;
 }
 
 const CustomTable = <T extends Record<string, any>>({
@@ -86,6 +88,8 @@ const CustomTable = <T extends Record<string, any>>({
   onFilterChange,
   searchValue,
   filterValue,
+  showSearch = true,
+  searchPlaceholder = "Search...",
 }: CustomTableProps<T>) => {
   const [internalPage, setInternalPage] = useState(1);
   const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
@@ -209,22 +213,25 @@ const CustomTable = <T extends Record<string, any>>({
         </div>
       )}
       {/* Search / Filter */}
-      <SearchFilterBar
-        search={search}
-        filter={filter}
-        onSearchChange={(val: any) => {
-          if (serverSide) onSearchChange?.(val);
-          else setInternalSearch(val);
-        }}
-        onFilterChange={(val: any) => {
-          if (serverSide) onFilterChange?.(val);
-          else setInternalFilter(val);
-        }}
-        filterOptions={filterOptions.map(({ label, value }) => ({
-          label,
-          value,
-        }))}
-      />
+      {showSearch && (
+        <SearchFilterBar
+          search={search}
+          filter={filter}
+          onSearchChange={(val: any) => {
+            if (serverSide) onSearchChange?.(val);
+            else setInternalSearch(val);
+          }}
+          onFilterChange={(val: any) => {
+            if (serverSide) onFilterChange?.(val);
+            else setInternalFilter(val);
+          }}
+          filterOptions={filterOptions.map(({ label, value }) => ({
+            label,
+            value,
+          }))}
+          placeholder={searchPlaceholder}
+        />
+      )}
 
       {/* Add Button */}
       {addButtonLabel && onAddClick && (
