@@ -1,6 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using SalyanthanSchool.Core.DTOs.Teacher;
 using SalyanthanSchool.Core.Interfaces;
+using SalyanthanSchool.Core.DTOs.Common;
 
 namespace SalyanthanSchool.WebAPI.Controllers
 {
@@ -15,65 +16,64 @@ namespace SalyanthanSchool.WebAPI.Controllers
             _service = service;
         }
 
-        // GET: api/teacher
-        // Supports paging, sorting, searching, filtering
         [HttpGet]
         public async Task<IActionResult> Get([FromQuery] TeacherQueryParameter query)
         {
-            if (query.PageNumber < 1)
-                return BadRequest("PageNumber must be greater than or equal to 1");
-
-            if (query.PageSize < 1)
-                return BadRequest("PageSize must be greater than or equal to 1");
-
             var result = await _service.GetAsync(query);
-            return Ok(result);
+            // Result is already a PagedResult, we wrap it in ApiResponse
+            return Ok(ApiResponse<PagedResult<TeacherResponseDto>>.Ok(result));
         }
 
-        // GET: api/teacher/{id}
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
             var teacher = await _service.GetByIdAsync(id);
-            return teacher == null ? NotFound() : Ok(teacher);
+            if (teacher == null)
+                return NotFound(ApiResponse<TeacherResponseDto>.Fail("Teacher not found"));
+
+            return Ok(ApiResponse<TeacherResponseDto>.Ok(teacher));
         }
 
-        // POST: api/teacher
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] TeacherRequestDto dto)
         {
             try
             {
                 var created = await _service.CreateAsync(dto);
-                return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+                return CreatedAtAction(nameof(GetById), new { id = created.Id }, 
+                    ApiResponse<TeacherResponseDto>.Ok(created, "Teacher created successfully"));
             }
             catch (InvalidOperationException ex)
             {
-                return Conflict(ex.Message);
+                return Conflict(ApiResponse<TeacherResponseDto>.Fail(ex.Message));
             }
         }
 
-        // PUT: api/teacher/{id}
         [HttpPut("{id:int}")]
         public async Task<IActionResult> Update(int id, [FromBody] TeacherRequestDto dto)
         {
             try
             {
                 var updated = await _service.UpdateAsync(id, dto);
-                return updated == null ? NotFound() : Ok(updated);
+                if (updated == null)
+                    return NotFound(ApiResponse<TeacherResponseDto>.Fail("Teacher not found"));
+
+                return Ok(ApiResponse<TeacherResponseDto>.Ok(updated, "Teacher updated successfully"));
             }
             catch (InvalidOperationException ex)
             {
-                return Conflict(ex.Message);
+                return Conflict(ApiResponse<TeacherResponseDto>.Fail(ex.Message));
             }
         }
 
-        // DELETE: api/teacher/{id}
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
             var deleted = await _service.DeleteAsync(id);
-            return deleted ? NoContent() : NotFound();
+            if (!deleted)
+                return NotFound(ApiResponse<bool>.Fail("Teacher not found or could not be deleted"));
+
+            return Ok(ApiResponse<bool>.Ok(true, "Teacher deleted successfully"));
         }
     }
 }

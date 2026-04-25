@@ -131,16 +131,12 @@ namespace SalyanthanSchool.Infrastructure.Services
             var emailExists = await _context.Teachers.AnyAsync(t => t.Email == dto.Email);
             if (emailExists) throw new InvalidOperationException("Email already exists.");
 
-            var codeExists = await _context.Teachers.AnyAsync(t => t.EmployeeCode == dto.EmployeeCode);
-            if (codeExists) throw new InvalidOperationException("Employee Code already exists.");
-
             var panExists = await _context.Teachers.AnyAsync(t => t.PanNumber == dto.PanNumber);
             if (panExists) throw new InvalidOperationException("PAN Number already exists.");
 
 
             var teacher = new Teacher
             {
-                EmployeeCode = dto.EmployeeCode,
                 FirstName = dto.FirstName,
                 MiddleName = dto.MiddleName,
                 LastName = dto.LastName,
@@ -177,15 +173,11 @@ namespace SalyanthanSchool.Infrastructure.Services
             var emailExists = await _context.Teachers.AnyAsync(t => t.Email == dto.Email && t.Id != id);
             if (emailExists) throw new InvalidOperationException("Email already exists.");
 
-            var codeExists = await _context.Teachers.AnyAsync(t => t.EmployeeCode == dto.EmployeeCode && t.Id != id);
-            if (codeExists) throw new InvalidOperationException("Employee Code already exists.");
-
             var panExists = await _context.Teachers.AnyAsync(t => t.PanNumber == dto.PanNumber && t.Id != id);
             if (panExists) throw new InvalidOperationException("PAN Number already exists.");
 
 
             // Update properties
-            teacher.EmployeeCode = dto.EmployeeCode;
             teacher.FirstName = dto.FirstName;
             teacher.MiddleName = dto.MiddleName;
             teacher.LastName = dto.LastName;
