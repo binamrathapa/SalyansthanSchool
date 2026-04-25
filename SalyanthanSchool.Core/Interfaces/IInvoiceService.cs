@@ -4,9 +4,25 @@ namespace SalyanthanSchool.Core.Interfaces
 {
     public interface IInvoiceService
     {
-        Task<int> GenerateMonthlyInvoicesAsync(GenerateInvoiceDto dto);
-        Task<IEnumerable<InvoiceResponseDto>> GetAsync(InvoiceQueryParameter query);
+        // Generate monthly invoices for all/specific grade
+        Task<GenerateInvoiceResultDto> GenerateMonthlyInvoicesAsync(
+            GenerateInvoiceDto dto);
+
+        // Get list of invoices
+        Task<IEnumerable<InvoiceResponseDto>> GetAsync(
+            InvoiceQueryParameter query);
+
+        // Get single invoice
         Task<InvoiceResponseDto?> GetByIdAsync(int id);
-        Task<bool> ProcessPaymentAsync(PaymentRequestDto dto);
+
+        // Process payment with rollback
+        Task<PaymentResultDto> ProcessPaymentAsync(
+            PaymentRequestDto dto);
+
+        // Rollback/Cancel invoice
+        Task<bool> RollbackInvoiceAsync(int invoiceId, string reason);
+
+        // Rollback/Reverse a payment
+        Task<bool> RollbackPaymentAsync(int paymentId, string reason);
     }
 }

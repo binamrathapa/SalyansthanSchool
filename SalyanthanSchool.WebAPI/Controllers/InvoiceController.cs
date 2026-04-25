@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
+using SalyanthanSchool.Core.DTOs.Common;
 using SalyanthanSchool.Core.DTOs.Invoice;
 using SalyanthanSchool.Core.Interfaces;
 
@@ -6,78 +7,304 @@ namespace SalyanthanSchool.WebAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    //[Authorize]
     public class InvoiceController : ControllerBase
     {
         private readonly IInvoiceService _service;
+        private readonly IInvoicePdfService _pdfService;
+        private readonly ILogger<InvoiceController> _logger;
 
-        public InvoiceController(IInvoiceService service)
+        public InvoiceController(
+            IInvoiceService service,
+            IInvoicePdfService pdfService,
+            ILogger<InvoiceController> logger)
         {
-            _service = service;
+            _service    = service;
+            _pdfService = pdfService;
+            _logger     = logger;
         }
 
-        /// <summary>
-        /// Fetches list of invoices with pagination and filters (StudentId, Status, InvoiceNo)
-        /// </summary>
+        // GET: api/Invoice
         [HttpGet]
-        public async Task<IActionResult> Get([FromQuery] InvoiceQueryParameter query)
+        public async Task<IActionResult> Get(
+            [FromQuery] InvoiceQueryParameter query)
         {
             if (query.PageNumber < 1 || query.PageSize < 1)
-                return BadRequest("Pagination error: PageNumber and PageSize must be at least 1.");
+                return BadRequest(
+                    ApiResponse<IEnumerable<InvoiceResponseDto>>.Fail(
+                        "PageNumber and PageSize must be at least 1"));
 
-            var result = await _service.GetAsync(query);
-            return Ok(result);
-        }
-
-        /// <summary>
-        /// Gets detailed information for a specific invoice
-        /// </summary>
-        [HttpGet("{id:int}")]
-        public async Task<IActionResult> GetById(int id)
-        {
-            var result = await _service.GetByIdAsync(id);
-            return result == null ? NotFound() : Ok(result);
-        }
-
-        /// <summary>
-        /// Triggers the bulk generation for a specific month (Handles Monthly + One-Time Fees + Carry Forward)
-        /// </summary>
-        [HttpPost("generate-monthly")]
-        public async Task<IActionResult> Generate([FromBody] GenerateInvoiceDto dto)
-        {
             try
             {
-                int count = await _service.GenerateMonthlyInvoicesAsync(dto);
-                return Ok(new
-                {
-                    Message = "Generation Process Completed",
-                    InvoicesCreated = count,
-                    BillingMonth = dto.BillingMonth
-                });
+                var result = await _service.GetAsync(query);
+                var list   = result.ToList();
+
+                return Ok(
+                    ApiResponse<List<InvoiceResponseDto>>.Ok(
+                        data: list,
+                        message: "Invoices fetched successfully",
+                        meta: new
+                        {
+                            pageNumber = query.PageNumber,
+                            pageSize   = query.PageSize,
+                            total      = list.Count
+                        }
+                    )
+                );
             }
             catch (Exception ex)
             {
-                // Error might occur if FeeHeadId for Carry Forward is missing or DB constraints fail
-                return BadRequest(new { Error = "Generation failed", Details = ex.Message });
+                _logger.LogError(ex, "Error fetching invoices");
+                return StatusCode(500,
+                    ApiResponse<List<InvoiceResponseDto>>.Fail(
+                        ex.Message));
             }
         }
 
-        /// <summary>
-        /// Records a payment. This will fail if the invoice is already marked as 'Paid' (Lock Feature)
-        /// </summary>
-        [HttpPost("pay")]
-        public async Task<IActionResult> PostPayment([FromBody] PaymentRequestDto dto)
+        // GET: api/Invoice/{id}
+        [HttpGet("{id:int}")]
+        public async Task<IActionResult> GetById(int id)
         {
-            var success = await _service.ProcessPaymentAsync(dto);
-
-            if (!success)
+            try
             {
-                return BadRequest(new
-                {
-                    Message = "Payment rejected. Possible reasons: Invoice is already PAID, invoice does not exist, or internal database error."
-                });
-            }
+                var result = await _service.GetByIdAsync(id);
 
-            return Ok(new { Message = "Payment recorded successfully. Invoice status has been updated (Paid/Partial)." });
+                if (result == null)
+                    return NotFound(
+                        ApiResponse<InvoiceResponseDto>.Fail(
+                            "Invoice not found"));
+
+                return Ok(
+                    ApiResponse<InvoiceResponseDto>.Ok(
+                        result,
+                        "Invoice fetched successfully"));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Error fetching invoice {Id}", id);
+                return StatusCode(500,
+                    ApiResponse<InvoiceResponseDto>.Fail(
+                        ex.Message));
+            }
         }
+
+        // POST: api/Invoice/generate-monthly
+        [HttpPost("generate-monthly")]
+        public async Task<IActionResult> Generate(
+            [FromBody] GenerateInvoiceDto dto)
+        {
+            // Validate
+            if (dto.BillingMonth < 1 || dto.BillingMonth > 12)
+                return BadRequest(
+                    ApiResponse<GenerateInvoiceResultDto>.Fail(
+                        "BillingMonth must be between 1 and 12"));
+
+            try
+            {
+                var result = await _service
+                    .GenerateMonthlyInvoicesAsync(dto);
+
+                // ✅ Return errors if any
+                if (result.Errors.Any())
+                {
+                    return Ok(
+                        ApiResponse<GenerateInvoiceResultDto>.Ok(
+                            result,
+                            result.Message,
+                            new
+                            {
+                                invoicesCreated = result.InvoicesCreated,
+                                invoicesSkipped = result.InvoicesSkipped,
+                                errorsCount     = result.Errors.Count
+                            }
+                        )
+                    );
+                }
+
+                return Ok(
+                    ApiResponse<GenerateInvoiceResultDto>.Ok(
+                        result,
+                        result.Message,
+                        new
+                        {
+                            invoicesCreated = result.InvoicesCreated,
+                            invoicesSkipped = result.InvoicesSkipped
+                        }
+                    )
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Error generating invoices");
+                return BadRequest(
+                    ApiResponse<GenerateInvoiceResultDto>.Fail(
+                        $"Generation failed: {ex.Message}"));
+            }
+        }
+
+        // POST: api/Invoice/pay
+        [HttpPost("pay")]
+        public async Task<IActionResult> ProcessPayment(
+            [FromBody] PaymentRequestDto dto)
+        {
+            // Validate
+            if (dto.AmountPaid <= 0)
+                return BadRequest(
+                    ApiResponse<PaymentResultDto>.Fail(
+                        "Amount must be greater than 0"));
+
+            try
+            {
+                var result = await _service
+                    .ProcessPaymentAsync(dto);
+
+                if (!result.Success)
+                    return BadRequest(
+                        ApiResponse<PaymentResultDto>.Ok(
+                            result,
+                            result.Message));
+
+                return Ok(
+                    ApiResponse<PaymentResultDto>.Ok(
+                        result,
+                        result.Message));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Error processing payment for invoice {Id}",
+                    dto.InvoiceId);
+                return StatusCode(500,
+                    ApiResponse<PaymentResultDto>.Fail(
+                        ex.Message));
+            }
+        }
+
+        // POST: api/Invoice/rollback/{invoiceId}
+        [HttpPost("rollback/{invoiceId:int}")]
+        public async Task<IActionResult> RollbackInvoice(
+            int invoiceId,
+            [FromBody] RollbackRequestDto dto)
+        {
+            try
+            {
+                var result = await _service
+                    .RollbackInvoiceAsync(
+                        invoiceId,
+                        dto.Reason ?? "No reason provided");
+
+                if (!result)
+                    return BadRequest(
+                        ApiResponse<bool>.Fail(
+                            "Invoice rollback failed. " +
+                            "Invoice may not exist, " +
+                            "already cancelled, or has payments."));
+
+                return Ok(
+                    ApiResponse<bool>.Ok(
+                        true,
+                        $"Invoice {invoiceId} rolled back successfully"));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Error rolling back invoice {Id}", invoiceId);
+                return StatusCode(500,
+                    ApiResponse<bool>.Fail(ex.Message));
+            }
+        }
+
+        // POST: api/Invoice/rollback-payment/{paymentId}
+        [HttpPost("rollback-payment/{paymentId:int}")]
+        public async Task<IActionResult> RollbackPayment(
+            int paymentId,
+            [FromBody] RollbackRequestDto dto)
+        {
+            try
+            {
+                var result = await _service
+                    .RollbackPaymentAsync(
+                        paymentId,
+                        dto.Reason ?? "No reason provided");
+
+                if (!result)
+                    return BadRequest(
+                        ApiResponse<bool>.Fail(
+                            "Payment rollback failed. " +
+                            "Payment may not exist."));
+
+                return Ok(
+                    ApiResponse<bool>.Ok(
+                        true,
+                        $"Payment {paymentId} reversed successfully"));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Error rolling back payment {Id}", paymentId);
+                return StatusCode(500,
+                    ApiResponse<bool>.Fail(ex.Message));
+            }
+        }
+
+        // ── PDF: Download Fee Bill ──────────────────────────
+        [HttpGet("{studentId:int}/bill-pdf")]
+        public async Task<IActionResult> DownloadBillPdf(
+            int studentId,
+            [FromQuery] int? month = null)
+        {
+            try
+            {
+                var pdfBytes = await _pdfService
+                    .GenerateBillPdfAsync(studentId, month);
+
+                var fileName = $"FeeBill_{studentId}_{DateTime.Now:yyyyMMdd}.pdf";
+
+                return File(pdfBytes, "application/pdf", fileName);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ApiResponse<string>.Fail(ex.Message));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error generating bill PDF for student {Id}", studentId);
+                return StatusCode(500, ApiResponse<string>.Fail(ex.Message));
+            }
+        }
+
+        // ── PDF: Download Payment Receipt ───────────────────
+        [HttpGet("{studentId:int}/receipt-pdf/{paymentId:int}")]
+        public async Task<IActionResult> DownloadReceiptPdf(
+            int studentId,
+            int paymentId)
+        {
+            try
+            {
+                var pdfBytes = await _pdfService
+                    .GenerateReceiptPdfAsync(studentId, paymentId);
+
+                var fileName = $"Receipt_{studentId}_{paymentId}_{DateTime.Now:yyyyMMdd}.pdf";
+
+                return File(pdfBytes, "application/pdf", fileName);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ApiResponse<string>.Fail(ex.Message));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error generating receipt PDF for student {Id}", studentId);
+                return StatusCode(500, ApiResponse<string>.Fail(ex.Message));
+            }
+        }
+    }
+
+    // ── Rollback Request ───────────────────────────────────
+    public class RollbackRequestDto
+    {
+        public string? Reason { get; set; }
     }
 }

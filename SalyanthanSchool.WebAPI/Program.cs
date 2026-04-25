@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -78,6 +78,7 @@ builder.Services.AddScoped<IStudentDiscountService, StudentDiscountService>();
 builder.Services.AddScoped<IPaymentModeService, PaymentModeService>();
 builder.Services.AddScoped<IInvoiceService, InvoiceService>();
 builder.Services.AddScoped<IStudentFeeService, StudentFeeService>();
+builder.Services.AddScoped<IInvoicePdfService, InvoicePdfService>();
 
 
 
