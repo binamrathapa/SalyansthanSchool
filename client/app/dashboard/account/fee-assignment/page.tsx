@@ -15,7 +15,6 @@ import { showSuccess } from "@/lib/sweet-alert";
 import IndividualAssignment from "./components/IndividualAssignment";
 import GroupAssignment from "./components/GroupAssignment";
 import BillGeneration from "./components/BillGeneration";
-import DiscountTab from "./components/DiscountTab";
 import RecentAssignmentsTable from "./components/RecentAssignmentsTable";
 
 import { useGetAllGrades } from "@/server-action/api/grade.api";
@@ -57,6 +56,8 @@ export default function FeeAssignmentPage() {
         class: s.gradeName || "Unknown",
         section: s.sectionName || "Unknown",
         roll_no: s.rollNo || "-",
+        gradeId: s.gradeId,
+        sectionId: s.sectionId,
       })),
       feeStructures: (feeStructuresData || []).map((fs: any) => ({
         id: fs.id,
@@ -65,6 +66,8 @@ export default function FeeAssignmentPage() {
         feeHead: fs.feeHeadName || fs.feeHead?.name || "Unknown",
         amount: fs.amount,
         type: fs.type || "Recurring",
+        academicYearId: fs.academicYearId,
+        gradeId: fs.gradeId,
       })),
       months: [
         "Baisakh", "Jestha", "Ashadh", "Shrawan", "Bhadra", "Ashwin",
@@ -110,7 +113,6 @@ export default function FeeAssignmentPage() {
               { value: "individual", label: "Individual", icon: User },
               { value: "group", label: "Class / Section", icon: Users },
               { value: "billing", label: "Generate Bills", icon: CalendarDays },
-              { value: "discounts", label: "Discounts", icon: Tag },
             ].map((tab) => (
               <TabsTrigger
                 key={tab.value}
@@ -135,10 +137,6 @@ export default function FeeAssignmentPage() {
 
           <TabsContent value="billing" className="mt-0 focus-visible:outline-none">
             <BillGeneration data={data} onGenerate={handleAssignment} />
-          </TabsContent>
-
-          <TabsContent value="discounts" className="mt-0 focus-visible:outline-none">
-            <DiscountTab />
           </TabsContent>
         </div>
       </Tabs>
