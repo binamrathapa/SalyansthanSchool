@@ -49,6 +49,14 @@ namespace SalyanthanSchool.WebAPI.Services
                 studentsQuery = studentsQuery
                     .Where(s => s.GradeId == dto.GradeId.Value);
 
+            if (dto.SectionId.HasValue)
+                studentsQuery = studentsQuery
+                    .Where(s => s.SectionId == dto.SectionId.Value);
+
+            if (dto.StudentId.HasValue)
+                studentsQuery = studentsQuery
+                    .Where(s => s.Id == dto.StudentId.Value);
+
             var students = await studentsQuery.ToListAsync();
 
             if (!students.Any())
@@ -68,32 +76,82 @@ namespace SalyanthanSchool.WebAPI.Services
                 {
                     try
                     {
-                        // Skip if invoice already exists
-                        bool exists = await _context.Invoice
-                            .AnyAsync(i =>
+                        // ── Existing Invoice Check ────────
+                        var existingInvoice = await _context.Invoice
+                            .Include(i => i.InvoiceItems)
+                            .FirstOrDefaultAsync(i =>
                                 i.StudentId      == student.Id         &&
                                 i.BillingMonth   == dto.BillingMonth   &&
                                 i.AcademicYearId == dto.AcademicYearId);
 
-                        if (exists)
+                        if (existingInvoice != null)
                         {
-                            result.InvoicesSkipped++;
-                            continue;
+                            // 1. If CustomItems are provided, append them to the existing invoice
+                            if (dto.CustomItems != null && dto.CustomItems.Any())
+                            {
+                                foreach (var custom in dto.CustomItems)
+                                {
+                                    var item = new InvoiceItem
+                                    {
+                                        FeeHeadId   = custom.FeeHeadId,
+                                        Amount      = custom.Amount,
+                                        Description = custom.Description ?? "Custom Fee",
+                                        InvoiceId   = existingInvoice.Id
+                                    };
+                                    _context.InvoiceItem.Add(item);
+
+                                    existingInvoice.TotalAmount     += custom.Amount;
+                                    existingInvoice.RemainingAmount += custom.Amount;
+                                }
+
+                                // Update status if it was PAID/PARTIAL
+                                if (existingInvoice.PaidAmount > 0)
+                                    existingInvoice.Status = InvoiceStatus.Partial;
+                                else
+                                    existingInvoice.Status = InvoiceStatus.Unpaid;
+
+                                existingInvoice.UpdatedAt = DateTime.UtcNow;
+                                result.InvoicesCreated++;
+                                continue;
+                            }
+
+                            // 2. Fallback to Replace logic if explicitly requested
+                            if (dto.IsReplace && existingInvoice.Status == InvoiceStatus.Unpaid)
+                            {
+                                _context.Invoice.Remove(existingInvoice);
+                                await _context.SaveChangesAsync();
+                            }
+                            else
+                            {
+                                result.InvoicesSkipped++;
+                                continue;
+                            }
                         }
 
-                        // Get fee structure for student grade
-                        var fees = await _context.FeeStructure
-                            .Include(f => f.FeeHead)
-                            .Where(f =>
-                                f.GradeId        == student.GradeId     &&
-                                f.AcademicYearId == dto.AcademicYearId)
-                            .ToListAsync();
+                        // Get fee structure
+                        List<FeeStructure> fees;
+                        if (dto.FeeStructureIds != null && dto.FeeStructureIds.Any())
+                        {
+                            fees = await _context.FeeStructure
+                                .Include(f => f.FeeHead)
+                                .Where(f => dto.FeeStructureIds.Contains(f.Id))
+                                .ToListAsync();
+                        }
+                        else
+                        {
+                            fees = await _context.FeeStructure
+                                .Include(f => f.FeeHead)
+                                .Where(f =>
+                                    f.GradeId == student.GradeId &&
+                                    f.AcademicYearId == dto.AcademicYearId)
+                                .ToListAsync();
+                        }
 
-                        if (!fees.Any())
+                        if (!fees.Any() && (dto.CustomItems == null || !dto.CustomItems.Any()))
                         {
                             result.InvoicesSkipped++;
                             result.Errors.Add(
-                                $"No fee structure for student {student.Id}");
+                                $"No fees or custom items to assign for student {student.Id}");
                             continue;
                         }
 
@@ -144,9 +202,9 @@ namespace SalyanthanSchool.WebAPI.Services
                         decimal currentMonthGross = 0;
                         var invoiceItems = new List<InvoiceItem>();
 
+                        // 1. Add Standard/Selected Fees
                         foreach (var fee in fees)
                         {
-                            // Create the item (Gross Amount)
                             var item = new InvoiceItem();
                             item.FeeHeadId   = fee.FeeHeadId;
                             item.Amount      = fee.Amount;
@@ -155,6 +213,23 @@ namespace SalyanthanSchool.WebAPI.Services
 
                             invoiceItems.Add(item);
                             currentMonthGross += fee.Amount;
+                        }
+
+                        // 2. Add Custom Ad-hoc Fees
+                        if (dto.CustomItems != null && dto.CustomItems.Any())
+                        {
+                            foreach (var custom in dto.CustomItems)
+                            {
+                                var item = new InvoiceItem
+                                {
+                                    FeeHeadId   = custom.FeeHeadId,
+                                    Amount      = custom.Amount,
+                                    Description = custom.Description ?? "Custom Fee",
+                                    Invoice     = invoice
+                                };
+                                invoiceItems.Add(item);
+                                currentMonthGross += custom.Amount;
+                            }
                         }
 
                         // ── Set Total & Remaining ──────────
