@@ -51,6 +51,7 @@ export const DB = {
   FEE_PAYMENT: "FeePayment",
   STUDENT_DISCOUNT: "StudentDiscount",
   INVOICE: "Invoice",
+  DASHBOARD: "Dashboard",
 };
 
 // ================= USER ROLES (UI / AUTH USE) =================
