@@ -15,7 +15,7 @@ import {
 } from "recharts";
 
 interface StudentDistributionProps {
-  classData: { name: string; students: number }[];
+  classData: { name: string; value: number }[];
   genderData: { name: string; value: number }[];
 }
 
@@ -64,7 +64,7 @@ export default function StudentDistribution({
                 }}
               />
               <Bar
-                dataKey="students"
+                dataKey="value"
                 fill="var(--brand-500)"
                 radius={[4, 4, 0, 0]}
                 barSize={30}

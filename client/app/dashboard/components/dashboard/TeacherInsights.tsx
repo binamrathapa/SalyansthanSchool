@@ -5,7 +5,7 @@ import { UserCheck, GraduationCap, Briefcase, Award } from "lucide-react";
 
 interface TeacherInsightsProps {
   facultyStats: { label: string; value: string | number }[];
-  departmentStaffing: { subject: string; count: number }[];
+  departmentStaffing: { subject: string; value: number }[];
 }
 
 const facultyConfig = [
@@ -57,12 +57,12 @@ export default function TeacherInsights({
             <div key={item.subject} className="space-y-1">
               <div className="flex justify-between text-xs">
                 <span className="font-medium text-gray-700">{item.subject}</span>
-                <span className="text-gray-500">{item.count} Teachers</span>
+                <span className="text-gray-500">{item.value} Teachers</span>
               </div>
               <div className="h-1.5 w-full rounded-full bg-gray-100">
                 <div
                   className="h-1.5 rounded-full bg-brand-500"
-                  style={{ width: `${(item.count / 5) * 100}%` }}
+                  style={{ width: `${(item.value / 5) * 100}%` }}
                 />
               </div>
             </div>
