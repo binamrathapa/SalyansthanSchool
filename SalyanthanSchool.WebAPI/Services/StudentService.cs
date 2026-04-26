@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using SalyanthanSchool.Core.Common;
 using SalyanthanSchool.Core.DTOs.Student;
@@ -35,6 +35,12 @@ namespace SalyanthanSchool.WebAPI.Services
             // --- Filtering ---
             if (parameters.IsActive.HasValue)
                 query = query.Where(s => s.IsActive == parameters.IsActive.Value);
+
+            if (parameters.GradeId.HasValue)
+                query = query.Where(s => s.GradeId == parameters.GradeId.Value);
+
+            if (parameters.SectionId.HasValue)
+                query = query.Where(s => s.SectionId == parameters.SectionId.Value);
 
             if (!string.IsNullOrWhiteSpace(parameters.GradeName))
             {
