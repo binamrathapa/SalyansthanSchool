@@ -12,6 +12,14 @@ namespace SalyanthanSchool.Core.Entities
         Cancelled = 4
     }
 
+    public enum PaymentStatus
+    {
+        Pending   = 0,
+        Completed = 1,
+        Failed    = 2,
+        Refunded  = 3
+    }
+
     [Table("Invoice")]
     public class Invoice
     {
@@ -137,9 +145,14 @@ namespace SalyanthanSchool.Core.Entities
         [Column("created_at")]
         public DateTime? CreatedAt { get; set; }
 
-        // ⭐ New Column
         [Column("receipt_no")]
         public string? ReceiptNo { get; set; }
+
+        [Column("status")]
+        public PaymentStatus Status { get; set; } = PaymentStatus.Pending;
+
+        [Column("error_message")]
+        public string? ErrorMessage { get; set; }
 
         [NotMapped]
         public string? Remarks { get; set; }
