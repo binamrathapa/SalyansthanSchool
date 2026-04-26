@@ -56,6 +56,8 @@ export default function FeeAssignmentPage() {
         class: s.gradeName || "Unknown",
         section: s.sectionName || "Unknown",
         roll_no: s.rollNo || "-",
+        gradeId: s.gradeId,
+        sectionId: s.sectionId,
       })),
       feeStructures: (feeStructuresData || []).map((fs: any) => ({
         id: fs.id,
@@ -64,6 +66,8 @@ export default function FeeAssignmentPage() {
         feeHead: fs.feeHeadName || fs.feeHead?.name || "Unknown",
         amount: fs.amount,
         type: fs.type || "Recurring",
+        academicYearId: fs.academicYearId,
+        gradeId: fs.gradeId,
       })),
       months: [
         "Baisakh", "Jestha", "Ashadh", "Shrawan", "Bhadra", "Ashwin",

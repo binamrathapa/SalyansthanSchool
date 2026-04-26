@@ -3,7 +3,7 @@ import {
   Search, Check, Loader2, X, RotateCcw, ChevronRight,
   Calendar, StickyNote, UserCheck, BookOpen,
   GraduationCap, Hash, Users, Phone, Mail, Home,
-  ArrowRight, CheckCircle2, Tag, Plus
+  ArrowRight, CheckCircle2, Tag, Plus, Trash2
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,12 +19,14 @@ import { useGetAllStudentsPaginated } from "@/server-action/api/student.api";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getPhotoUrl } from "@/server-action/utils/api";
 import { useGetAllFeeHeads } from "@/server-action/api/feeHead";
+import { useGetAllFeeCategories } from "@/server-action/api/account-category.api";
 import {
   useGetAllDiscounts,
   useCreateDiscount,
   useDeleteDiscount,
   useToggleDiscountStatus,
 } from "@/server-action/api/discount.api";
+import { useGenerateMonthlyInvoice } from "@/server-action/api/invoice.api";
 import CustomTable from "@/app/dashboard/components/dashboard/common/CustomTable";
 import { discountColumns } from "@/app/dashboard/config/table/discountTableConfig";
 import { StudentDiscountPayload } from "@/app/dashboard/types/discount";
@@ -33,6 +35,15 @@ import { showSuccess, showError, showConfirm } from "@/lib/sweet-alert";
 interface IndividualAssignmentProps {
   data: AssignmentData;
   onAssign: (payload: any) => void;
+}
+
+// Local type for staged custom fee items (display-enriched)
+interface CustomFeeItem {
+  feeHeadId: number;
+  feeHeadName: string;      // for display only
+  feeCategoryName: string;  // for display only
+  amount: number;
+  description: string;
 }
 
 const TABS = [
@@ -49,6 +60,11 @@ const panelSubtitles: Record<string, string> = {
   remarks: "Add an optional note",
 };
 
+const monthMap: Record<string, number> = {
+  "Baisakh": 1, "Jestha": 2, "Ashadh": 3, "Shrawan": 4, "Bhadra": 5, "Ashwin": 6,
+  "Kartik": 7, "Mangsir": 8, "Poush": 9, "Magh": 10, "Falgun": 11, "Chaitra": 12
+};
+
 export default function IndividualAssignment({ data, onAssign }: IndividualAssignmentProps) {
   const [activeTab, setActiveTab] = useState("student");
   const [studentQuery, setStudentQuery] = useState("");
@@ -61,9 +77,16 @@ export default function IndividualAssignment({ data, onAssign }: IndividualAssig
   const [selectedStructureIds, setSelectedStructureIds] = useState<string[]>([]);
   const [remarks, setRemarks] = useState("");
 
+  // Custom fee item state
+  const [customFeeItems, setCustomFeeItems] = useState<CustomFeeItem[]>([]);
+  const [customCategoryId, setCustomCategoryId] = useState<string>("");
+  const [customFeeHeadId, setCustomFeeHeadId] = useState<string>("");
+  const [customAmount, setCustomAmount] = useState<string>("");
+  const [customDescription, setCustomDescription] = useState<string>("");
+  const [customAmountError, setCustomAmountError] = useState<string>("");
+
   // Discount form state
-  const [discountFormData, setDiscountFormData] = useState<Partial<StudentDiscountPayload>>({
-    academicYearId: 0,
+  const [discountFormData, setDiscountFormData] = useState<Partial<StudentDiscountPayload>>({    academicYearId: 0,
     discountValue: 0,
     isPercentage: false,
     maxDiscountAmount: 0,
@@ -74,10 +97,12 @@ export default function IndividualAssignment({ data, onAssign }: IndividualAssig
   });
 
   const { data: feeHeads = [] } = useGetAllFeeHeads();
+  const { data: feeCategories = [], isLoading: isLoadingCategories } = useGetAllFeeCategories();
   const { data: discounts = [], isLoading: isLoadingDiscounts } = useGetAllDiscounts();
   const createDiscountMutation = useCreateDiscount();
   const deleteDiscountMutation = useDeleteDiscount();
   const toggleDiscountMutation = useToggleDiscountStatus();
+  const generateInvoiceMutation = useGenerateMonthlyInvoice();
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedQuery(studentQuery), 400);
@@ -121,6 +146,27 @@ export default function IndividualAssignment({ data, onAssign }: IndividualAssig
     [discounts, selectedStudentId]
   );
 
+  // ── Custom item derived state ──────────────────────────────────────────────
+  const filteredFeeHeads = useMemo(
+    () =>
+      customCategoryId
+        ? feeHeads.filter((h: any) => h.feeCategoryId === Number(customCategoryId))
+        : [],
+    [feeHeads, customCategoryId]
+  );
+
+  const canAddCustomItem =
+    !!customFeeHeadId &&
+    !!customAmount &&
+    Number(customAmount) > 0;
+
+  const customItemsTotal = useMemo(
+    () => customFeeItems.reduce((sum, item) => sum + item.amount, 0),
+    [customFeeItems]
+  );
+
+  const grandTotal = totalAmount + customItemsTotal;
+
   const handleCreateDiscount = async () => {
     if (!selectedStudentId || !discountFormData.feeHeadId || !discountFormData.academicYearId) {
       showError("Please fill all required discount fields");
@@ -142,7 +188,7 @@ export default function IndividualAssignment({ data, onAssign }: IndividualAssig
 
   const tabDone: Record<string, boolean> = {
     student: !!selectedStudentId,
-    details: !!(academicYear && month && selectedStructureIds.length > 0),
+    details: !!(academicYear && month && (selectedStructureIds.length > 0 || customFeeItems.length > 0)),
     discount: false,
     remarks: true,
   };
@@ -151,10 +197,10 @@ export default function IndividualAssignment({ data, onAssign }: IndividualAssig
     student: true,
     details: !!selectedStudentId,
     discount: !!(selectedStudentId && academicYear),
-    remarks: !!(selectedStructureIds.length > 0 && academicYear && month),
+    remarks: !!(academicYear && month && (selectedStructureIds.length > 0 || customFeeItems.length > 0)),
   };
 
-  const canAssign = selectedStudentId && academicYear && month && selectedStructureIds.length > 0;
+  const canAssign = selectedStudentId && academicYear && month && (selectedStructureIds.length > 0 || customFeeItems.length > 0);
 
   const handleReset = () => {
     setStudentQuery(""); setDebouncedQuery("");
@@ -163,11 +209,78 @@ export default function IndividualAssignment({ data, onAssign }: IndividualAssig
     setAcademicYear(""); setMonth("");
     setSelectedStructureIds([]);
     setRemarks("");
+    // Custom item list
+    setCustomFeeItems([]);
+    // Custom item form fields
+    setCustomCategoryId("");
+    setCustomFeeHeadId("");
+    setCustomAmount("");
+    setCustomDescription("");
+    setCustomAmountError("");
     setActiveTab("student");
   };
 
-  const handleAssign = () => {
-    onAssign({ type: "individual", studentId: selectedStudentId, academicYear, month, structureIds: selectedStructureIds, remarks });
+  const handleAddCustomItem = () => {
+    if (!customAmount) {
+      setCustomAmountError("Amount is required");
+      return;
+    }
+    const numAmount = Number(customAmount);
+    if (numAmount <= 0) {
+      setCustomAmountError("Amount must be greater than 0");
+      return;
+    }
+
+    const selectedHead = feeHeads.find((h: any) => h.id === Number(customFeeHeadId));
+    const selectedCategory = feeCategories.find((c: any) => c.id === Number(customCategoryId));
+
+    setCustomFeeItems((prev) => [
+      ...prev,
+      {
+        feeHeadId: Number(customFeeHeadId),
+        feeHeadName: selectedHead?.name || "",
+        feeCategoryName: selectedCategory?.name || "",
+        amount: numAmount,
+        description: customDescription.trim(),
+      },
+    ]);
+
+    // Reset form fields
+    setCustomCategoryId("");
+    setCustomFeeHeadId("");
+    setCustomAmount("");
+    setCustomDescription("");
+    setCustomAmountError("");
+  };
+
+  const handleAssign = async () => {
+    if (!selectedStudent || !academicYear || !month) return;
+    if (selectedStructureIds.length === 0 && customFeeItems.length === 0) return;
+
+    const yearObj = data.academicYears.find(y => y.name === academicYear);
+    
+    const payload = {
+      academicYearId: yearObj?.id || 0,
+      billingMonth: monthMap[month] || 0,
+      dueDate: new Date().toISOString(), 
+      gradeId: selectedStudent.gradeId || 0,
+      sectionId: selectedStudent.sectionId || 0,
+      studentId: selectedStudent.id,
+      feeStructureIds: selectedStructureIds.map(id => Number(id)),
+      isReplace: true,
+      customItems: customFeeItems.map(({ feeHeadId, amount, description }) => ({
+        feeHeadId,
+        amount,
+        description,
+      })),
+    };
+
+    try {
+      await generateInvoiceMutation.mutateAsync(payload);
+      handleReset();
+    } catch (error) {
+      // Error is handled by mutation onError (Swal)
+    }
   };
 
   const goNext = () => {
@@ -394,13 +507,147 @@ export default function IndividualAssignment({ data, onAssign }: IndividualAssig
             </div>
           )}
         </div>
+
+        {/* ── Custom Fee Items ─────────────────────────────────────────── */}
+        <div className="space-y-3">
+          <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Custom Fee Items</h4>
+          <p className="text-xs text-slate-500">Add ad-hoc fee items not covered by the fee structures above.</p>
+
+          {/* Custom Item Form */}
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              {/* Fee Category */}
+              <div className="space-y-1.5 flex flex-col">
+                <Label className="block w-full text-xs text-slate-500 font-semibold uppercase tracking-wider">Fee Category</Label>
+                <Select
+                  value={customCategoryId}
+                  onValueChange={(val) => {
+                    setCustomCategoryId(val);
+                    setCustomFeeHeadId("");
+                  }}
+                  disabled={isLoadingCategories}
+                >
+                  <SelectTrigger className="w-full h-9 text-sm bg-white">
+                    <SelectValue placeholder={feeCategories.length === 0 && !isLoadingCategories ? "No categories available" : "Select category"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {feeCategories.map((c: any) => (
+                      <SelectItem key={c.id} value={c.id.toString()}>{c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Fee Head */}
+              <div className="space-y-1.5 flex flex-col">
+                <Label className="block w-full text-xs text-slate-500 font-semibold uppercase tracking-wider">Fee Head</Label>
+                <Select
+                  value={customFeeHeadId}
+                  onValueChange={setCustomFeeHeadId}
+                  disabled={!customCategoryId}
+                >
+                  <SelectTrigger className="w-full h-9 text-sm bg-white">
+                    <SelectValue placeholder={customCategoryId && filteredFeeHeads.length === 0 ? "No fee heads available" : "Select fee head"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {filteredFeeHeads.map((h: any) => (
+                      <SelectItem key={h.id} value={h.id.toString()}>{h.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              {/* Amount */}
+              <div className="space-y-1.5 flex flex-col">
+                <Label className="block w-full text-xs text-slate-500 font-semibold uppercase tracking-wider">Amount (Rs.)</Label>
+                <Input
+                  type="number"
+                  value={customAmount}
+                  onChange={(e) => {
+                    setCustomAmount(e.target.value);
+                    setCustomAmountError("");
+                  }}
+                  placeholder="Enter amount"
+                  min={1}
+                  className="h-9 text-sm bg-white"
+                />
+                {customAmountError && (
+                  <p className="text-xs text-rose-500">{customAmountError}</p>
+                )}
+              </div>
+
+              {/* Description */}
+              <div className="space-y-1.5 flex flex-col">
+                <Label className="block w-full text-xs text-slate-500 font-semibold uppercase tracking-wider">Description <span className="text-slate-400 normal-case font-normal">(optional)</span></Label>
+                <Input
+                  type="text"
+                  value={customDescription}
+                  onChange={(e) => setCustomDescription(e.target.value)}
+                  placeholder="e.g. Late fee"
+                  maxLength={255}
+                  className="h-9 text-sm bg-white"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end">
+              <Button
+                onClick={handleAddCustomItem}
+                disabled={!canAddCustomItem}
+                className={cn(
+                  "h-9 px-4 rounded-lg text-sm font-semibold flex items-center gap-1.5",
+                  canAddCustomItem
+                    ? "bg-green-600 hover:bg-green-700 text-white"
+                    : "bg-slate-100 text-slate-300 cursor-not-allowed"
+                )}
+              >
+                <Plus size={14} /> Add Item
+              </Button>
+            </div>
+          </div>
+
+          {/* Custom Items List */}
+          {customFeeItems.length === 0 ? (
+            <p className="text-xs text-slate-400 italic text-center py-2">No custom items added yet</p>
+          ) : (
+            <div className="space-y-2">
+              {customFeeItems.map((item, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between px-3 py-2.5 rounded-xl border border-slate-200 bg-white"
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-slate-800 truncate">{item.feeHeadName}</p>
+                    <p className="text-xs text-slate-400">{item.feeCategoryName}{item.description ? ` · ${item.description}` : ""}</p>
+                  </div>
+                  <div className="flex items-center gap-3 shrink-0 ml-3">
+                    <span className="text-sm font-bold text-green-700 tabular-nums">Rs. {item.amount.toLocaleString()}</span>
+                    <button
+                      onClick={() => setCustomFeeItems((prev) => prev.filter((_, i) => i !== index))}
+                      className="p-1 rounded hover:bg-rose-50 text-slate-400 hover:text-rose-500 transition-colors"
+                      title="Remove item"
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+              <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                <span className="text-xs text-slate-400">{customFeeItems.length} custom item{customFeeItems.length !== 1 ? "s" : ""}</span>
+                <span className="text-sm font-bold text-slate-800 tabular-nums">Rs. {customItemsTotal.toLocaleString()}</span>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       <PanelFooter
         onBack={() => setActiveTab("student")}
         onNext={goNext}
         nextLabel="Continue to Discounts"
-        nextDisabled={!academicYear || !month || selectedStructureIds.length === 0}
+        nextDisabled={!academicYear || !month || (selectedStructureIds.length === 0 && customFeeItems.length === 0)}
       />
     </div>
   );
@@ -667,9 +914,12 @@ export default function IndividualAssignment({ data, onAssign }: IndividualAssig
           selectedStructures={selectedStructures}
           totalAmount={totalAmount}
           onAssign={handleAssign}
+          isPending={generateInvoiceMutation.isPending}
           canAssign={!!canAssign}
           student={selectedStudent}
           onDeselect={() => { setSelectedStudentId(null); setStudentQuery(""); }}
+          customItems={customFeeItems.map(({ feeHeadName, feeCategoryName, amount }) => ({ feeHeadName, feeCategoryName, amount }))}
+          grandTotal={grandTotal}
         />
       </div>
     </div>

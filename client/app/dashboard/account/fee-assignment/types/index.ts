@@ -22,6 +22,8 @@ export interface Student {
   roll_no: string | number;
   photo?: string;
   isActive?: boolean;
+  gradeId?: number;
+  sectionId?: number;
 }
 
 export interface FeeStructure {
@@ -31,6 +33,8 @@ export interface FeeStructure {
   feeHead: string;
   amount: number;
   type: string;
+  academicYearId?: number;
+  gradeId?: number;
 }
 
 export interface RecentAssignment {

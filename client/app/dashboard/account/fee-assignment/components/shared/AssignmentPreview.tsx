@@ -29,6 +29,8 @@ interface AssignmentPreviewProps {
     guardianContact?: string | null;
     address?: string | null;
   };
+  customItems?: { feeHeadName: string; feeCategoryName: string; amount: number }[];
+  grandTotal?: number;
 }
 
 const moneyFormatter = (amount: number) => `Rs. ${amount.toLocaleString()}`;
@@ -44,7 +46,9 @@ export default function AssignmentPreview({
   isPending,
   canAssign,
   student,
-  onDeselect
+  onDeselect,
+  customItems = [],
+  grandTotal,
 }: AssignmentPreviewProps) {
   const Icon = type === "individual" ? User : type === "group" ? Users : CalendarDays;
   const gradient = "from-green-500 to-green-700";
@@ -140,7 +144,7 @@ export default function AssignmentPreview({
           ))}
           <div className="pt-3 border-t border-slate-100 flex justify-between items-center">
             <span className="text-sm font-bold text-slate-900">Total Amount</span>
-            <span className="text-xl font-black text-green-600 tabular-nums">{moneyFormatter(totalAmount)}</span>
+            <span className="text-xl font-black text-green-600 tabular-nums">{moneyFormatter(grandTotal ?? totalAmount)}</span>
           </div>
         </div>
 
@@ -164,6 +168,23 @@ export default function AssignmentPreview({
             </div>
           )}
         </div>
+
+        {customItems.length > 0 && (
+          <div className="space-y-2">
+            <h5 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Custom Items</h5>
+            <div className="space-y-2">
+              {customItems.map((item, idx) => (
+                <div key={idx} className="p-3 rounded-xl bg-amber-50 border border-amber-100 transition-all">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-semibold text-slate-800">{item.feeHeadName}</span>
+                    <span className="text-sm font-bold text-amber-700">{moneyFormatter(item.amount)}</span>
+                  </div>
+                  <p className="text-[10px] text-slate-500 mt-1 uppercase tracking-tight">{item.feeCategoryName}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="p-5 border-t border-slate-100 bg-slate-50/30">
