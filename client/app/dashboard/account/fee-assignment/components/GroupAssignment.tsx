@@ -1,259 +1,125 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Users, Search, FileText, Check, ChevronDown } from "lucide-react";
-import { Label } from "@/components/ui/label";
+import FeeStructureForm from "../../setup/components/FeeStructureForm";
+import CustomTable from "@/app/dashboard/components/dashboard/common/CustomTable";
+import { feeStructureColumns } from "@/app/dashboard/config/table/accountSetupTableConfig";
+import { showConfirm, showError } from "@/lib/sweet-alert";
+import LoadingWrapper from "@/app/dashboard/components/dashboard/common/GlobalLoaderWrapper";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import AssignmentPreview from "./shared/AssignmentPreview";
-import { AssignmentData, FeeStructure } from "../types";
+  useGetAllFeeStructures,
+  useCreateFeeStructure,
+  useUpdateFeeStructure,
+  useDeleteFeeStructure,
+} from "@/server-action/api/fee-structure.api";
+import { useGetAllAcademicYears } from "@/server-action/api/academic-year-api";
+import { useGetAllGrades } from "@/server-action/api/grade.api";
+import { useGetAllFeeHeads } from "@/server-action/api/feeHead";
+import { FeeStructure } from "@/app/dashboard/types/fee-structure";
+import { AssignmentData } from "../types";
 
 interface GroupAssignmentProps {
   data: AssignmentData;
   onAssign: (payload: any) => void;
 }
 
-const moneyFormatter = (amount: number) => `Rs. ${amount.toLocaleString()}`;
+export default function GroupAssignment({ data }: GroupAssignmentProps) {
+  const [editingStructure, setEditingStructure] = useState<FeeStructure | null>(null);
 
-export default function GroupAssignment({ data, onAssign }: GroupAssignmentProps) {
-  const [academicYear, setAcademicYear] = useState("");
-  const [targetClass, setTargetClass] = useState("");
-  const [targetSection, setTargetSection] = useState("");
-  const [month, setMonth] = useState("");
-  const [selectedStructureIds, setSelectedStructureIds] = useState<string[]>([]);
+  const { data: structuresData, isLoading: isLoadingStructures } = useGetAllFeeStructures();
+  const { data: academicYearsData } = useGetAllAcademicYears();
+  const { data: gradesData } = useGetAllGrades();
+  const { data: accountHeadsData } = useGetAllFeeHeads();
 
-  const structureOptions = useMemo(() => {
-    if (!academicYear || !targetClass) return [];
-    return data.feeStructures.filter(
-      (item) => item.academicYear === academicYear && item.class === targetClass
-    );
-  }, [academicYear, targetClass, data.feeStructures]);
+  const createStruct = useCreateFeeStructure();
+  const updateStruct = useUpdateFeeStructure();
+  const deleteStruct = useDeleteFeeStructure();
 
-  const selectedStructures = useMemo(() => {
-    return data.feeStructures.filter((item) => selectedStructureIds.includes(item.id.toString()));
-  }, [selectedStructureIds, data.feeStructures]);
+  const academicYears = Array.isArray(academicYearsData) ? academicYearsData : [];
+  const accountHeads = Array.isArray(accountHeadsData) ? accountHeadsData : [];
+  const structures = Array.isArray(structuresData) ? structuresData : [];
+  const grades = Array.isArray(gradesData) ? gradesData : [];
 
-  const perStudentAmount = useMemo(() => {
-    return selectedStructures.reduce((sum, item) => sum + item.amount, 0);
-  }, [selectedStructures]);
+  const structureInitialValues = useMemo(() => ({
+    academicYearId: editingStructure?.academicYearId || 0,
+    gradeId: editingStructure?.gradeId || 0,
+    feeHeadId: editingStructure?.feeHeadId || 0,
+    amount: editingStructure?.amount || 0,
+    isMonthly: editingStructure?.isMonthly ?? true,
+  }), [editingStructure]);
 
-  const targetCount = useMemo(() => {
-    return data.students.filter((student) => {
-      const classMatched = targetClass ? student.class === targetClass : true;
-      const sectionMatched = targetSection ? student.section === targetSection : true;
-      return classMatched && sectionMatched;
-    }).length;
-  }, [targetClass, targetSection, data.students]);
-
-  const totalValue = perStudentAmount * targetCount;
-
-  const handleAssign = () => {
-    onAssign({
-      type: "group",
-      academicYear,
-      class: targetClass,
-      section: targetSection,
-      month,
-      structureIds: selectedStructureIds,
-      targetCount,
-    });
+  const handleStructureSubmit = async (values: any) => {
+    try {
+      if (editingStructure) {
+        await updateStruct.mutateAsync({ id: editingStructure.id, ...values });
+      } else {
+        await createStruct.mutateAsync(values);
+      }
+      setEditingStructure(null);
+    } catch (error: any) {
+      showError(error || "Something went wrong while saving the fee structure.");
+    }
   };
 
   return (
-    <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
-      {/* Left Column: Form */}
-      <div className="xl:col-span-8 space-y-8">
-        <div className="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm space-y-8">
-          <div className="space-y-6">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-green-50 text-green-600 flex items-center justify-center">
-                <Users size={20} />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-slate-900">Define Group</h3>
-                <p className="text-sm text-slate-500">Select class and section for group assignment</p>
-              </div>
-            </div>
+    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="px-7 py-5 border-b border-slate-100">
+        <h3 className="text-sm font-bold text-slate-900">Manage Fee Structures</h3>
+        <p className="text-xs text-slate-400 mt-0.5">
+          Define and manage fee structures for different classes and academic years.
+        </p>
+      </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label>Academic Year</Label>
-                <Select value={academicYear} onValueChange={setAcademicYear}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select year" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {data.academicYears.map((item) => (
-                      <SelectItem key={item.id} value={item.name}>
-                        {item.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+      <LoadingWrapper isLoading={isLoadingStructures}>
+        <div className="px-7 py-6 space-y-10">
 
-              <div className="space-y-2">
-                <Label>Class</Label>
-                <Select value={targetClass} onValueChange={setTargetClass}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select class" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {data.classes.map((item) => (
-                      <SelectItem key={item.id} value={item.name}>
-                        {item.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+          <section>
+            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">
+              {editingStructure ? "Edit Structure" : "New Structure"}
+            </h4>
+            <FeeStructureForm
+              key={editingStructure ? `edit-${editingStructure.id}` : "new-structure"}
+              initialValues={structureInitialValues}
+              academicYears={academicYears}
+              grades={grades}
+              feeHeads={accountHeads}
+              onSubmit={handleStructureSubmit}
+              submitLabel={editingStructure ? "Update Structure" : "Save Structure"}
+              onCancel={() => setEditingStructure(null)}
+            />
+          </section>
 
-              <div className="space-y-2">
-                <Label>Section</Label>
-                <Select value={targetSection} onValueChange={setTargetSection}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="All Sections" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Sections</SelectItem>
-                    {data.sections.map((item) => (
-                      <SelectItem key={item.id} value={item.name}>
-                        {item.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+          <section>
+            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">
+              Fee Structures List
+            </h4>
+            <CustomTable
+              caption="Fee Structures List"
+              data={structures}
+              columns={feeStructureColumns(
+                (row) => {
+                  const year = academicYears.find(y => y.name === row.academicYearName);
+                  const grade = grades.find(g => g.name === row.gradeName);
+                  const head = accountHeads.find(h => h.name === row.feeHeadName);
+                  setEditingStructure({
+                    ...row,
+                    academicYearId: row.academicYearId || year?.id || 0,
+                    gradeId: row.gradeId || grade?.id || 0,
+                    feeHeadId: row.feeHeadId || head?.id || 0,
+                  });
+                },
+                async (row) => {
+                  const confirmed = await showConfirm({ title: "Delete?", text: "Delete this structure?" });
+                  if (confirmed) await deleteStruct.mutateAsync(row.id);
+                }
+              )}
+              isLoading={isLoadingStructures}
+              searchableKeys={["gradeName", "feeHeadName"]}
+            />
+          </section>
 
-              <div className="space-y-2">
-                <Label>Billing Month</Label>
-                <Select value={month} onValueChange={setMonth}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select month" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {data.months.map((m) => (
-                      <SelectItem key={m} value={m}>
-                        {m}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-6 pt-6 border-t border-slate-100">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                <FileText size={20} />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-slate-900">Select Fees</h3>
-                <p className="text-sm text-slate-500">Specify the structures for this group</p>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Fee Structures</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    role="combobox"
-                    className={cn(
-                      "w-full justify-between font-normal",
-                      !selectedStructureIds.length && "text-muted-foreground"
-                    )}
-                  >
-                    {selectedStructureIds.length > 0
-                      ? `${selectedStructureIds.length} structures selected`
-                      : "Select fee structures..."}
-                    <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[400px] p-0" align="start">
-                  <Command>
-                    <CommandInput placeholder="Search structures..." />
-                    <CommandList>
-                      <CommandEmpty>No structures found.</CommandEmpty>
-                      <CommandGroup>
-                        {structureOptions.map((option) => (
-                          <CommandItem
-                            key={option.id}
-                            onSelect={() => {
-                              const id = option.id.toString();
-                              setSelectedStructureIds((prev) =>
-                                prev.includes(id)
-                                  ? prev.filter((i) => i !== id)
-                                  : [...prev, id]
-                              );
-                            }}
-                          >
-                            <div className="flex items-center gap-2 w-full">
-                              <Checkbox
-                                checked={selectedStructureIds.includes(
-                                  option.id.toString()
-                                )}
-                              />
-                              <div className="flex flex-1 items-center justify-between">
-                                <span>{option.feeHead}</span>
-                                <span className="font-bold">
-                                  Rs. {option.amount.toLocaleString()}
-                                </span>
-                              </div>
-                            </div>
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
-            </div>
-          </div>
         </div>
-      </div>
-
-      {/* Right Column: Preview */}
-      <div className="xl:col-span-4 h-full">
-        <AssignmentPreview
-          title="Group Assignment"
-          type="group"
-          targetName={targetClass || "All Eligible"}
-          subDetails={[
-            { label: "Section", value: targetSection || "All Sections" },
-            { label: "Eligible Students", value: String(targetCount) },
-            { label: "Per Student", value: moneyFormatter(perStudentAmount) },
-            { label: "Month", value: month || "-" },
-            { label: "Academic Year", value: academicYear || "-" },
-          ]}
-          selectedStructures={selectedStructures}
-          totalAmount={totalValue}
-          onAssign={handleAssign}
-        />
-      </div>
+      </LoadingWrapper>
     </div>
   );
 }

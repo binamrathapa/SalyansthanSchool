@@ -1,62 +1,62 @@
 export interface AcademicYear {
-  id: number;
-  name: string;
+    id: number;
+    name: string;
 }
 
 export interface ClassItem {
-  id: number;
-  name: string;
+    id: number;
+    name: string;
 }
 
 export interface Section {
-  id: number;
-  name: string;
+    id: number;
+    name: string;
 }
 
 export interface Student {
-  id: number;
-  name: string;
-  admission_no: string;
-  class: string;
-  section: string;
-  roll_no: string | number;
-  photo?: string;
-  isActive?: boolean;
-  gradeId?: number;
-  sectionId?: number;
+    id: number;
+    name: string;
+    admission_no: string;
+    class: string;
+    section: string;
+    roll_no: string | number;
+    photo?: string;
+    isActive?: boolean;
+    gradeId?: number;
+    sectionId?: number;
 }
 
 export interface FeeStructure {
-  id: number;
-  academicYear: string;
-  class: string;
-  feeHead: string;
-  amount: number;
-  type: string;
-  academicYearId?: number;
-  gradeId?: number;
+    id: number;
+    academicYear: string;
+    class: string;
+    feeHead: string;
+    amount: number;
+    type: string;
+    academicYearId?: number;
+    gradeId?: number;
 }
 
 export interface RecentAssignment {
-  id: number;
-  targetType: string;
-  targetName: string;
-  class: string;
-  section: string;
-  feeHead: string;
-  amount: number;
-  month: string;
-  academicYear: string;
-  assignedOn: string;
-  type: string;
+    id: number;
+    targetType: string;
+    targetName: string;
+    class: string;
+    section: string;
+    feeHead: string;
+    amount: number;
+    month: string;
+    academicYear: string;
+    assignedOn: string;
+    type: string;
 }
 
 export interface AssignmentData {
-  academicYears: AcademicYear[];
-  classes: ClassItem[];
-  sections: Section[];
-  students: Student[];
-  feeStructures: FeeStructure[];
-  months: string[];
-  recentAssignments: RecentAssignment[];
+    academicYears: AcademicYear[];
+    classes: ClassItem[];
+    sections: Section[];
+    students: Student[];
+    feeStructures: FeeStructure[];
+    months: string[];
+    recentAssignments: RecentAssignment[];
 }
