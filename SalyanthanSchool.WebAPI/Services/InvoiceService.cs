@@ -41,19 +41,19 @@ namespace SalyanthanSchool.WebAPI.Services
                 return result;
             }
 
-            // ── Get Students ───────────────────────────────
+            // ── Get Students (Treat 0 as null) ──────────────
             var studentsQuery = _context.Student
                 .Where(s => s.IsActive == true);
 
-            if (dto.GradeId.HasValue)
+            if (dto.GradeId.HasValue && dto.GradeId > 0)
                 studentsQuery = studentsQuery
                     .Where(s => s.GradeId == dto.GradeId.Value);
 
-            if (dto.SectionId.HasValue)
+            if (dto.SectionId.HasValue && dto.SectionId > 0)
                 studentsQuery = studentsQuery
                     .Where(s => s.SectionId == dto.SectionId.Value);
 
-            if (dto.StudentId.HasValue)
+            if (dto.StudentId.HasValue && dto.StudentId > 0)
                 studentsQuery = studentsQuery
                     .Where(s => s.Id == dto.StudentId.Value);
 
@@ -86,10 +86,14 @@ namespace SalyanthanSchool.WebAPI.Services
 
                         if (existingInvoice != null)
                         {
-                            // 1. If CustomItems are provided, append them to the existing invoice
-                            if (dto.CustomItems != null && dto.CustomItems.Any())
+                            // 1. If Valid CustomItems are provided, append them to the existing invoice
+                            var validCustoms = dto.CustomItems?
+                                .Where(c => c.FeeHeadId > 0 && c.Amount > 0)
+                                .ToList();
+
+                            if (validCustoms != null && validCustoms.Any())
                             {
-                                foreach (var custom in dto.CustomItems)
+                                foreach (var custom in validCustoms)
                                 {
                                     var item = new InvoiceItem
                                     {
@@ -104,7 +108,7 @@ namespace SalyanthanSchool.WebAPI.Services
                                     existingInvoice.RemainingAmount += custom.Amount;
                                 }
 
-                                // Update status if it was PAID/PARTIAL
+                                // Update status
                                 if (existingInvoice.PaidAmount > 0)
                                     existingInvoice.Status = InvoiceStatus.Partial;
                                 else
@@ -114,44 +118,40 @@ namespace SalyanthanSchool.WebAPI.Services
                                 result.InvoicesCreated++;
                                 continue;
                             }
-
-                            // 2. Fallback to Replace logic if explicitly requested
-                            if (dto.IsReplace && existingInvoice.Status == InvoiceStatus.Unpaid)
-                            {
-                                _context.Invoice.Remove(existingInvoice);
-                                await _context.SaveChangesAsync();
-                            }
                             else
                             {
+                                // 2. If no custom items, block duplicate generation
                                 result.InvoicesSkipped++;
+                                result.Errors.Add($"Student {student.Id}: Invoice for month {dto.BillingMonth} already exists.");
                                 continue;
                             }
                         }
 
                         // Get fee structure
-                        List<FeeStructure> fees;
-                        if (dto.FeeStructureIds != null && dto.FeeStructureIds.Any())
+                        List<FeeStructure> fees = new();
+
+                        if (dto.StudentId == null || dto.StudentId == 0)
                         {
-                            fees = await _context.FeeStructure
-                                .Include(f => f.FeeHead)
-                                .Where(f => dto.FeeStructureIds.Contains(f.Id))
-                                .ToListAsync();
-                        }
-                        else
-                        {
+                            // Default to Grade fees for Bulk generation
                             fees = await _context.FeeStructure
                                 .Include(f => f.FeeHead)
                                 .Where(f =>
                                     f.GradeId == student.GradeId &&
-                                    f.AcademicYearId == dto.AcademicYearId)
+                                    f.AcademicYearId == dto.AcademicYearId &&
+                                    f.FeeHead.IsIndividualOnly == false)
                                 .ToListAsync();
                         }
 
-                        if (!fees.Any() && (dto.CustomItems == null || !dto.CustomItems.Any()))
+                        // Validate if anything to assign
+                        var validCustomItems = dto.CustomItems?
+                            .Where(c => c.FeeHeadId > 0 && c.Amount > 0)
+                            .ToList();
+
+                        if (!fees.Any() && (validCustomItems == null || !validCustomItems.Any()))
                         {
                             result.InvoicesSkipped++;
                             result.Errors.Add(
-                                $"No fees or custom items to assign for student {student.Id}");
+                                $"Student {student.Id}: No valid fees or custom items to assign.");
                             continue;
                         }
 
@@ -215,10 +215,10 @@ namespace SalyanthanSchool.WebAPI.Services
                             currentMonthGross += fee.Amount;
                         }
 
-                        // 2. Add Custom Ad-hoc Fees
-                        if (dto.CustomItems != null && dto.CustomItems.Any())
+                        // 2. Add Custom Ad-hoc Fees (Validated)
+                        if (validCustomItems != null && validCustomItems.Any())
                         {
-                            foreach (var custom in dto.CustomItems)
+                            foreach (var custom in validCustomItems)
                             {
                                 var item = new InvoiceItem
                                 {
@@ -243,6 +243,11 @@ namespace SalyanthanSchool.WebAPI.Services
                         {
                             await _context.Invoice.AddAsync(invoice);
                             result.InvoicesCreated++;
+                        }
+                        else
+                        {
+                            result.Errors.Add(
+                                $"Student {student.Id}: Invoice skipped because total amount is 0.");
                         }
                     }
                     catch (Exception ex)
@@ -279,7 +284,11 @@ namespace SalyanthanSchool.WebAPI.Services
 
                 result.InvoicesCreated = 0;
                 result.Message         = "Generation failed - all changes rolled back";
-                result.Errors.Add(ex.Message);
+                
+                var errorMsg = ex.InnerException != null 
+                    ? $"{ex.Message} -> {ex.InnerException.Message}" 
+                    : ex.Message;
+                result.Errors.Add(errorMsg);
 
                 return result;
             }

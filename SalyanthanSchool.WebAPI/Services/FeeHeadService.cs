@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using SalyanthanSchool.Core.DTOs.FeeHead;
 using SalyanthanSchool.Core.Entities;
 using SalyanthanSchool.Core.Interfaces;
@@ -40,6 +40,7 @@ namespace SalyanthanSchool.WebAPI.Services
                     FeeCategoryId = f.FeeCategoryId,
                     FeeCategoryName = f.FeeCategory.Name,
                     Name = f.Name,
+                    IsIndividualOnly = f.IsIndividualOnly,
                     CreatedAt = f.CreatedAt
                 }).ToListAsync();
 
@@ -61,6 +62,7 @@ namespace SalyanthanSchool.WebAPI.Services
                     FeeCategoryId = f.FeeCategoryId,
                     FeeCategoryName = f.FeeCategory.Name,
                     Name = f.Name,
+                    IsIndividualOnly = f.IsIndividualOnly,
                     CreatedAt = f.CreatedAt
                 }).FirstOrDefaultAsync(f => f.Id == id);
         }
@@ -79,6 +81,7 @@ namespace SalyanthanSchool.WebAPI.Services
             {
                 Name = dto.Name,
                 FeeCategoryId = dto.FeeCategoryId,
+                IsIndividualOnly = dto.IsIndividualOnly,
                 CreatedAt = DateTime.UtcNow // Using UtcNow to match Grade pattern
             };
 
@@ -99,6 +102,7 @@ namespace SalyanthanSchool.WebAPI.Services
 
             head.Name = dto.Name;
             head.FeeCategoryId = dto.FeeCategoryId;
+            head.IsIndividualOnly = dto.IsIndividualOnly;
 
             await _context.SaveChangesAsync();
             return await GetByIdAsync(id);
