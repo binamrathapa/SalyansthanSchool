@@ -1,4 +1,4 @@
-﻿namespace SalyanthanSchool.Core.DTOs.FeeHead
+namespace SalyanthanSchool.Core.DTOs.FeeHead
 {
     public class FeeHeadResponseDto
     {
@@ -6,6 +6,7 @@
         public int FeeCategoryId { get; set; }
         public string? FeeCategoryName { get; set; } // For display in UI
         public string Name { get; set; } = null!;
+        public bool IsIndividualOnly { get; set; }
         public DateTime? CreatedAt { get; set; }
     }
 }

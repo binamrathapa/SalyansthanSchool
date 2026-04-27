@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SalyanthanSchool.Core.Entities
@@ -18,6 +18,9 @@ namespace SalyanthanSchool.Core.Entities
         [Required]
         [StringLength(100)]
         public string Name { get; set; } = null!;
+
+        [Column("is_individual_only")]
+        public bool IsIndividualOnly { get; set; } = false;
 
         [Column("created_at")]
         public DateTime? CreatedAt { get; set; } = DateTime.Now;

@@ -89,6 +89,27 @@ namespace SalyanthanSchool.WebAPI.Controllers
             }
         }
 
+        // POST: api/Invoice/generate-monthly/bulk
+        [HttpPost("generate-monthly/bulk")]
+        public async Task<IActionResult> GenerateBulk([FromBody] GenerateBulkInvoiceDto bulkDto)
+        {
+            var dto = new GenerateInvoiceDto
+            {
+                AcademicYearId = bulkDto.AcademicYearId,
+                BillingMonth = bulkDto.BillingMonth,
+                DueDate = bulkDto.DueDate,
+                GradeId = bulkDto.GradeId
+            };
+            return await Generate(dto);
+        }
+
+        // POST: api/Invoice/generate-monthly/individual
+        [HttpPost("generate-monthly/individual")]
+        public async Task<IActionResult> GenerateIndividual([FromBody] GenerateInvoiceDto dto)
+        {
+            return await Generate(dto);
+        }
+
         // POST: api/Invoice/generate-monthly
         [HttpPost("generate-monthly")]
         public async Task<IActionResult> Generate(
@@ -105,11 +126,11 @@ namespace SalyanthanSchool.WebAPI.Controllers
                 var result = await _service
                     .GenerateMonthlyInvoicesAsync(dto);
 
-                // ✅ Return errors if any
+                // ✅ Return Fail if errors exist
                 if (result.Errors.Any())
                 {
-                    return Ok(
-                        ApiResponse<GenerateInvoiceResultDto>.Ok(
+                    return BadRequest(
+                        ApiResponse<GenerateInvoiceResultDto>.Fail(
                             result,
                             result.Message,
                             new
@@ -117,6 +138,22 @@ namespace SalyanthanSchool.WebAPI.Controllers
                                 invoicesCreated = result.InvoicesCreated,
                                 invoicesSkipped = result.InvoicesSkipped,
                                 errorsCount     = result.Errors.Count
+                            }
+                        )
+                    );
+                }
+
+                // ✅ Return Fail if nothing happened
+                if (result.InvoicesCreated == 0 && result.InvoicesSkipped == 0)
+                {
+                    return BadRequest(
+                        ApiResponse<GenerateInvoiceResultDto>.Fail(
+                            result,
+                            "No invoices were generated. Check if students have assigned fees or valid custom items.",
+                            new
+                            {
+                                invoicesCreated = result.InvoicesCreated,
+                                invoicesSkipped = result.InvoicesSkipped
                             }
                         )
                     );
@@ -162,7 +199,7 @@ namespace SalyanthanSchool.WebAPI.Controllers
 
                 if (!result.Success)
                     return BadRequest(
-                        ApiResponse<PaymentResultDto>.Ok(
+                        ApiResponse<PaymentResultDto>.Fail(
                             result,
                             result.Message));
 

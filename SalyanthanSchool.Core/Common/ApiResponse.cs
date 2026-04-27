@@ -1,4 +1,4 @@
-﻿namespace SalyanthanSchool.Core.DTOs.Common
+namespace SalyanthanSchool.Core.DTOs.Common
 {
     public class ApiResponse<T>
     {
@@ -25,6 +25,17 @@
                 Success = false,
                 Message = message,
                 Data = default
+            };
+        }
+
+        public static ApiResponse<T> Fail(T data, string message = "Failure", object? meta = null)
+        {
+            return new ApiResponse<T>
+            {
+                Success = false,
+                Message = message,
+                Data = data,
+                Meta = meta
             };
         }
     }

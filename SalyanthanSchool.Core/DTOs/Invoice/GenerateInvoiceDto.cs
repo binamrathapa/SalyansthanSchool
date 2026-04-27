@@ -11,9 +11,7 @@ namespace SalyanthanSchool.Core.DTOs.Invoice
         public int? GradeId { get; set; }
         public int? SectionId { get; set; }
         public int? StudentId { get; set; }
-        public List<int>? FeeStructureIds { get; set; }
         public List<CustomFeeItemDto>? CustomItems { get; set; }
-        public bool IsReplace { get; set; } = false;
     }
 
     public class CustomFeeItemDto
