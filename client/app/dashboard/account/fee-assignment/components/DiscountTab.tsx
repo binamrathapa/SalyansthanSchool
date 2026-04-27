@@ -268,8 +268,6 @@ export default function DiscountTab() {
           data={discounts}
           isLoading={isLoading}
           caption="A list of student discounts."
-          showSearch={true}
-          searchPlaceholder="Search by student name..."
           searchableKeys={["studentName", "feeHeadName"]}
         />
       </div>
