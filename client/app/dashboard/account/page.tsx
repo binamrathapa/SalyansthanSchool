@@ -59,6 +59,9 @@ import {
 
 import { Defaulter, Transaction } from "@/app/dashboard/types/finance.types";
 
+import { useGetFinanceDashboard } from "@/server-action/api/finance.api";
+import GlobalLoader from "../components/dashboard/common/GlobalLoader";
+
 /* ------------------------------------------------ */
 /* TYPES */
 /* ------------------------------------------------ */
@@ -212,105 +215,106 @@ const ClassFilterBar = ({
 /* ------------------------------------------------ */
 
 const FinanceOverviewDashboard = () => {
+  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
+  const { data: financeDashboard, isLoading, error } = useGetFinanceDashboard(selectedYear);
+
   const [dailyFilter, setDailyFilter] = useState<BarChartFilter>({});
   const [pieFilter, setPieFilter] = useState<PieChartFilter>({});
 
   const classOptions = useMemo(() => {
-    return classWiseFeeStatusData.map((item) => item.class).sort();
-  }, []);
+    if (!financeDashboard) return [];
+    return financeDashboard.classWiseFeeStatus.map((item) => item.class).sort();
+  }, [financeDashboard]);
 
   const selectedClass = pieFilter.classFilter ?? "All Classes";
 
+  const kpiData = useMemo(() => {
+    if (!financeDashboard) return null;
+
+    const { data, previousYearsAggregate } = financeDashboard;
+    
+    const totalDueAmount = data.defaulters.reduce((sum, item) => sum + item.dueAmount, 0);
+    const thisMonthCollection = data.monthlyCollection.reduce((sum, item) => sum + item.amount, 0);
+    const thisYearCollection = data.yearlyCollection.reduce((sum, item) => sum + item.amount, 0);
+    
+    const previousYearRecord = previousYearsAggregate.find(item => item.year === selectedYear - 1);
+    const previousYearCollection = previousYearRecord?.totalCollection ?? 0;
+    const growth = previousYearCollection > 0 
+      ? ((thisYearCollection - previousYearCollection) / previousYearCollection) * 100 
+      : 0;
+
+    const latestWeeklyAmount = data.weeklyCollection.reduce((sum, item) => sum + item.amount, 0);
+    const avgWeeklyAmount = data.weeklyCollection.length > 0 ? latestWeeklyAmount / data.weeklyCollection.length : 0;
+
+    return {
+      todayCollection: {
+        value: `Rs.${data.todayCollection.amount.toLocaleString()}`,
+        sub: data.todayCollection.status,
+      },
+      totalDue: {
+        value: `Rs.${totalDueAmount.toLocaleString()}`,
+        sub: "Outstanding dues",
+      },
+      yearCollection: {
+        value: `Rs.${thisYearCollection.toLocaleString()}`,
+        sub: `${growth >= 0 ? "↑" : "↓"} ${Math.abs(growth).toFixed(1)}% vs last year`,
+      },
+      monthCollection: {
+        value: `Rs.${thisMonthCollection.toLocaleString()}`,
+        sub: "Current month collection",
+      },
+      weeklyAverage: {
+        value: `Rs.${Math.round(avgWeeklyAmount).toLocaleString()}`,
+        sub: "Average daily this week",
+      },
+      transactionsCount: {
+        value: data.latestestTrasaction.length.toString(),
+        sub: "Latest transactions",
+      },
+    };
+  }, [financeDashboard, selectedYear]);
+
   const filteredDailyData = useMemo(() => {
+    if (!financeDashboard) return [];
+    const { data, previousYearsAggregate } = financeDashboard;
     const period = dailyFilter.period ?? "This Month";
 
     if (period === "Today") {
-      return [{ day: "Today", amount: todayCollection.amount }];
+      return [{ day: "Today", amount: data.todayCollection.amount }];
     }
 
     if (period === "This Week") {
-      return weeklyCollectionData.map((d) => ({
+      return data.weeklyCollection.map((d) => ({
         day: d.label,
         amount: d.amount,
       }));
     }
 
     if (period === "This Month") {
-      return monthlyCollectionData.map((d) => ({
+      return data.monthlyCollection.map((d) => ({
         day: d.label,
         amount: d.amount,
       }));
     }
 
     if (period === "This Year") {
-      return yearlyCollectionData.map((d) => ({
+      return data.yearlyCollection.map((d) => ({
         day: d.label,
         amount: d.amount,
       }));
     }
 
     if (period === "Previous Years") {
-      return previousYearsAggregateData.map((d) => ({
+      return previousYearsAggregate.map((d) => ({
         day: d.year.toString(),
         amount: d.totalCollection,
       }));
     }
 
     return [];
-  }, [dailyFilter]);
+  }, [dailyFilter, financeDashboard]);
 
-  const paidUnpaidPieData = useMemo(() => {
-    if (selectedClass === "All Classes") {
-      const totalPaid = classWiseFeeStatusData.reduce(
-        (sum, item) => sum + item.paidAmount,
-        0
-      );
-
-      const totalUnpaid = classWiseFeeStatusData.reduce(
-        (sum, item) => sum + item.unpaidAmount,
-        0
-      );
-
-      return [
-        { name: "Paid", value: totalPaid, fill: GREEN },
-        { name: "Unpaid", value: totalUnpaid, fill: ROSE },
-      ];
-    }
-
-    const selectedClassData = classWiseFeeStatusData.find(
-      (item) => item.class === selectedClass
-    );
-
-    return [
-      {
-        name: "Paid",
-        value: selectedClassData?.paidAmount ?? 0,
-        fill: GREEN,
-      },
-      {
-        name: "Unpaid",
-        value: selectedClassData?.unpaidAmount ?? 0,
-        fill: ROSE,
-      },
-    ];
-  }, [selectedClass]);
-
-  const pieTotal = paidUnpaidPieData.reduce((sum, item) => sum + item.value, 0);
-
-  const peakAmount =
-    filteredDailyData.length > 0
-      ? Math.max(...filteredDailyData.map((d) => d.amount))
-      : 0;
-
-  const handleDeleteDefaulters = useCallback((rows: Defaulter[]) => {
-    console.log("Delete:", rows);
-  }, []);
-
-  const handleDeleteTransactions = useCallback((rows: Transaction[]) => {
-    console.log("Delete:", rows);
-  }, []);
-
-  const defaulterColumns: Column<Defaulter>[] = [
+  const defaulterColumns: Column<any>[] = [
     { key: "sn", label: "S.N.", exportable: true, visible: true },
     { key: "id", label: "Student ID", exportable: true, visible: true },
     { key: "name", label: "Name", exportable: true, visible: true },
@@ -324,8 +328,8 @@ const FinanceOverviewDashboard = () => {
       render: (row) => `Rs. ${row.dueAmount.toLocaleString()}`,
     },
     {
-      key: "lastPayment",
-      label: "Last Payment",
+      key: "contact",
+      label: "Contact",
       exportable: true,
       visible: true,
     },
@@ -348,7 +352,7 @@ const FinanceOverviewDashboard = () => {
     },
   ];
 
-  const transactionColumns: Column<Transaction>[] = [
+  const transactionColumns: Column<any>[] = [
     { key: "sn", label: "S.N.", exportable: true, visible: true },
     { key: "receipt", label: "Receipt No.", exportable: true, visible: true },
     { key: "student", label: "Student", exportable: true, visible: true },
@@ -382,6 +386,55 @@ const FinanceOverviewDashboard = () => {
     },
   ];
 
+  const paidUnpaidPieData = useMemo(() => {
+    if (!financeDashboard) return [];
+    const { classWiseFeeStatus } = financeDashboard;
+
+    if (selectedClass === "All Classes") {
+      const totalPaid = classWiseFeeStatus.reduce(
+        (sum, item) => sum + item.paidAmount,
+        0
+      );
+
+      const totalUnpaid = classWiseFeeStatus.reduce(
+        (sum, item) => sum + item.unpaidAmount,
+        0
+      );
+
+      return [
+        { name: "Paid", value: totalPaid, fill: GREEN },
+        { name: "Unpaid", value: totalUnpaid, fill: ROSE },
+      ];
+    }
+
+    const selectedClassData = classWiseFeeStatus.find(
+      (item) => item.class === selectedClass
+    );
+
+    return [
+      {
+        name: "Paid",
+        value: selectedClassData?.paidAmount ?? 0,
+        fill: GREEN,
+      },
+      {
+        name: "Unpaid",
+        value: selectedClassData?.unpaidAmount ?? 0,
+        fill: ROSE,
+      },
+    ];
+  }, [selectedClass, financeDashboard]);
+
+  const pieTotal = paidUnpaidPieData.reduce((sum, item) => sum + (item.value as number), 0);
+
+  const peakAmount =
+    filteredDailyData.length > 0
+      ? Math.max(...filteredDailyData.map((d) => d.amount))
+      : 0;
+
+  if (isLoading) return <GlobalLoader />;
+  if (error || !financeDashboard) return <div>Error loading financial data</div>;
+
   return (
     <div className="p-7 md:p-8 min-h-screen font-['Plus_Jakarta_Sans','Segoe_UI',sans-serif]">
       <style jsx global>{`
@@ -405,57 +458,66 @@ const FinanceOverviewDashboard = () => {
             Real-time financial snapshot
           </p>
         </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Session</span>
+          <FilterSelect
+            value={selectedYear}
+            onChange={(v) => setSelectedYear(parseInt(v))}
+            options={financeDashboard.availableYears}
+          />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 mb-3.5">
         <KpiCard
           title="Today's Collection"
-          value={kpiData.todayCollection.value}
+          value={kpiData!.todayCollection.value}
           icon={<Wallet size={18} />}
           gradient={`linear-gradient(135deg, ${TEAL} 0%, #0891b2 100%)`}
-          sub={kpiData.todayCollection.sub}
+          sub={kpiData!.todayCollection.sub}
         />
 
         <KpiCard
           title="Total Due"
-          value={kpiData.totalDue.value}
+          value={kpiData!.totalDue.value}
           icon={<TrendingDown size={18} />}
           gradient={`linear-gradient(135deg, ${ROSE} 0%, #f97316 100%)`}
-          sub={kpiData.totalDue.sub}
+          sub={kpiData!.totalDue.sub}
         />
 
         <KpiCard
           title="Year Collection"
-          value={kpiData.yearCollection.value}
+          value={kpiData!.yearCollection.value}
           icon={<TrendingUp size={18} />}
           gradient={`linear-gradient(135deg, ${GREEN} 0%, #0d9488 100%)`}
-          sub={kpiData.yearCollection.sub}
+          sub={kpiData!.yearCollection.sub}
         />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 mb-6">
         <KpiCard
           title="This Month Collection"
-          value={kpiData.monthCollection.value}
+          value={kpiData!.monthCollection.value}
           icon={<TrendingUp size={18} />}
           gradient={`linear-gradient(135deg, ${BLUE} 0%, #6366f1 100%)`}
-          sub={kpiData.monthCollection.sub}
+          sub={kpiData!.monthCollection.sub}
         />
 
         <KpiCard
           title="Weekly Average"
-          value={kpiData.weeklyAverage.value}
+          value={kpiData!.weeklyAverage.value}
           icon={<Activity size={18} />}
           gradient={`linear-gradient(135deg, ${AMBER} 0%, #f59e0b 100%)`}
-          sub={kpiData.weeklyAverage.sub}
+          sub={kpiData!.weeklyAverage.sub}
         />
 
         <KpiCard
           title="Recent Transactions"
-          value={kpiData.transactionsCount.value}
+          value={kpiData!.transactionsCount.value}
           icon={<Receipt size={18} />}
           gradient="linear-gradient(135deg, #64748b 0%, #475569 100%)"
-          sub={kpiData.transactionsCount.sub}
+          sub={kpiData!.transactionsCount.sub}
         />
       </div>
 
@@ -501,7 +563,7 @@ const FinanceOverviewDashboard = () => {
               <Bar dataKey="amount" radius={[6, 6, 0, 0]}>
                 {filteredDailyData.map((entry, index) => (
                   <Cell
-                    key={`bar-cell-${index}`}
+                      key={`bar-cell-${index}`}
                     fill={
                       entry.amount === peakAmount
                         ? "#2563eb"
@@ -585,7 +647,7 @@ const FinanceOverviewDashboard = () => {
                       </span>
                       <span className="text-slate-400 w-10 text-right">
                         {pieTotal > 0
-                          ? ((item.value / pieTotal) * 100).toFixed(0)
+                          ? (((item.value as number) / pieTotal) * 100).toFixed(0)
                           : 0}
                         %
                       </span>
@@ -608,13 +670,13 @@ const FinanceOverviewDashboard = () => {
             Defaulters List
           </h3>
 
-          <CustomTable<Defaulter>
+          <CustomTable
             caption="List of students with pending fees"
             columns={defaulterColumns}
-            data={defaultersData}
+            data={financeDashboard.data.defaulters}
             limit={5}
             showDelete
-            onDelete={handleDeleteDefaulters}
+            onDelete={() => {}}
             searchableKeys={["name", "id", "class"]}
             filterOptions={[
               { label: "Unpaid", value: "Unpaid", key: "status" },
@@ -628,12 +690,12 @@ const FinanceOverviewDashboard = () => {
             Recent Fee Transactions
           </h3>
 
-          <CustomTable<Transaction>
+          <CustomTable
             caption="Recent fee transactions"
             columns={transactionColumns}
-            data={recentTransactionsData}
+            data={financeDashboard.data.latestestTrasaction}
             limit={5}
-            onDelete={handleDeleteTransactions}
+            onDelete={() => {}}
             searchableKeys={["receipt", "student", "class", "method"]}
             filterOptions={[
               { label: "Cash", value: "Cash", key: "method" },

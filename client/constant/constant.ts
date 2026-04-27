@@ -50,6 +50,7 @@ export const DB = {
   FEE_STRUCTURE: "FeeStructure",
   FEE_PAYMENT: "FeePayment",
   STUDENT_DISCOUNT: "StudentDiscount",
+  FINANCE: "Finance",
 };
 
 // ================= USER ROLES (UI / AUTH USE) =================
