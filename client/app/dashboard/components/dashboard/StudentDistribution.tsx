@@ -19,7 +19,7 @@ interface StudentDistributionProps {
   genderData: { name: string; value: number }[];
 }
 
-const genderColors = ["var(--brand-500)", "#f43f5e"];
+const genderColors = ["var(--brand-700)", "var(--brand-secondary)"];
 
 export default function StudentDistribution({
   classData,
@@ -65,7 +65,7 @@ export default function StudentDistribution({
               />
               <Bar
                 dataKey="value"
-                fill="var(--brand-500)"
+                fill="var(--brand-700)"
                 radius={[4, 4, 0, 0]}
                 barSize={30}
               />
@@ -88,7 +88,7 @@ export default function StudentDistribution({
                   data={chartGenderData}
                   cx="50%"
                   cy="50%"
-                  innerRadius={60}
+                  innerRadius={40}
                   outerRadius={100}
                   paddingAngle={5}
                   dataKey="value"

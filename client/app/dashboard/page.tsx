@@ -6,17 +6,19 @@ import {
   UserSquare2,
   GraduationCap
 } from "lucide-react";
-import SummaryCard from "./components/dashboard/SummaryCard";
 import StudentDistribution from "./components/dashboard/StudentDistribution";
 import MiniAccountSummary from "./components/dashboard/MiniAccountSummary";
 import { useGetDashboardData } from "@/server-action/api/dashboard.api";
 import GlobalLoader from "./components/dashboard/common/GlobalLoader";
 import "./dashboard.css";
 
-const metricConfigs: Record<string, { icon: any; color: "blue" | "purple" | "green" | "orange" }> = {
-  students: { icon: Users, color: "blue" },
-  teachers: { icon: UserSquare2, color: "purple" },
-  classes: { icon: GraduationCap, color: "green" },
+const BRAND_GREEN = "var(--brand-700)";
+const BRAND_SECONDARY = "var(--brand-secondary)";
+
+const metricIcons: Record<string, React.ReactNode> = {
+  students: <Users size={18} color="white" />,
+  teachers: <UserSquare2 size={18} color="white" />,
+  classes: <GraduationCap size={18} color="white" />,
 };
 
 export default function DashboardHome() {
@@ -39,18 +41,31 @@ export default function DashboardHome() {
 
       {/* Top Metrics Grid */}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {dashboardData.metrics.map((metric: any) => {
-          const config = metricConfigs[metric.id] || metricConfigs.students;
+        {dashboardData.metrics.map((metric: any, index: number) => {
+          const bg = index % 2 === 0 ? BRAND_GREEN : BRAND_SECONDARY;
+          const icon = metricIcons[metric.id] ?? <Users size={18} color="white" />;
           return (
-            <SummaryCard
+            <div
               key={metric.id}
-              title={metric.title}
-              value={metric.value}
-              icon={config.icon}
-              description={metric.description}
-              trend={metric.trend}
-              color={config.color}
-            />
+              className="rounded-[20px] p-5 text-white shadow-lg transition-all duration-150 hover:-translate-y-0.5 hover:shadow-xl cursor-default"
+              style={{ background: bg }}
+            >
+              <div className="flex justify-between items-start mb-3">
+                <span className="text-xs font-medium opacity-90">{metric.title}</span>
+                <div className="bg-white/20 p-2 rounded-xl">
+                  {icon}
+                </div>
+              </div>
+              <div className="text-2xl font-extrabold tracking-tight mb-1">{metric.value}</div>
+              {metric.description && (
+                <div className="text-xs opacity-80">{metric.description}</div>
+              )}
+              {metric.trend && (
+                <div className="text-xs opacity-80 mt-0.5">
+                  {metric.trend.isPositive ? "↑" : "↓"} {Math.abs(metric.trend.value)}%
+                </div>
+              )}
+            </div>
           );
         })}
       </div>

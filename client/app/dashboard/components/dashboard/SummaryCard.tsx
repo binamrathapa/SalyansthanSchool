@@ -17,7 +17,7 @@ interface SummaryCardProps {
     value: number;
     isPositive: boolean;
   };
-  color?: "blue" | "green" | "purple" | "orange" | "rose";
+  color?: "blue" | "green" | "purple" | "orange" | "rose" | "brand" | "secondary";
   className?: string;
 }
 
@@ -46,6 +46,16 @@ const colorMap = {
     bg: "bg-rose-50",
     icon: "text-rose-600",
     border: "border-rose-100",
+  },
+  brand: {
+    bg: "bg-green-100",
+    icon: "text-green-700",
+    border: "border-green-200",
+  },
+  secondary: {
+    bg: "bg-fuchsia-100",
+    icon: "text-fuchsia-700",
+    border: "border-fuchsia-200",
   },
 };
 

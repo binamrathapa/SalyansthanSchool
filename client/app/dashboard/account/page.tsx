@@ -39,25 +39,10 @@ import {
 import KpiCard from "./components/KpiCard";
 import CustomTooltip from "./components/CustomTooltip";
 
-import {
-  TEAL,
-  ROSE,
-  GREEN,
-  BLUE,
-  AMBER,
-  todayCollection,
-  weeklyCollectionData,
-  monthlyCollectionData,
-  yearlyCollectionData,
-  previousYearsAggregateData,
-  classWiseFeeStatusData,
-  defaultersData,
-  recentTransactionsData,
-  kpiData,
-  COLOR_PALETTE,
-} from "./data";
-
 import { Defaulter, Transaction } from "@/app/dashboard/types/finance.types";
+
+const BRAND_GREEN = "var(--brand-700)";
+const BRAND_SECONDARY = "var(--brand-secondary)";
 
 import { useGetFinanceDashboard } from "@/server-action/api/finance.api";
 import GlobalLoader from "../components/dashboard/common/GlobalLoader";
@@ -402,8 +387,8 @@ const FinanceOverviewDashboard = () => {
       );
 
       return [
-        { name: "Paid", value: totalPaid, fill: GREEN },
-        { name: "Unpaid", value: totalUnpaid, fill: ROSE },
+        { name: "Paid", value: totalPaid, fill: BRAND_GREEN },
+        { name: "Unpaid", value: totalUnpaid, fill: BRAND_SECONDARY },
       ];
     }
 
@@ -415,12 +400,12 @@ const FinanceOverviewDashboard = () => {
       {
         name: "Paid",
         value: selectedClassData?.paidAmount ?? 0,
-        fill: GREEN,
+        fill: BRAND_GREEN,
       },
       {
         name: "Unpaid",
         value: selectedClassData?.unpaidAmount ?? 0,
-        fill: ROSE,
+        fill: BRAND_SECONDARY,
       },
     ];
   }, [selectedClass, financeDashboard]);
@@ -473,24 +458,24 @@ const FinanceOverviewDashboard = () => {
         <KpiCard
           title="Today's Collection"
           value={kpiData!.todayCollection.value}
-          icon={<Wallet size={18} />}
-          gradient={`linear-gradient(135deg, ${TEAL} 0%, #0891b2 100%)`}
+          icon={<Wallet size={18} color="white" />}
+          gradient={BRAND_GREEN}
           sub={kpiData!.todayCollection.sub}
         />
 
         <KpiCard
           title="Total Due"
           value={kpiData!.totalDue.value}
-          icon={<TrendingDown size={18} />}
-          gradient={`linear-gradient(135deg, ${ROSE} 0%, #f97316 100%)`}
+          icon={<TrendingDown size={18} color="white" />}
+          gradient={BRAND_SECONDARY}
           sub={kpiData!.totalDue.sub}
         />
 
         <KpiCard
           title="Year Collection"
           value={kpiData!.yearCollection.value}
-          icon={<TrendingUp size={18} />}
-          gradient={`linear-gradient(135deg, ${GREEN} 0%, #0d9488 100%)`}
+          icon={<TrendingUp size={18} color="white" />}
+          gradient={BRAND_GREEN}
           sub={kpiData!.yearCollection.sub}
         />
       </div>
@@ -499,24 +484,24 @@ const FinanceOverviewDashboard = () => {
         <KpiCard
           title="This Month Collection"
           value={kpiData!.monthCollection.value}
-          icon={<TrendingUp size={18} />}
-          gradient={`linear-gradient(135deg, ${BLUE} 0%, #6366f1 100%)`}
+          icon={<TrendingUp size={18} color="white" />}
+          gradient={BRAND_SECONDARY}
           sub={kpiData!.monthCollection.sub}
         />
 
         <KpiCard
           title="Weekly Average"
           value={kpiData!.weeklyAverage.value}
-          icon={<Activity size={18} />}
-          gradient={`linear-gradient(135deg, ${AMBER} 0%, #f59e0b 100%)`}
+          icon={<Activity size={18} color="white" />}
+          gradient={BRAND_GREEN}
           sub={kpiData!.weeklyAverage.sub}
         />
 
         <KpiCard
           title="Recent Transactions"
           value={kpiData!.transactionsCount.value}
-          icon={<Receipt size={18} />}
-          gradient="linear-gradient(135deg, #64748b 0%, #475569 100%)"
+          icon={<Receipt size={18} color="white" />}
+          gradient={BRAND_SECONDARY}
           sub={kpiData!.transactionsCount.sub}
         />
       </div>
@@ -562,14 +547,10 @@ const FinanceOverviewDashboard = () => {
               />
               <Bar dataKey="amount" radius={[6, 6, 0, 0]}>
                 {filteredDailyData.map((entry, index) => (
-                  <Cell
+                    <Cell
                       key={`bar-cell-${index}`}
-                    fill={
-                      entry.amount === peakAmount
-                        ? "#2563eb"
-                        : COLOR_PALETTE[index % COLOR_PALETTE.length]
-                    }
-                  />
+                      fill={entry.amount === peakAmount ? BRAND_SECONDARY : BRAND_GREEN}
+                    />
                 ))}
               </Bar>
             </BarChart>
